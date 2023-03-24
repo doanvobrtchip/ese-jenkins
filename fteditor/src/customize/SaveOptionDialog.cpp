@@ -17,41 +17,41 @@ bool SaveOptionDialog::autoOpen = true;
 
 SaveOptionDialog::SaveOptionDialog(SaveOptionDialog::Type type,
                                    QWidget *parent) {
-  type_ = type;
-  setWindowTitle(type_ == SaveOptionDialog::DisplayList
+  m_type = type;
+  setWindowTitle(m_type == SaveOptionDialog::DisplayList
                      ? tr("Save Display List")
                      : tr("Save Coprocessor Command"));
-  useDefaultName_ = true;
+  m_useDefaultName = true;
   auto label = new QLabel(tr("Save as:"));
-  lineEdit_ = new QLineEdit;
-  label->setBuddy(lineEdit_);
+  m_lineEdit = new QLineEdit;
+  label->setBuddy(m_lineEdit);
   auto findButton = new QPushButton(tr("..."));
   findButton->setAutoDefault(false);
   QHBoxLayout *dirHBoxLayout = new QHBoxLayout;
   dirHBoxLayout->addWidget(label);
-  dirHBoxLayout->addWidget(lineEdit_);
+  dirHBoxLayout->addWidget(m_lineEdit);
   dirHBoxLayout->addWidget(findButton);
 
   // Notation group
-  radioBinary_ = new QRadioButton;
-  radioBinary_->setText(tr("Binary"));
-  radioString_ = new QRadioButton;
-  radioString_->setText(tr("Hexadecimal String"));
+  m_radioBinary = new QRadioButton;
+  m_radioBinary->setText(tr("Binary"));
+  m_radioString = new QRadioButton;
+  m_radioString->setText(tr("Hexadecimal String"));
   auto notationHBoxLayout = new QHBoxLayout;
-  notationHBoxLayout->addWidget(radioBinary_);
-  notationHBoxLayout->addWidget(radioString_);
+  notationHBoxLayout->addWidget(m_radioBinary);
+  notationHBoxLayout->addWidget(m_radioString);
   auto notationGroupBox = new QGroupBox(this);
   notationGroupBox->setTitle(tr("Notation"));
   notationGroupBox->setLayout(notationHBoxLayout);
 
   // Byte order group
-  radioLittleEndian_ = new QRadioButton;
-  radioLittleEndian_->setText(tr("Little Endian"));
-  radioBigEndian_ = new QRadioButton;
-  radioBigEndian_->setText(tr("Big Endian"));
+  m_radioLittleEndian = new QRadioButton;
+  m_radioLittleEndian->setText(tr("Little Endian"));
+  m_radioBigEndian = new QRadioButton;
+  m_radioBigEndian->setText(tr("Big Endian"));
   auto byteOrderHBoxLayout = new QHBoxLayout;
-  byteOrderHBoxLayout->addWidget(radioLittleEndian_);
-  byteOrderHBoxLayout->addWidget(radioBigEndian_);
+  byteOrderHBoxLayout->addWidget(m_radioLittleEndian);
+  byteOrderHBoxLayout->addWidget(m_radioBigEndian);
   auto byteOrderGroupBox = new QGroupBox;
   byteOrderGroupBox->setTitle(tr("Byte Order"));
   byteOrderGroupBox->setLayout(byteOrderHBoxLayout);
@@ -80,89 +80,89 @@ SaveOptionDialog::SaveOptionDialog(SaveOptionDialog::Type type,
 
   setLayout(verticalLayout);
   setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
-  outputType == SaveOptionDialog::Binary ? radioBinary_->setChecked(true)
-                                         : radioString_->setChecked(true);
+  outputType == SaveOptionDialog::Binary ? m_radioBinary->setChecked(true)
+                                         : m_radioString->setChecked(true);
   byteOrder == SaveOptionDialog::BigEndian
-      ? radioBigEndian_->setChecked(true)
-      : radioLittleEndian_->setChecked(true);
+      ? m_radioBigEndian->setChecked(true)
+      : m_radioLittleEndian->setChecked(true);
   autoOpenCheckBox->setChecked(autoOpen);
 
   connect(autoOpenCheckBox, &QAbstractButton::clicked, this,
           [](bool checked) { autoOpen = checked; });
-  connect(radioLittleEndian_, SIGNAL(clicked()), this,
+  connect(m_radioLittleEndian, SIGNAL(clicked()), this,
           SLOT(updateDefaultName()));
-  connect(radioLittleEndian_, SIGNAL(clicked()), this, SLOT(changeByteOrder()));
-  connect(radioBigEndian_, SIGNAL(clicked()), this, SLOT(updateDefaultName()));
-  connect(radioBigEndian_, SIGNAL(clicked()), this, SLOT(changeByteOrder()));
-  connect(radioString_, SIGNAL(clicked()), this, SLOT(updateDefaultName()));
-  connect(radioString_, SIGNAL(clicked()), this, SLOT(changeOutputType()));
-  connect(radioBinary_, SIGNAL(clicked()), this, SLOT(updateDefaultName()));
-  connect(radioBinary_, SIGNAL(clicked()), this, SLOT(changeOutputType()));
+  connect(m_radioLittleEndian, SIGNAL(clicked()), this,
+          SLOT(changeByteOrder()));
+  connect(m_radioBigEndian, SIGNAL(clicked()), this, SLOT(updateDefaultName()));
+  connect(m_radioBigEndian, SIGNAL(clicked()), this, SLOT(changeByteOrder()));
+  connect(m_radioString, SIGNAL(clicked()), this, SLOT(updateDefaultName()));
+  connect(m_radioString, SIGNAL(clicked()), this, SLOT(changeOutputType()));
+  connect(m_radioBinary, SIGNAL(clicked()), this, SLOT(updateDefaultName()));
+  connect(m_radioBinary, SIGNAL(clicked()), this, SLOT(changeOutputType()));
 
   connect(findButton, SIGNAL(clicked()), this, SLOT(handleFindClicked()));
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(handleAcceptClicked()));
   connect(buttonBox, &QDialogButtonBox::rejected, this, &QDialog::reject);
-  connect(this, SIGNAL(filePathChanged(QString)), lineEdit_,
+  connect(this, SIGNAL(filePathChanged(QString)), m_lineEdit,
           SLOT(setText(QString)));
 
   updateDefaultName();
 
   // Set default width for QLineEdit
-  auto textSize = lineEdit_->fontMetrics().size(0, lineEdit_->text());
+  auto textSize = m_lineEdit->fontMetrics().size(0, m_lineEdit->text());
   textSize.setWidth(textSize.width() - 10);
   QStyleOptionFrame op;
-  op.initFrom(lineEdit_);
+  op.initFrom(m_lineEdit);
   auto newSize =
-      lineEdit_->style()->sizeFromContents(QStyle::CT_LineEdit, &op, textSize);
-  lineEdit_->setMinimumSize(newSize);
+      m_lineEdit->style()->sizeFromContents(QStyle::CT_LineEdit, &op, textSize);
+  m_lineEdit->setMinimumSize(newSize);
 }
 
 void SaveOptionDialog::updateDefaultName() {
-  if (!useDefaultName_) return;
-  defaultFileName_ = generateDefaultFileName();
+  if (!m_useDefaultName) return;
+  m_defaultFileName = generateDefaultFileName();
 
   setFilePath(
-      QDir::cleanPath(savedDirectory + QDir::separator() + defaultFileName_));
+      QDir::cleanPath(savedDirectory + QDir::separator() + m_defaultFileName));
 }
 
-const QString &SaveOptionDialog::getFilePath() const { return filePath_; }
+const QString &SaveOptionDialog::getFilePath() const { return m_filePath; }
 
 void SaveOptionDialog::setFilePath(const QString &newFilePath) {
-  filePath_ = newFilePath;
-  emit filePathChanged(filePath_);
+  m_filePath = newFilePath;
+  emit filePathChanged(m_filePath);
 }
 
 QString SaveOptionDialog::generateDefaultFileName() {
   QString prefix =
       QString(QDir(QDir::currentPath()).dirName())
-          .append(type_ == Type::DisplayList ? tr("_dl")
-                                             : tr("_copro"));
-  prefix = QString(prefix).append(radioBinary_->isChecked() ? tr(".bin")
-                                                            : tr(".txt"));
+          .append(m_type == Type::DisplayList ? tr("_dl") : tr("_copro"));
+  prefix = QString(prefix).append(m_radioBinary->isChecked() ? tr(".bin")
+                                                             : tr(".txt"));
   return prefix;
 }
 
 void SaveOptionDialog::changeOutputType() {
-  outputType = radioBinary_->isChecked() ? SaveOptionDialog::Binary
-                                         : SaveOptionDialog::Text;
+  outputType = m_radioBinary->isChecked() ? SaveOptionDialog::Binary
+                                          : SaveOptionDialog::Text;
 }
 
 void SaveOptionDialog::changeByteOrder() {
-  byteOrder = radioLittleEndian_->isChecked() ? SaveOptionDialog::LittleEndian
-                                              : SaveOptionDialog::BigEndian;
+  byteOrder = m_radioLittleEndian->isChecked() ? SaveOptionDialog::LittleEndian
+                                               : SaveOptionDialog::BigEndian;
 }
 
 void SaveOptionDialog::handleFindClicked() {
   QString filePath = QFileDialog::getSaveFileName(
-      this, tr("Save as"), filePath_,
+      this, tr("Save as"), m_filePath,
       tr(outputType == OutputType::Binary ? "Binary(*.bin)" : "Text(*.txt)"));
   if (filePath.isEmpty()) return;
   setFilePath(filePath);
   savedDirectory = QFileInfo(filePath).absolutePath();
-  useDefaultName_ = false;
+  m_useDefaultName = false;
 }
 
 void SaveOptionDialog::handleAcceptClicked() {
-  emit handleAccept(filePath_, outputType, byteOrder, autoOpen);
+  emit handleAccept(m_filePath, outputType, byteOrder, autoOpen);
   accept();
 }

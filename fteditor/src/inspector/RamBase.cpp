@@ -15,58 +15,54 @@
 namespace FTEDITOR {
 
 RamBase::RamBase(Inspector *parent)
-    : QDockWidget(parent->mainWindow())
-    , m_Inspector(parent)
-{
-	setVisible(false);
-	setFloating(true);
-	setFocusPolicy(Qt::StrongFocus);
+    : QDockWidget(parent->mainWindow()), m_insp(parent) {
+  setVisible(false);
+  setFloating(true);
+  setFocusPolicy(Qt::StrongFocus);
 
-	m_OpenDlgBtn = new QPushButton;
-	m_OpenDlgBtn->setContentsMargins(0, 0, 0, 0);
-	m_OpenDlgBtn->setIconSize(QSize(10, 10));
-	m_OpenDlgBtn->setIcon(QIcon(":/icons/external-link.png"));
+  m_btnOpenDlg = new QPushButton;
+  m_btnOpenDlg->setContentsMargins(0, 0, 0, 0);
+  m_btnOpenDlg->setIconSize(QSize(10, 10));
+  m_btnOpenDlg->setIcon(QIcon(":/icons/external-link.png"));
 
-	m_DockBackBtn = new QPushButton;
-	m_DockBackBtn->setContentsMargins(0, 0, 0, 0);
-	m_DockBackBtn->setIconSize(QSize(10, 10));
-	m_DockBackBtn->setIcon(QIcon(":/icons/dock-back.png"));
-	m_DockBackBtn->setVisible(false);
+  m_btnDockBack = new QPushButton;
+  m_btnDockBack->setContentsMargins(0, 0, 0, 0);
+  m_btnDockBack->setIconSize(QSize(10, 10));
+  m_btnDockBack->setIcon(QIcon(":/icons/dock-back.png"));
+  m_btnDockBack->setVisible(false);
 
-	m_TitleLabel = new QLabel;
-	m_Widget = new QWidget(this);
-	m_Inspector->mainWindow()->addDockWidget(Qt::BottomDockWidgetArea, this);
+  m_lbTitle = new QLabel;
+  m_widget = new QWidget(this);
+  m_insp->mainWindow()->addDockWidget(Qt::BottomDockWidgetArea, this);
 
-	m_TitleLayout = new QHBoxLayout;
-	m_TitleLayout->setAlignment(Qt::AlignLeft);
-	m_TitleLayout->addWidget(m_TitleLabel);
-	m_TitleLayout->addWidget(m_OpenDlgBtn);
-	m_TitleLayout->addWidget(m_DockBackBtn);
-	
-	connect(this, &QDockWidget::visibilityChanged, m_TitleLabel,
-	    [this](bool visible) {
-		    m_OpenDlgBtn->setVisible(!visible);
-		    m_DockBackBtn->setVisible(visible);
-		    m_TitleLabel->setVisible(!visible);
-	    });
-	connect(m_OpenDlgBtn, &QPushButton::clicked, this, &RamBase::openDialog);
-	connect(m_DockBackBtn, &QPushButton::clicked, this, &RamBase::dockBack);
+  m_lytTitle = new QHBoxLayout;
+  m_lytTitle->setAlignment(Qt::AlignLeft);
+  m_lytTitle->addWidget(m_lbTitle);
+  m_lytTitle->addWidget(m_btnOpenDlg);
+  m_lytTitle->addWidget(m_btnDockBack);
+
+  connect(this, &QDockWidget::visibilityChanged, m_lbTitle,
+          [this](bool visible) {
+            m_btnOpenDlg->setVisible(!visible);
+            m_btnDockBack->setVisible(visible);
+            m_lbTitle->setVisible(!visible);
+          });
+  connect(m_btnOpenDlg, &QPushButton::clicked, this, &RamBase::openDialog);
+  connect(m_btnDockBack, &QPushButton::clicked, this, &RamBase::dockBack);
 }
 
-QWidget *RamBase::Widget() const { return m_Widget; }
+QWidget *RamBase::Widget() const { return m_widget; }
 
-void RamBase::openDialog(bool checked)
-{
-	setWidget(m_Widget);
-	setVisible(true);
-	activateWindow();
+void RamBase::openDialog(bool checked) {
+  setWidget(m_widget);
+  setVisible(true);
+  activateWindow();
 }
 
-void RamBase::dockBack(bool checked)
-{
-	m_Inspector->addSplitter(m_Widget);
-	close();
+void RamBase::dockBack(bool checked) {
+  m_insp->addSplitter(m_widget);
+  close();
 }
 
 void RamBase::closeEvent(QCloseEvent *event) { dockBack(); }
-} // namespace FTEDITOR
+}  // namespace FTEDITOR

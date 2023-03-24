@@ -12,122 +12,121 @@ class QMenu;
 namespace FTEDITOR {
 struct ContentInfo;
 
-class QHexView : public QAbstractScrollArea
-{
-	Q_OBJECT
-public:
-	class DataStorage
-	{
-	public:
-		virtual ~DataStorage() {};
-		virtual QByteArray getData(int position, int length) = 0;
-		virtual int size() = 0;
-	};
+class QHexView : public QAbstractScrollArea {
+  Q_OBJECT
+ public:
+  class DataStorage {
+   public:
+    virtual ~DataStorage(){};
+    virtual QByteArray getData(int position, int length) = 0;
+    virtual int size() = 0;
+  };
 
-	class DataStorageArray : public DataStorage
-	{
-	public:
-		DataStorageArray(const QByteArray &arr);
-		virtual QByteArray getData(int position, int length);
-		virtual int size();
+  class DataStorageArray : public DataStorage {
+   public:
+    DataStorageArray(const QByteArray &arr);
+    virtual QByteArray getData(int position, int length);
+    virtual int size();
 
-	private:
-		QByteArray m_data;
-	};
+   private:
+    QByteArray m_data;
+  };
 
-	class DataStorageFile : public DataStorage
-	{
-	public:
-		DataStorageFile(const QString &fileName);
-		virtual QByteArray getData(int position, int length);
-		virtual int size();
+  class DataStorageFile : public DataStorage {
+   public:
+    DataStorageFile(const QString &fileName);
+    virtual QByteArray getData(int position, int length);
+    virtual int size();
 
-	private:
-		QFile m_file;
-	};
+   private:
+    QFile m_file;
+  };
 
-	struct ContentArea
-	{
-		ContentArea(ContentInfo *contentInfo);
-		ContentInfo *contentInfo;
-		QColor color;
-		int start();
-		int end();
-	};
+  struct ContentArea {
+    ContentArea(ContentInfo *contentInfo);
+    ContentInfo *contentInfo;
+    QColor color;
+    int start();
+    int end();
+  };
 
-	QHexView(QWidget *parent = 0);
-	~QHexView();
+  QHexView(QWidget *parent = 0);
+  ~QHexView();
 
-public slots:
-	void setData(QHexView::DataStorage *pData);
-	void clear();
-	bool showFromOffset(int offset);
+ public slots:
+  void setData(QHexView::DataStorage *pData);
+  void clear();
+  bool showFromOffset(int offset);
+  bool showFromAddress(int address);
 
-public:
-	void setSelected(int offset, int length);
-	DataStorage *data();
-	void resetSelection();
-	void addContentArea(ContentInfo *contentInfo);
-	void removeContentArea(ContentInfo *contentInfo);
-	ContentInfo *detectCurrentContentInfo();
-	void setBytesPerLine(int bytesPerLine);
-	void setCursorPos(int pos);
-	void resetSelection(int pos);
-	void ensureVisible();
-	void updateUint();
-	bool checkVisible();
-	bool isValidMouseEvent(QMouseEvent *event);
+ public:
+  void updateUint();
+  bool checkVisible();
+  DataStorage *data();
+  void ensureVisible();
+  void resetSelection();
+  int StartAddress() const;
+  void setCursorPos(int pos);
+  void resetSelection(int pos);
+  bool isValidPress(QMouseEvent *event);
+  void setBytesPerLine(int bytesPerLine);
+  ContentInfo *detectCurrentContentInfo();
+  void setStartAddress(int newStartAddress);
+  void addContentArea(ContentInfo *contentInfo);
+  void setUseContentArea(bool newUseContentArea);
+  void setSelectedOffset(int offset, int length);
+  void removeContentArea(ContentInfo *contentInfo);
+  void setSelectedAddress(int address, int length);
 
-	void setUseContentArea(bool newUseContentArea);
+ protected:
+  void wheelEvent(QWheelEvent *e);
+  void paintEvent(QPaintEvent *event);
+  void keyPressEvent(QKeyEvent *event);
+  void mouseMoveEvent(QMouseEvent *event);
+  void mousePressEvent(QMouseEvent *event);
+ private slots:
+  void onCopy();
 
-	int StartAddress() const;
-	void setStartAddress(int newStartAddress);
+ private:
+  QMutex m_dataMtx;
+  DataStorage *m_pdata;
+  int m_posAddr;
+  int m_posHex;
+  int m_posAscii;
+  int m_charWidth;
+  int m_charHeight;
 
-protected:
-	void paintEvent(QPaintEvent *event);
-	void keyPressEvent(QKeyEvent *event);
-	void mouseMoveEvent(QMouseEvent *event);
-	void mousePressEvent(QMouseEvent *event);
-	void wheelEvent(QWheelEvent *e);
-private slots:
-	void onCopy();
+  int m_selectEnd;
+  int m_selectType;
+  int m_selectInit;
+  int m_selectBegin;
 
-private:
-	QMutex m_dataMtx;
-	DataStorage *m_pdata;
-	int m_posAddr;
-	int m_posHex;
-	int m_posAscii;
-	int m_charWidth;
-	int m_charHeight;
+  int m_cursorPos;
+  int m_bytesPerLine;
+  int m_startAddress;
+  bool m_useContentArea;
 
-	int m_selectBegin;
-	int m_selectEnd;
-	int m_selectInit;
-	int m_cursorPos;
-	int m_bytesPerLine;
-	bool m_UseContentArea;
-	int m_StartAddress;
+  QList<ContentArea *> m_contentAreaList;
+  QMenu *m_contextMenu;
 
-	QSize fullSize() const;
-	void updatePositions();
-	void setSelection(int pos, bool shouldEmitUpdate = false);
-	int cursorPos(const QPointF &position);
-	int lineHeight() const;
-	int rowCount() const;
+  int rowCount() const;
+  void updatePositions();
+  int lineHeight() const;
+  QSize fullSize() const;
+  int cursorPos(const QPointF &position);
+  void setSelection(int pos, bool shouldEmitUpdate = false);
 
-	QList<QColor> colours = { QColor(0x66, 0x00, 0x66), QColor(0x00, 0x80, 0x80),
-		QColor(0xcc, 0x33, 0x00), QColor(0x00, 0x66, 0x66),
-		QColor(0x99, 0x00, 0x4d), QColor(0x00, 0x80, 0x00) };
+  QList<QColor> m_colours = {
+      QColor(0x66, 0x00, 0x66), QColor(0x00, 0x80, 0x80),
+      QColor(0xcc, 0x33, 0x00), QColor(0x00, 0x66, 0x66),
+      QColor(0x99, 0x00, 0x4d), QColor(0x00, 0x80, 0x00)};
+  enum SelectType { None, Hex, Ascii };
 
-	QList<ContentArea *> m_contentAreaList;
-	QMenu *m_ContextMenu;
-
-signals:
-	void currentInfoChanged(ContentInfo *currentInfo);
-	void bytesPerLineChanged(int bytesPerLine);
-	void uintChanged(uint value);
+ signals:
+  void bytesPerLineChanged(int bytesPerLine);
+  void uintChanged(QString valueStr, uint value);
+  void currentInfoChanged(FTEDITOR::ContentInfo *currentInfo);
 };
 
-} // namespace FTEDITOR
+}  // namespace FTEDITOR
 #endif

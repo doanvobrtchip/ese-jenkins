@@ -28,27 +28,27 @@ class SaveOptionDialog : public QDialog {
   QString generateDefaultFileName();
 
  private:
-  static QString savedDirectory;
-  static OutputType outputType;
-  static ByteOrder byteOrder;
   static bool autoOpen;
+  static ByteOrder byteOrder;
+  static OutputType outputType;
+  static QString savedDirectory;
 
-  QRadioButton *radioBinary_;
-  QRadioButton *radioString_;
-  QRadioButton *radioLittleEndian_;
-  QRadioButton *radioBigEndian_;
-  QLineEdit *lineEdit_;
-  QString defaultFileName_;
-  QString filePath_;
-  bool useDefaultName_;
-  Type type_;
+  Type m_type;
+  QString m_filePath;
+  bool m_useDefaultName;
+  QLineEdit *m_lineEdit;
+  QString m_defaultFileName;
+  QRadioButton *m_radioString;
+  QRadioButton *m_radioBinary;
+  QRadioButton *m_radioBigEndian;
+  QRadioButton *m_radioLittleEndian;
 
  public slots:
-  void changeOutputType();
   void changeByteOrder();
+  void changeOutputType();
   void handleFindClicked();
-  void handleAcceptClicked();
   void updateDefaultName();
+  void handleAcceptClicked();
 
  signals:
   void filePathChanged(QString newPath);
