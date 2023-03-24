@@ -15,25 +15,24 @@ class QRuler : public QWidget {
  public:
   QRuler(QWidget *parent = nullptr, Qt::Orientation orientation = Qt::Vertical);
   ~QRuler() = default;
-  void setScale(int newScale);
-  void setScreenLeft(int newScreenLeft);
-  void setScreenTop(int newScreenTop);
-  void setVisible(bool visible) override;
-
-  void setShowIndicator(bool newShowIndicator);
   void setIndicator(int pos);
+  void setScale(int newScale);
+  void setScreenTop(int newScreenTop);
+  void setScreenLeft(int newScreenLeft);
+  void setVisible(bool visible) override;
+  void setShowIndicator(bool newShowIndicator);
 
  protected:
   virtual void paintEvent(QPaintEvent *event) override;
   virtual void mousePressEvent(QMouseEvent *e) override;
 
  private:
-  Qt::Orientation m_Orientation;
-  int m_Scale;
-  int m_ScreenLeft;
-  int m_ScreenTop;
-  bool m_ShowIndicator;
-  int m_Indicator;
+  int m_scale;
+  int m_indicator;
+  int m_screenTop;
+  int m_screenLeft;
+  bool m_showIndicator;
+  Qt::Orientation m_orientation;
 
  signals:
   void visibleChanged(bool visible);

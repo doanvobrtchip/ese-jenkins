@@ -14,28 +14,27 @@ namespace FTEDITOR {
 class Inspector;
 class QHexView;
 
-class RamCMD : public RamBase
-{
-	Q_OBJECT
+class RamCMD : public RamBase {
+  Q_OBJECT
 
-public:
-	RamCMD(Inspector *parent);
-	~RamCMD() = default;
+ public:
+  RamCMD(Inspector *parent);
+  ~RamCMD() = default;
 
-public slots:
-	void goToAddress();
-	void setLabelUint(uint value);
-	void updateView();
-	void openDialog(bool checked) override;
-	void dockBack(bool checked) override;
+ public slots:
+  void updateView();
+  void goToAddress();
+  void openDialog(bool checked) override;
+  void dockBack(bool checked) override;
+  void setLabelUint(QString valueStr, uint value);
 
-private:
-	QLabel *m_UintLabel;
-	QHexView *m_HexView;
-	QLabel *m_AddressLabel;
-	QPushButton *m_SearchButton;
-	QHBoxLayout *m_SearchLayout;
-	QLineEdit *m_AddressJumpEdit;
+ private:
+  QLabel *m_lbUint;
+  QHexView *m_hexView;
+  QLabel *m_lbAddress;
+  QLineEdit *m_leAddress;
+  QPushButton *m_btnSearch;
+  QHBoxLayout *m_lytSearch;
 };
-} // namespace FTEDITOR
-#endif // RAMCMD_H
+}  // namespace FTEDITOR
+#endif  // RAMCMD_H

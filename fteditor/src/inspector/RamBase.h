@@ -15,28 +15,28 @@ class QHBoxLayout;
 namespace FTEDITOR {
 class Inspector;
 
-class RamBase : public QDockWidget
-{
-	Q_OBJECT
+class RamBase : public QDockWidget {
+  Q_OBJECT
 
-public:
-	RamBase(Inspector *parent);
-	~RamBase() = default;
-	QWidget *Widget() const;
-public slots:
-	virtual void openDialog(bool checked = true);
-	virtual void dockBack(bool checked = true);
+ public:
+  RamBase(Inspector *parent);
+  ~RamBase() = default;
+  QWidget *Widget() const;
 
-protected:
-	void closeEvent(QCloseEvent *event) override;
+ public slots:
+  virtual void openDialog(bool checked = true);
+  virtual void dockBack(bool checked = true);
 
-	QWidget *m_Widget;
-	Inspector *m_Inspector;
-	QLabel *m_TitleLabel;
-	QPushButton *m_OpenDlgBtn;
-	QPushButton *m_DockBackBtn;
-	QHBoxLayout *m_TitleLayout;
+ protected:
+  void closeEvent(QCloseEvent *event) override;
+
+  QWidget *m_widget;
+  Inspector *m_insp;
+  QLabel *m_lbTitle;
+  QPushButton *m_btnOpenDlg;
+  QPushButton *m_btnDockBack;
+  QHBoxLayout *m_lytTitle;
 };
-} // namespace FTEDITOR
+}  // namespace FTEDITOR
 
-#endif // RAMBASE_H
+#endif  // RAMBASE_H

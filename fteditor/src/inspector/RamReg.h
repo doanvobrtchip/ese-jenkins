@@ -14,31 +14,30 @@ class QTreeWidgetItem;
 namespace FTEDITOR {
 class Inspector;
 
-class RamReg : public RamBase
-{
-	Q_OBJECT
+class RamReg : public RamBase {
+  Q_OBJECT
 
-public:
-	RamReg(Inspector *widget);
-	~RamReg() = default;
-	void initDisplayReg();
-	bool wantRegister(int regEnum);
-	void releaseDisplayReg();
-	bool eventFilter(QObject *watched, QEvent *event) override;
-	
-public slots:
-	void updateView(int dlCMDCount);
-	void onPrepareContextMenu(const QPoint &pos);
-	void onCopy();
-	void openDialog(bool checked) override;
-	void dockBack(bool checked) override;
+ public:
+  RamReg(Inspector *widget);
+  ~RamReg() = default;
+  void initDisplayReg();
+  void releaseDisplayReg();
+  bool wantRegister(int regEnum);
+  bool eventFilter(QObject *watched, QEvent *event) override;
 
-private:
-	std::vector<uint32_t> m_RegisterCopy;
-	std::vector<QTreeWidgetItem *> m_RegisterItems;
-	QAction *m_CopyAct;
-	QMenu *m_ContextMenu;
-	QTreeWidget *m_Registers;
+ public slots:
+  void onCopy();
+  void updateView(int dlCMDCount);
+  void onPrepareContextMenu(const QPoint &pos);
+  void openDialog(bool checked) override;
+  void dockBack(bool checked) override;
+
+ private:
+  QAction *m_actCopy;
+  QMenu *m_menuContext;
+  QTreeWidget *m_registers;
+  std::vector<uint32_t> m_registerCopy;
+  std::vector<QTreeWidgetItem *> m_registerItems;
 };
-} // namespace FTEDITOR
-#endif // RAMREG_H
+}  // namespace FTEDITOR
+#endif  // RAMREG_H
