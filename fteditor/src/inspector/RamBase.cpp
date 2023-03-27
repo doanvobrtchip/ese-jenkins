@@ -16,7 +16,6 @@ namespace FTEDITOR {
 
 RamBase::RamBase(Inspector *parent)
     : QDockWidget(parent->mainWindow()), m_insp(parent) {
-  setVisible(false);
   setFloating(true);
   setFocusPolicy(Qt::StrongFocus);
 
@@ -33,7 +32,6 @@ RamBase::RamBase(Inspector *parent)
 
   m_lbTitle = new QLabel;
   m_widget = new QWidget(this);
-  m_insp->mainWindow()->addDockWidget(Qt::BottomDockWidgetArea, this);
 
   m_lytTitle = new QHBoxLayout;
   m_lytTitle->setAlignment(Qt::AlignLeft);
@@ -55,14 +53,21 @@ QWidget *RamBase::Widget() const { return m_widget; }
 
 void RamBase::openDialog(bool checked) {
   setWidget(m_widget);
-  setVisible(true);
+  show();
+  raise();
   activateWindow();
+  if (m_focusWhenOpen) m_focusWhenOpen->setFocus(Qt::MouseFocusReason);
 }
 
 void RamBase::dockBack(bool checked) {
   m_insp->addSplitter(m_widget);
   close();
+  if (m_focusWhenOpen) m_focusWhenOpen->setFocus(Qt::MouseFocusReason);
 }
 
 void RamBase::closeEvent(QCloseEvent *event) { dockBack(); }
+
+void RamBase::setFocusWhenOpen(QWidget *newFocusWhenOpen) {
+  m_focusWhenOpen = newFocusWhenOpen;
+}
 }  // namespace FTEDITOR

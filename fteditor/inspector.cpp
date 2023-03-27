@@ -61,21 +61,17 @@ Inspector::Inspector(MainWindow *parent)
 	layout->setContentsMargins(3, 0, 0, 2);
 	m_Splitter = new QSplitter(this);
 
-	// Set up RAM_DL Inspector
 	m_RamDL = new RamDL(this);
-	m_Splitter->addWidget(m_RamDL->Widget());
+	m_RamDL->dockBack();
 
-	// Set up RAM_REG Inspector
 	m_RamReg = new RamReg(this);
-	m_Splitter->addWidget(m_RamReg->Widget());
-
-	// Set up RAM_G inspector
-	m_RamG = new RamG(this);
-	m_Splitter->addWidget(m_RamG->Widget());
+	m_RamReg->dockBack();
 	
-	// Set up RAM_CMD inspector
+	m_RamG = new RamG(this);
+	m_RamG->dockBack();
+	
 	m_RamCMD = new RamCMD(this);
-	m_Splitter->addWidget(m_RamCMD->Widget());
+	m_RamCMD->dockBack();
 
 	layout->addWidget(m_Splitter);
 	setLayout(layout);

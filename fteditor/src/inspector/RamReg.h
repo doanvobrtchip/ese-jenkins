@@ -29,8 +29,6 @@ class RamReg : public RamBase {
   void onCopy();
   void updateView(int dlCMDCount);
   void onPrepareContextMenu(const QPoint &pos);
-  void openDialog(bool checked) override;
-  void dockBack(bool checked) override;
 
  private:
   QAction *m_actCopy;

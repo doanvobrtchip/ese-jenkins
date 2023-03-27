@@ -22,10 +22,11 @@ class RamBase : public QDockWidget {
   RamBase(Inspector *parent);
   ~RamBase() = default;
   QWidget *Widget() const;
+  void setFocusWhenOpen(QWidget *newFocusWhenOpen);
 
  public slots:
-  virtual void openDialog(bool checked = true);
-  virtual void dockBack(bool checked = true);
+  void openDialog(bool checked = true);
+  void dockBack(bool checked = true);
 
  protected:
   void closeEvent(QCloseEvent *event) override;
@@ -33,9 +34,10 @@ class RamBase : public QDockWidget {
   QWidget *m_widget;
   Inspector *m_insp;
   QLabel *m_lbTitle;
+  QHBoxLayout *m_lytTitle;
+  QWidget *m_focusWhenOpen;
   QPushButton *m_btnOpenDlg;
   QPushButton *m_btnDockBack;
-  QHBoxLayout *m_lytTitle;
 };
 }  // namespace FTEDITOR
 
