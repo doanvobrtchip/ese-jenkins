@@ -464,6 +464,7 @@ void QHexView::mousePressEvent(QMouseEvent *event) {
   }
   if (!isValidPress(event)) {
     setSelectedAddress(0, 0);
+    emit uintChanged("", 0);
     emit currentInfoChanged(nullptr);
     return;
   }
