@@ -33,6 +33,7 @@ RamCMD::RamCMD(Inspector *parent) : RamBase(parent) {
 
   m_lbUint = new QLabel(tr("Uint:"));
   m_lbUint->setStatusTip(tr("Decimal value (4 bytes, Little Endian)"));
+  m_lbUint->setMinimumWidth(25); 
 
   // Set default width for QLineEdit
   m_leAddress = new QLineEdit;
@@ -41,6 +42,7 @@ RamCMD::RamCMD(Inspector *parent) : RamBase(parent) {
   auto textSize = m_leAddress->fontMetrics().size(0, placeholderText);
   m_leAddress->setPlaceholderText(placeholderText);
   m_leAddress->setMaximumWidth(textSize.width() + 10);
+  m_leAddress->setMinimumWidth(30);
   m_focusWhenOpen = m_leAddress;
 
   m_lbAddress = new QLabel(tr("Address:"));
@@ -48,21 +50,22 @@ RamCMD::RamCMD(Inspector *parent) : RamBase(parent) {
 
   m_btnSearch = new QPushButton(tr("Jump"));
   m_btnSearch->setDefault(true);
-  m_btnSearch->setMaximumWidth(90);
+  m_btnSearch->setMaximumWidth(80);
+  m_btnSearch->setMinimumWidth(50);
 
   m_lytSearch = new QHBoxLayout;
   m_lytSearch->setAlignment(Qt::AlignRight);
-  m_lytSearch->addWidget(m_lbUint);
+  m_lytSearch->addWidget(m_lbUint, 0);
   m_lytSearch->addWidget(m_lbAddress);
-  m_lytSearch->addWidget(m_leAddress);
-  m_lytSearch->addWidget(m_btnSearch);
-
+  m_lytSearch->addWidget(m_leAddress, 2);
+  m_lytSearch->addWidget(m_btnSearch, 1);
+  
   auto layout = new QVBoxLayout;
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setAlignment(Qt::AlignRight);
   auto groupBox = new QGroupBox(this);
   auto vBoxLayout = new QVBoxLayout;
-  vBoxLayout->setContentsMargins(5, 5, 5, 5);
+  vBoxLayout->setContentsMargins(3, 3, 3, 3);
   vBoxLayout->addLayout(m_lytTitle);
   vBoxLayout->addWidget(m_hexView);
   vBoxLayout->addLayout(m_lytSearch);
@@ -97,8 +100,10 @@ void RamCMD::goToAddress() {
 }
 
 void RamCMD::setLabelUint(QString valueStr, uint value) {
-  QString text = QString(tr("Uint: %1 (%2)")).arg(value).arg(valueStr);
-  m_lbUint->setText(text);
+  m_lbUint->setText(
+      valueStr.isEmpty()
+          ? tr("Uint:")
+          : QString(tr("Uint: %1 (%2)")).arg(value).arg(valueStr));
 }
 
 void RamCMD::updateView() {
