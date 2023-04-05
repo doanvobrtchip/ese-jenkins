@@ -1,0 +1,67 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "CLEAR_COLOR_RGB(255,255,255)",
+        "CLEAR_COLOR_A(255)",
+        "CLEAR(1, 1, 1)",
+        "",
+        "CMD_GRADIENT(100, 207, 0x007FFF, 244, 189, 0x7FFF00)",
+        "",
+        "SAVE_CONTEXT()",
+        "",
+        "SCISSOR_XY(100, 100)",
+        "SCISSOR_SIZE(101, 101)",
+        "",
+        "COLOR_RGB(255,255,255)",
+        "COLOR_A(255)",
+        "",
+        "COLOR_MASK(0,0,0,1)",
+        "BLEND_FUNC(ZERO, ZERO)",
+        "",
+        "BEGIN(RECTS)",
+        "VERTEX2F(1600, 1600)",
+        "VERTEX2F(3200, 3200)",
+        "",
+        "COLOR_A(255) // Circle transparency",
+        "BLEND_FUNC(SRC_ALPHA, ZERO)",
+        "POINT_SIZE(800)",
+        "BEGIN(POINTS)",
+        "VERTEX2F(2400, 2400)",
+        "",
+        "BLEND_FUNC(ZERO, ZERO)",
+        "POINT_SIZE(384)",
+        "BEGIN(POINTS)",
+        "VERTEX2F(2400, 2400)",
+        "",
+        "//Anti-aliasing inner portion",
+        "BLEND_FUNC(ZERO, ONE_MINUS_SRC_ALPHA)",
+        "POINT_SIZE(416)",
+        "BEGIN(POINTS)",
+        "VERTEX2F(2400, 2400)",
+        "",
+        "COLOR_RGB(245,58,41)",
+        "COLOR_A(255)",
+        "COLOR_MASK(1,1,1,1)",
+        "BLEND_FUNC(DST_ALPHA, ONE_MINUS_DST_ALPHA)",
+        "",
+        "BEGIN(RECTS)",
+        "VERTEX2F(1600, 1600)",
+        "VERTEX2F(3200, 3200)",
+        "",
+        "RESTORE_CONTEXT()"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2071
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            ""
+        ],
+        "vSize": 480
+    }
+}
