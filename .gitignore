@@ -1,5 +1,4 @@
 # Various build directories
-bin
 obj
 Debug
 Release

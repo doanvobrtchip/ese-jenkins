@@ -113,7 +113,9 @@ public:
 	const QList<int> &SelectedLines() const;
 	void setSelectedLines(const QList<int> &newSelectedLines);
 	void changeCursorByLine(int);
-
+	
+	void setBlockNumberTag(const QString &newBlockNumberTag);
+	
 protected:
 	virtual void resizeEvent(QResizeEvent *event);
 	virtual void keyPressEvent(QKeyEvent *e);
@@ -155,6 +157,7 @@ private:
 	QString m_LatestText;
 	QList<int> m_SelectedLines;
 	bool m_Deleting;
+	QString m_BlockNumberTag;
 	
 signals:
 	void cursorChanged(bool isActive = true);

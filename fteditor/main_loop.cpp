@@ -103,6 +103,7 @@ typedef int32_t ramaddr;
 volatile int g_HSize = 480;
 volatile int g_VSize = 272;
 volatile int g_Rotate = 0;
+volatile int g_PlayCtrl = -1;
 
 volatile bool g_EmulatorRunning = false;
 
@@ -811,6 +812,10 @@ void loop()
 	// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
 	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE)) != g_Rotate)
 		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE), g_Rotate);
+	if (g_PlayCtrl == 1) {
+		s_WantReloopCmd = true;
+	}
+	
 	// switch to next macro list
 	g_Macro->lockDisplayList();
 	bool macroModified = g_Macro->isDisplayListModified();
@@ -1463,9 +1468,8 @@ void loop()
 					cmdFile.open(QIODevice::ReadOnly);
 					QDataStream cmdStream(&cmdFile);
 					int writeCount = 0;
-					
 					for (;;)
-					{
+					{	
 						if (freespace < (4 + 8) || writeCount < 128) // Wait for coprocessor free space, + 4 for swap and display afterwards
 						{
 							// COPY PASTE FROM ABOVE
@@ -1490,9 +1494,15 @@ void loop()
 									resetCoprocessorFromLoop();
 									return;
 								}
+								
+								if (g_PlayCtrl != -1) {
+									wr8(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAY_CONTROL), g_PlayCtrl);
+									g_PlayCtrl = -1;
+								}
 							} while (fullness > 1024); // DIFFER FROM ABOVE HERE
 							freespace = ((4096 - 4) - fullness);
-
+							
+							int regPlayCtrl = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_PLAY_CONTROL));
 							int *cpWrite = BT8XXEMU_getDisplayListCoprocessorWrites(g_Emulator);
 							for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 							{
@@ -1508,9 +1518,13 @@ void loop()
 
 							// nothing to read from cocmd ram here (should be...)
 							coprocessorWriteStart = (wp & 0xFFF) >> 2;
-
+							
 							printf("Stream: %i bytes\n", (int)writeCount);
-
+							
+							if ((regPlayCtrl & 0xFF) == 0xFF) {
+								resetCoprocessorFromLoop();
+								break;
+							}
 							swrbegin(addr(FTEDITOR_CURRENT_DEVICE, FTEDITOR_RAM_CMD) + (wp & 0xFFF));
 						}
 						
@@ -1542,6 +1556,7 @@ void loop()
 							swrend();
 							return;
 						}
+						
 						if (g_CmdEditor->isDisplayListModified())
 						{
 							s_WantReloopCmd = true;
@@ -1553,7 +1568,7 @@ void loop()
 					printf("Finished streaming in file\n");
 					g_StreamingData = false;
 				}
-
+				
 				printf("Flush after stream\n");
 				if (true) // Flush after
 				{
@@ -1565,7 +1580,7 @@ void loop()
 						rp = rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_CMD_READ));
 						if ((rp & 0xFFF) == 0xFFF) return;
 						fullness = ((wp & 0xFFF) - rp) & 0xFFF;
-
+						
 						if (g_CmdEditor->isDisplayListModified()) // Trap to avoid infinite flush on errors
 						{
 							printf("Abort coprocessor flush (1056)\n");
@@ -1653,7 +1668,7 @@ void loop()
 			{
 				if (s_DisplayListCoprocessorCommandWrite[i] >= 0)
 				{
-					setUtilizationDisplayListCmd(i);
+					setUtilizationDisplayListCmd(i + 1);
 					break;
 				}
 			}
