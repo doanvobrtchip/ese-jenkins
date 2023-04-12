@@ -681,7 +681,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 				}
 			};
 
-			for (int i = 0; i < m_LineEditor->getLineCount(); i++)
+			for (int i = 0; i < FTEDITOR_DL_SIZE && i < m_LineEditor->getLineCount() ; i++)
 			{
 				if (i == m_LineNumber)
 					continue;
@@ -1631,7 +1631,7 @@ void InteractiveViewport::selectItems()
 	int lineCount = m_LineEditor->getLineCount();
 	m_SelectedLines.clear();
 	emit selectedLinesChanged(m_SelectedLines);
-	for (int line = 0; line < lineCount; line++)
+	for (int line = 0; line < lineCount && line < FTEDITOR_DL_SIZE; line++)
 	{
 		const DlParsed &parsed = m_LineEditor->getLine(line);
 		const DlState &state = m_LineEditor->getState(line);
