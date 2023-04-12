@@ -188,7 +188,6 @@ void RamG::updateView() {
   if (data && byteArr == data->getData(0, data->size())) {
     return;
   }
-  debugLog("RAM_G - Content has a change");
   m_hexView->setData(new QHexView::DataStorageArray(byteArr));
   m_hexView->viewport()->update();
   handleContentItemPressed(

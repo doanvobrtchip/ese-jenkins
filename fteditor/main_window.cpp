@@ -103,6 +103,7 @@ typedef int32_t ramaddr;
 extern volatile int g_HSize;
 extern volatile int g_VSize;
 extern volatile int g_Rotate;
+extern volatile int g_PlayCtrl;
 
 extern volatile bool g_EmulatorRunning;
 
@@ -1704,7 +1705,8 @@ void MainWindow::createDockWindows()
 			QGroupBox *macroGroup = new QGroupBox(widget);
 			macroGroup->setTitle(tr("Macro"));
 			QVBoxLayout *macroLayout = new QVBoxLayout();
-
+			macroLayout->setContentsMargins(0, 0, 0, 0);
+			
 			m_Macro = new DlEditor(this);
 			m_Macro->setPropertiesEditor(m_PropertiesEditor);
 			m_Macro->setUndoStack(m_UndoStack);
@@ -1715,11 +1717,64 @@ void MainWindow::createDockWindows()
 			//layout->addWidget(macroLabel);
 			macroLayout->addWidget(m_Macro);
 			//layout->addLayout(macroLayout);
-
+			
 			macroGroup->setLayout(macroLayout);
+			macroGroup->setMaximumHeight(80);
 			layout->addWidget(macroGroup);
 		}
+		
+		// Control
+		{
+			QGroupBox *ctrlGroup = new QGroupBox(widget);
+			ctrlGroup->setTitle(tr("Control"));
+			QVBoxLayout *ctrlLayout = new QVBoxLayout();
+			QHBoxLayout *hBoxReqPlayCtrl = new QHBoxLayout();
+			QLabel *lbReqPlayCtrl = new QLabel;
+			lbReqPlayCtrl->setText(tr("REG_PLAY_CONTROL"));
+			hBoxReqPlayCtrl->addWidget(lbReqPlayCtrl);
 
+			QHBoxLayout *hBoxExit = new QHBoxLayout;
+			QLabel *lbExit = new QLabel(tr("Exit:"));
+			QPushButton *btnExit = new QPushButton("0xFF");
+			hBoxExit->setAlignment(Qt::AlignRight);
+			hBoxExit->addWidget(lbExit);
+			hBoxExit->addWidget(btnExit);
+
+			QHBoxLayout *hBoxPause = new QHBoxLayout;
+			QLabel *lbPause = new QLabel(tr("Pause:"));
+			QPushButton *btnPause = new QPushButton("0x0");
+			hBoxPause->setAlignment(Qt::AlignRight);
+			hBoxPause->addWidget(lbPause);
+			hBoxPause->addWidget(btnPause);
+
+			QHBoxLayout *hBoxPlay = new QHBoxLayout;
+			QLabel *lbPlay = new QLabel(tr("Play:"));
+			QPushButton *btnPlay = new QPushButton("0x1");
+			hBoxPlay->setAlignment(Qt::AlignRight);
+			hBoxPlay->addWidget(lbPlay);
+			hBoxPlay->addWidget(btnPlay);
+
+			QVBoxLayout *vBoxReqPlayCtrl = new QVBoxLayout;
+			vBoxReqPlayCtrl->addLayout(hBoxExit);
+			vBoxReqPlayCtrl->addLayout(hBoxPause);
+			vBoxReqPlayCtrl->addLayout(hBoxPlay);
+			hBoxReqPlayCtrl->addLayout(vBoxReqPlayCtrl);
+			
+			connect(btnExit, &QPushButton::clicked, this, []() {
+				g_PlayCtrl = 0xFF;
+			});
+			connect(btnPause, &QPushButton::clicked, this, []() {
+				g_PlayCtrl = 0x0;
+			});
+			connect(btnPlay, &QPushButton::clicked, this, []() {
+				g_PlayCtrl = 0x1;
+			});
+
+			ctrlLayout->addLayout(hBoxReqPlayCtrl);
+			ctrlGroup->setLayout(ctrlLayout);
+			layout->addWidget(ctrlGroup);
+			layout->addStretch();
+		}
 		widget->setLayout(layout);
 		scrollArea->setWidget(widget);
 		m_RegistersDock->setWidget(scrollArea);

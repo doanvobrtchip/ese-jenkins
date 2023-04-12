@@ -73,6 +73,7 @@ CodeEditor::CodeEditor(QWidget *parent)
     , m_LastCombineId(917681768)
     , m_KeyHandler(NULL)
     , m_LastKeyHandler(NULL)
+    , m_BlockNumberTag("")
 {
 	lineNumberArea = new LineNumberArea(this);
 
@@ -380,10 +381,11 @@ int CodeEditor::lineNumberAreaWidth()
 	max /= 10;
 	++digits;
 	}*/
-	int digits = 2;
-
-	int space = 28 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * digits;
-	return space;
+	int digits = 4;
+	int charFontWidth = fontMetrics().horizontalAdvance(QLatin1Char('9'));
+	if (m_BlockNumberTag.isEmpty())
+		return 20 + digits * charFontWidth;
+	return 6 + (m_BlockNumberTag.length() + digits) * charFontWidth;
 }
 
 void CodeEditor::updateLineNumberAreaWidth(int /* newBlockCount */)
@@ -570,6 +572,12 @@ QString CodeEditor::textUnderCursor() const
 	return tc.selectedText();
 }
 
+void CodeEditor::setBlockNumberTag(const QString &newBlockNumberTag)
+{
+	m_BlockNumberTag = newBlockNumberTag;
+	updateLineNumberAreaWidth(0);
+}
+
 const QList<int> &CodeEditor::SelectedLines() const
 {
 	return m_SelectedLines;
@@ -603,7 +611,7 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event)
 	{
 		if (block.isVisible() && bottom >= event->rect().top())
 		{
-			QString number = QString::number(blockNumber /* + 1*/);
+			QString number = m_BlockNumberTag + QString::number(blockNumber);
 			lineNumberArea->setFont(QFont("Segoe UI", font().pointSize()));
 			painter.setPen((m_MaxLinesNotice && blockNumber >= m_MaxLinesNotice)
 			        ? Qt::red

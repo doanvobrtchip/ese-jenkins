@@ -346,8 +346,16 @@ int DlEditor::getVertextFormat(int line)
 void DlEditor::setModeMacro()
 {
 	m_ModeMacro = true;
-	m_CodeEditor->setMaxLinesNotice(FT800EMU_MACRO_SIZE);
+	m_CodeEditor->setBlockNumberTag("REG_MACRO_");
+	m_CodeEditor->setMaximumBlockCount(FT800EMU_MACRO_SIZE);
 	m_CodeEditor->installEventFilter(this);
+
+	connect(m_CodeEditor, &QPlainTextEdit::textChanged, this, [this]() {
+		if (m_CodeEditor->blockCount() < FT800EMU_MACRO_SIZE)
+		{
+			m_CodeEditor->setPlainText(m_CodeEditor->toPlainText() + "\n");
+		}
+	});
 }
 
 void DlEditor::clear()
