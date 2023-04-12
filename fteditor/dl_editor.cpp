@@ -445,7 +445,8 @@ void DlEditor::editorCursorPositionChanged(bool popupProperties)
 
 	QTextBlock block = m_CodeEditor->document()->findBlock(
 	    m_CodeEditor->textCursor().position());
-
+	
+	if (block.blockNumber() >= FTEDITOR_DL_SIZE) return;
 	// switch between auto completers
 	if (m_DisplayListParsed[block.blockNumber()].ValidId && m_CompleterIdentifiersActive)
 	{
@@ -914,6 +915,8 @@ QString DlEditor::getLineText(int line) const
 
 void DlEditor::selectLine(int line, bool force)
 {
+	if (m_CodeEditor->document()->findBlockByNumber(line).blockNumber() >= FTEDITOR_DL_SIZE)
+		return;
 	m_EditingInteractive = true;
 	m_CodeEditor->changeCursorByLine(line);
 	emit m_CodeEditor->cursorChanged();
