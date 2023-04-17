@@ -91,6 +91,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "constant_mapping.h"
 #include "constant_common.h"
 #include "constant_mapping_flash.h"
+#include "inspector/RamReg.h"
 
 namespace FTEDITOR
 {
@@ -1727,13 +1728,20 @@ void MainWindow::createDockWindows()
 		{
 			QGroupBox *ctrlGroup = new QGroupBox(widget);
 			ctrlGroup->setTitle(tr("Control"));
-			QVBoxLayout *ctrlLayout = new QVBoxLayout();
-			QHBoxLayout *hBoxReqPlayCtrl = new QHBoxLayout();
+			QVBoxLayout *ctrlLayout = new QVBoxLayout;
 			QLabel *lbReqPlayCtrl = new QLabel;
 			lbReqPlayCtrl->setText(tr("REG_PLAY_CONTROL"));
-			hBoxReqPlayCtrl->addWidget(lbReqPlayCtrl);
+			lbReqPlayCtrl->setMinimumWidth(30);
+			QLabel *lbCurrPlayCtrl = new QLabel;
 
+			QVBoxLayout *vBoxStrPlayTrl = new QVBoxLayout;
+			vBoxStrPlayTrl->setSpacing(0);
+			vBoxStrPlayTrl->setAlignment(Qt::AlignVCenter);
+			vBoxStrPlayTrl->addWidget(lbReqPlayCtrl);
+			vBoxStrPlayTrl->addWidget(lbCurrPlayCtrl);
+			
 			QHBoxLayout *hBoxExit = new QHBoxLayout;
+			hBoxExit->setSpacing(2);
 			QLabel *lbExit = new QLabel(tr("Exit:"));
 			QPushButton *btnExit = new QPushButton("0xFF");
 			hBoxExit->setAlignment(Qt::AlignRight);
@@ -1741,15 +1749,17 @@ void MainWindow::createDockWindows()
 			hBoxExit->addWidget(btnExit);
 
 			QHBoxLayout *hBoxPause = new QHBoxLayout;
+			hBoxPause->setSpacing(2);
 			QLabel *lbPause = new QLabel(tr("Pause:"));
-			QPushButton *btnPause = new QPushButton("0x0");
+			QPushButton *btnPause = new QPushButton("0x00");
 			hBoxPause->setAlignment(Qt::AlignRight);
 			hBoxPause->addWidget(lbPause);
 			hBoxPause->addWidget(btnPause);
 
 			QHBoxLayout *hBoxPlay = new QHBoxLayout;
+			hBoxPlay->setSpacing(2);
 			QLabel *lbPlay = new QLabel(tr("Play:"));
-			QPushButton *btnPlay = new QPushButton("0x1");
+			QPushButton *btnPlay = new QPushButton("0x01");
 			hBoxPlay->setAlignment(Qt::AlignRight);
 			hBoxPlay->addWidget(lbPlay);
 			hBoxPlay->addWidget(btnPlay);
@@ -1758,7 +1768,14 @@ void MainWindow::createDockWindows()
 			vBoxReqPlayCtrl->addLayout(hBoxExit);
 			vBoxReqPlayCtrl->addLayout(hBoxPause);
 			vBoxReqPlayCtrl->addLayout(hBoxPlay);
+			
+			QHBoxLayout *hBoxReqPlayCtrl = new QHBoxLayout;
+			hBoxReqPlayCtrl->addLayout(vBoxStrPlayTrl);
 			hBoxReqPlayCtrl->addLayout(vBoxReqPlayCtrl);
+
+			ctrlLayout->addLayout(hBoxReqPlayCtrl);
+			ctrlGroup->setLayout(ctrlLayout);
+			layout->addWidget(ctrlGroup);
 			
 			connect(btnExit, &QPushButton::clicked, this, []() {
 				g_PlayCtrl = 0xFF;
@@ -1769,12 +1786,14 @@ void MainWindow::createDockWindows()
 			connect(btnPlay, &QPushButton::clicked, this, []() {
 				g_PlayCtrl = 0x1;
 			});
-
-			ctrlLayout->addLayout(hBoxReqPlayCtrl);
-			ctrlGroup->setLayout(ctrlLayout);
-			layout->addWidget(ctrlGroup);
-			layout->addStretch();
+			connect(m_Inspector->ramReg(), &RamReg::regPlayControlChanged, this, [lbCurrPlayCtrl](int value) {
+				lbCurrPlayCtrl->setText("<b>(" + QString("0x%1").arg(value, 2, 16, QChar('0')) + ")</b>");
+			});
+			connect(this, &MainWindow::deviceChanged, this, [ctrlGroup]() {
+				ctrlGroup->setVisible(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815);
+			});
 		}
+		layout->addStretch();
 		widget->setLayout(layout);
 		scrollArea->setWidget(widget);
 		m_RegistersDock->setWidget(scrollArea);
@@ -3769,6 +3788,7 @@ void MainWindow::changeEmulatorInternal(int deviceIntf, int flashIntf)
 		m_HSize->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE));
 		m_VSize->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE));
 		m_Rotate->setMaximum(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 ? 7 : 1);
+		emit deviceChanged();		
 	}
 
 	// TODO:

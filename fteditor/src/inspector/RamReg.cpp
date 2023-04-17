@@ -40,7 +40,7 @@ RamReg::RamReg(Inspector *parent) : RamBase(parent) {
   m_registers->installEventFilter(this);
   m_registers->viewport()->installEventFilter(this);
   m_focusWhenOpen = m_registers;
-  
+
   m_actCopy = new QAction(parent);
   m_actCopy->setText(tr("Copy"));
 
@@ -178,6 +178,8 @@ void RamReg::updateView(int dlCMDCount) {
               m_registerItems[regEnum]->setText(
                   3, ConvertUtil::asSignedInt16F(regValue));
               break;
+            case FTEDITOR_REG_PLAY_CONTROL:
+              emit regPlayControlChanged(regValue & 0xFF);
             default:
               m_registerItems[regEnum]->setText(3,
                                                 ConvertUtil::asInt(regValue));

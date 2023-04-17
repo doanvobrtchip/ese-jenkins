@@ -36,6 +36,9 @@ class RamReg : public RamBase {
   QTreeWidget *m_registers;
   std::vector<uint32_t> m_registerCopy;
   std::vector<QTreeWidgetItem *> m_registerItems;
+
+ signals:
+  void regPlayControlChanged(int value);
 };
 }  // namespace FTEDITOR
 #endif  // RAMREG_H
