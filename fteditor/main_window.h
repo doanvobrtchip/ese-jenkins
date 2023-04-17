@@ -433,6 +433,7 @@ signals:
 	void utilizationDisplayListCmdChanged(int value);
 	void ramGChanged(uint8_t *value);
 	void readyToSetup(QObject *obj);
+	void deviceChanged();
 }; /* class MainWindow */
 
 } /* namespace FTEDITOR */
