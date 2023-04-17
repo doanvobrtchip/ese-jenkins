@@ -2,14 +2,17 @@ Version 4.6.0
 Alpha
 Feature updates:
 •   Improve inspector.
-•   Enhance 3rd party lib usage.
+•   Improve the registers window.
+•   Improvement on RAM_CMD window.
 •   Add an inspector window for RAM_CMD.
 •   Add one more section for exporting projects.
-•   Change font size of Coprocessor and Display List editor.
+•   Add one more example project "Circle Line".
+•   Apply the anti-aliasing effect to the inner circle in the "stencil fanshape" example project.
 •   Add one more chapter Work with EAB in the user guide of ESE.
 •   Add button in toolbar to toggle on/off alignment behaviour.
+•   Enhance 3rd party lib usage.
+•   Change font size of Coprocessor and Display List editor.
 •   Keep one instance of inspector window when it is poped up.
-•   Improvement on RAM_CMD window.
 
 Resolved issues:
 •   Stepping through DL or CMD pops up Properties.
@@ -17,6 +20,7 @@ Resolved issues:
 •   Unexpected behavior when user drops a new Content item with the Examples.
 •   Toolbox does not resume from display list mode to coprocessor mode.
 •   The source file should be relative file path.
+•   The app crashes when the line limit for the Coprocessor/Display List editor is exceeded.
 
 =======================
 Version 4.5.0
