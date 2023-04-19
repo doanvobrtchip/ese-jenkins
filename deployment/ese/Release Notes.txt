@@ -21,6 +21,7 @@ Resolved issues:
 •   Toolbox does not resume from display list mode to coprocessor mode.
 •   The source file should be relative file path.
 •   The app crashes when the line limit for the Coprocessor/Display List editor is exceeded.
+•   The error popup does not close when we already have a content item.
 
 =======================
 Version 4.5.0
