@@ -889,7 +889,7 @@ void MainWindow::frameQt()
 		m_ErrorFrame->setVisible(true);
 		g_CoprocessorFrameSuccess = false;
 	}
-	if ((g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation) && (/* g_CoprocessorContentSuccess || */!m_ContentManager->getContentCount()))
+	if ((g_CoprocessorFrameSuccess || g_WaitingCoprocessorAnimation) && (g_CoprocessorContentSuccess || !m_ContentManager->getContentCount()))
 	{
 		m_ErrorFrame->setVisible(false);
 	}
