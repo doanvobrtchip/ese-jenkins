@@ -78,6 +78,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 
 // Project includes
 #include "customize/SaveOptionDialog.h"
+#include "customize/WelcomeDialog.h"
 #include "utils/ReadWriteUtil.h"
 #include "dl_editor.h"
 #include "interactive_viewport.h"
@@ -331,7 +332,6 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	createToolBars();
 	createStatusBar();
 
-	
 	loadRecentProject();
 
     m_EmulatorViewport = new InteractiveViewport(this);
@@ -390,6 +390,17 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	bindCurrentDevice();
 
 	actNew(true);
+	 
+	connect(this, &MainWindow::windowActivate, this, [this](){
+		auto dlgWelcome = new WelcomeDialog(this);
+		dlgWelcome->open();
+		disconnect(this,  &MainWindow::windowActivate, nullptr, nullptr);
+	});
+}
+
+const QList<QAction *> &MainWindow::RecentActionList() const
+{
+	return m_RecentActionList;
 }
 
 MainWindow::~MainWindow()
@@ -2931,22 +2942,23 @@ QString MainWindow::getFileDialogPath()
 	return m_LastProjectDir;
 }
 
-void MainWindow::actOpen(QString projectPath)
+bool MainWindow::actOpen(QString projectPath)
 {
 	if (!maybeSave())
-		return;
-
+		return false;
+	
 	if (projectPath.isEmpty())
 	{
 		projectPath = QFileDialog::getOpenFileName(this, tr("Open Project"), getFileDialogPath(),
 		    tr("EVE Screen Editor Project (*.ese  *.ft800proj  *.ft8xxproj)"));
 		if (projectPath.isEmpty())
-			return;
+			return false;
 	}
-
+	
 	m_MinFlashType = -1;
 	openFile(projectPath);
 	actResetEmulator();
+	return true;
 }
 
 void MainWindow::openFile(const QString &fileName)
@@ -3097,6 +3109,10 @@ const bool MainWindow::isProjectSaved(void)
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 {
+	if (event->type() == QEvent::WindowActivate) {
+		emit windowActivate();
+	}
+		
 	if (watched == m_ProjectFlashFilename && event->type() == QEvent::Resize)
 	{
 		QString flashName = m_ProjectFlashFilename->property(PROPERTY_FLASH_FILE_NAME).toString();
@@ -3113,7 +3129,6 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event)
 		showExactNumberOfResourceWhenMouseHover(watched, isShowExact);
 		return false;
 	}
-
 	return QMainWindow::eventFilter(watched, event);
 }
 
@@ -3259,11 +3274,11 @@ void MainWindow::actSave()
 	m_AddRecentProjectFlag = true;
 }
 
-void MainWindow::actSaveAs()
+bool MainWindow::actSaveAs()
 {
 	const QString fileExtend(".ese");
-
-	QString filter = tr("ESE Project (*.ese)").arg(fileExtend);
+	
+	QString filter = tr("ESE Project (*.ese)");
 	QString dirPath = getFileDialogPath();
 	QString fileName;
 
@@ -3272,7 +3287,7 @@ void MainWindow::actSaveAs()
 		fileName = QFileDialog::getSaveFileName(this, tr("Save Project"), dirPath, filter, &filter);
 
 		if (fileName.isEmpty())
-			return;
+			return false;
 
 	    QDir dir(fileName);
 		dir.cdUp();
@@ -3382,6 +3397,7 @@ void MainWindow::actSaveAs()
 
 	// Update window title in case project folder changed
 	updateWindowTitle();
+	return true;
 }
 
 #define DUMP_VERSION_FT80X			(100)
@@ -3914,17 +3930,21 @@ void MainWindow::openRecentProject()
 {
 	QAction *pAction = (QAction *)sender();
 	QString projectPath = pAction->data().toString();
+	openProject(projectPath);
+}
 
+void MainWindow::openProject(QString projectPath)
+{
 	if (!QFile::exists(projectPath))
 	{
 		removeRecentProject(projectPath);
 		QMessageBox::critical(this, tr(""), QString(tr("%1 cannot be opened.")).arg(projectPath));
 		return;
 	}
-
+	
 	if (!maybeSave())
 		return;
-
+	
 	openFile(projectPath);
 }
 

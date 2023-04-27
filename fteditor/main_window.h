@@ -167,7 +167,9 @@ public:
 
 	void appendTextToOutputDock(const QString &text);
 	void updateLoadingIcon();
-
+	
+	const QList<QAction *> &RecentActionList() const;
+	
 private slots:
 	// void applyEmulatorConfig();
 
@@ -175,11 +177,9 @@ private slots:
 	void about();
 	void aboutQt();
 	void dummyCommand();
-
+	
 	void actNew();
-	void actOpen(QString projectPath = QString());
 	void actSave();
-	void actSaveAs();
 	void actCloseProject();
 	void actImport();
 	void actExport();
@@ -216,7 +216,7 @@ private slots:
 	void projectFlashChanged(int i);
 
 	void openRecentProject();
-
+	
 public slots:
 	void popupTimeout();
 	void actResetEmulator();
@@ -224,6 +224,9 @@ public slots:
 	void updateProgressBars();
 	void appendBusyList(QObject *obj);
 	void removeBusyList(QObject *obj);
+	void openProject(QString projectPath);
+	bool actSaveAs();
+	bool actOpen(QString projectPath = QString());
 
 private:
 	void updateInitialization(bool visible);
@@ -281,7 +284,7 @@ private:
 
 	void dragEnterEvent(QDragEnterEvent *event);
 	void dropEvent(QDropEvent *event);
-
+	
 protected:
 	virtual void closeEvent(QCloseEvent *event);
 
@@ -429,11 +432,13 @@ private:
 
 	QLabel *infoLabel;
 	QList<QObject *> busyList;
+	
 signals:
 	void utilizationDisplayListCmdChanged(int value);
 	void ramGChanged(uint8_t *value);
 	void readyToSetup(QObject *obj);
 	void deviceChanged();
+	void windowActivate();
 }; /* class MainWindow */
 
 } /* namespace FTEDITOR */
