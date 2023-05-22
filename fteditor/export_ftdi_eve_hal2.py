@@ -127,6 +127,14 @@ def generateProjectFiles(destDir, srcFile, projectName, filesToTestFolder, modul
             renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
             renameStringInFile(Ft90xPlatformHeader, "//#define ME810A_HV35R", "#define ME810A_HV35R")
             renameStringInFile(Ft90xPlatformHeader, "//#define MM900EV1A", "#define MM900EV1A")
+        elif moduleName == "VM880C(480x272)":
+            renameStringInFile(MSVCPlatformHeader, "//#define VM880C_480x272", "#define VM880C_480x272")
+            renameStringInFile(EmulatorPlatformHeader, "//#define FT_810_ENABLE", "#define FT_810_ENABLE")
+            renameStringInFile(EmulatorPlatformHeader, "//#define DISPLAY_RESOLUTION_WQVGA", "#define DISPLAY_RESOLUTION_WQVGA")
+            renameStringInFile(EmulatorPlatformHeader, "//#define ENABLE_SPI_SINGLE", "#define ENABLE_SPI_SINGLE")
+            renameStringInFile(Ft90xPlatformHeader, "//#define DISPLAY_RESOLUTION_WQVGA", "#define DISPLAY_RESOLUTION_WQVGA")
+            renameStringInFile(Ft90xPlatformHeader, "//#define FT_810_ENABLE", "#define FT_810_ENABLE")
+            renameStringInFile(Ft90xPlatformHeader, "//#define ENABLE_SPI_QUAD", "#define ENABLE_SPI_QUAD")
         
         ### Newly added here after ESE 2.4.0    
         ### ME81XA modules support -- for MSVC_Win32 platform 
@@ -1440,7 +1448,7 @@ def run(name, document, ram, moduleName):
                     f.write("\tFt_Gpu_Hal_Sleep(100); //timeout for snapshot to be performed by coprocessor\n")
 
                     f.write("\t/* reconfigure the resolution wrt configuration */\n")
-                    if moduleName == "VM800B43_50" or moduleName == "VM800BU43_50" or moduleName == "VM800C43_50" or moduleName == "VM801B43_50":
+                    if moduleName == "VM800B43_50" or moduleName == "VM800BU43_50" or moduleName == "VM800C43_50" or moduleName == "VM801B43_50" or moduleName == "VM880C(480x272)":
                         f.write("\tFt_Gpu_Hal_Wr16(phost, REG_HSIZE,480);\n")
                         f.write("\tFt_Gpu_Hal_Wr16(phost, REG_VSIZE,272);\n")
                     elif moduleName == "VM800B35" or moduleName == "VM800BU35" or moduleName == "VM800C35":

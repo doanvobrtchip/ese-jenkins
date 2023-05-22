@@ -41,18 +41,16 @@ Revision History:
 /* module specific macros */
 //#define VA800A_SPI								(1)
 
-//#define VM800B43_50								(1)
-//#define VM800B35								(1)
-//#define VM801B43_50								(1)
-//#define VM810C50								(1)
-//#define VM800B43_50							    (1)
+//#define VM800B43_50							(1)
 //#define VM800B35								(1)
 //#define VM801B43_50							(1)
 //#define VM810C50								(1)
+//#define VM880C_480x272						(1)
+
+//#define ME810AU_WH70R							(1)
+//#define ME811AU_WH70C							(1)
 //#define ME812AU_WH50R							(1)
-//#define ME813AU_WH50C                         (1)
-//#define ME810AU_WH70R                         (1)
-//#define ME811AU_WH70C                         (1)
+//#define ME813AU_WH50C							(1)
 
 #ifdef VM800B43_50
 /* Define all the macros specific to VM800B43_50 module */
@@ -86,6 +84,15 @@ Revision History:
 #define RESISTANCE_THRESHOLD					(1200)
 #define MSVC_PLATFORM_SPI_LIBMPSSE				(1)	
 #endif /* VM810C50 */
+
+#ifdef VM880C_480x272
+/* Define all the macros specific to VM880C_480x272 module */
+#define FT_810_ENABLE							(1)
+#define ENABLE_SPI_SINGLE						(1)
+#define DISPLAY_RESOLUTION_WQVGA				(1)
+#define RESISTANCE_THRESHOLD					(1200)
+#define MSVC_PLATFORM_SPI_LIBMPSSE				(1)	
+#endif /* VM880C_480x272 */
 
 
 #ifdef ME812AU_WH50R
@@ -129,7 +136,7 @@ Revision History:
 #endif /* VA800A_SPI */
 
 /* Custom configuration */
-#if (!defined(VM800B43_50) && !defined(VM800B35) && !defined(VM801B43_50) && !defined(VM810C50)  && !defined(ME812AU_WH50R) && !defined(ME813AU_WH50C) && !defined(ME810AU_WH70R) && !defined(ME811AU_WH70C))   
+#if (!defined(VM800B43_50) && !defined(VM800B35) && !defined(VM801B43_50) && !defined(VM810C50)  && !defined(ME812AU_WH50R) && !defined(ME813AU_WH50C) && !defined(ME810AU_WH70R) && !defined(ME811AU_WH70C) && !defined(VM880C_480x272))   
 /* platform specific macros */
 #define FT900_PLATFORM								(1)
 /* Display configuration specific macros */
