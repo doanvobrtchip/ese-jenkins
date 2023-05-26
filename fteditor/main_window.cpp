@@ -2748,7 +2748,19 @@ void MainWindow::actNew(bool addClear)
 	{
 		editLine = 0;
 	}
-
+	
+	//Reset Macro
+	{
+		DlParsed pa;
+		pa.ValidId = true;
+		pa.IdLeft = 0;
+		pa.IdRight = FTEDITOR_DL_NOP;
+		pa.ExpectedStringParameter = false;
+		pa.VarArgCount = 0;
+		m_Macro->replaceLine(0, pa);
+		m_Macro->replaceLine(1, pa);
+	}
+	
 	// clear undo stacks
 	clearUndoStack();
 
