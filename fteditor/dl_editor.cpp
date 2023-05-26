@@ -349,15 +349,16 @@ void DlEditor::setModeMacro()
 	m_CodeEditor->setBlockNumberTag("REG_MACRO_");
 	m_CodeEditor->setMaximumBlockCount(FT800EMU_MACRO_SIZE);
 	m_CodeEditor->installEventFilter(this);
-
+	
+	//Make Macro always has 2 lines for user easy to edit
 	connect(m_CodeEditor, &QPlainTextEdit::textChanged, this, [this]() {
 		if (m_CodeEditor->blockCount() < FT800EMU_MACRO_SIZE)
 		{
-			m_CodeEditor->setPlainText(m_CodeEditor->toPlainText() + "\n");
+			m_CodeEditor->textCursor().insertText("\n");
 		}
 	});
 }
-
+             
 void DlEditor::clear()
 {
 	m_CodeEditor->clear();
