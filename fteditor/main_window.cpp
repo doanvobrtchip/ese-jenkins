@@ -4,6 +4,7 @@ Copyright (C) 2016-2022  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
+#include "RegDefine.h"
 #pragma warning(disable : 26812)
 #pragma warning(disable : 26495)
 #pragma warning(disable : 26444)
@@ -1678,8 +1679,8 @@ void MainWindow::createDockWindows()
 			QVBoxLayout *groupLayout = new QVBoxLayout;
 
 			m_Rotate = new QSpinBox(widget);
-			m_Rotate->setMinimum(0);
-			m_Rotate->setMaximum(7);
+			m_Rotate->setMinimum(REG_ROTATE_MIN);
+			m_Rotate->setMaximum(REG_ROTATE_MAX);
 			connect(m_Rotate, SIGNAL(valueChanged(int)), this, SLOT(rotateChanged(int)));
 			auto hboxLayout = new QHBoxLayout;
 			auto label = new QLabel(widget);
@@ -1726,10 +1727,13 @@ void MainWindow::createDockWindows()
 			vBoxStrPlayTrl->addWidget(lbReqPlayCtrl);
 			vBoxStrPlayTrl->addWidget(lbCurrPlayCtrl);
 			
+			auto intToHexStr = [](int value){
+				return "0x" + QString("%1").arg(value, 2, 16, QChar('0')).toUpper();
+			};
 			QHBoxLayout *hBoxExit = new QHBoxLayout;
 			hBoxExit->setSpacing(2);
 			QLabel *lbExit = new QLabel(tr("Exit:"));
-			QPushButton *btnExit = new QPushButton("0xFF");
+			QPushButton *btnExit = new QPushButton(intToHexStr(REG_PLAY_CONTROL_EXIT));
 			hBoxExit->setAlignment(Qt::AlignRight);
 			hBoxExit->addWidget(lbExit);
 			hBoxExit->addWidget(btnExit);
@@ -1737,7 +1741,7 @@ void MainWindow::createDockWindows()
 			QHBoxLayout *hBoxPause = new QHBoxLayout;
 			hBoxPause->setSpacing(2);
 			QLabel *lbPause = new QLabel(tr("Pause:"));
-			QPushButton *btnPause = new QPushButton("0x00");
+			QPushButton *btnPause = new QPushButton(intToHexStr(REG_PLAY_CONTROL_PAUSE));
 			hBoxPause->setAlignment(Qt::AlignRight);
 			hBoxPause->addWidget(lbPause);
 			hBoxPause->addWidget(btnPause);
@@ -1745,7 +1749,7 @@ void MainWindow::createDockWindows()
 			QHBoxLayout *hBoxPlay = new QHBoxLayout;
 			hBoxPlay->setSpacing(2);
 			QLabel *lbPlay = new QLabel(tr("Play:"));
-			QPushButton *btnPlay = new QPushButton("0x01");
+			QPushButton *btnPlay = new QPushButton(intToHexStr(REG_PLAY_CONTROL_PLAY));
 			hBoxPlay->setAlignment(Qt::AlignRight);
 			hBoxPlay->addWidget(lbPlay);
 			hBoxPlay->addWidget(btnPlay);
@@ -1764,16 +1768,16 @@ void MainWindow::createDockWindows()
 			layout->addWidget(ctrlGroup);
 			
 			connect(btnExit, &QPushButton::clicked, this, []() {
-				g_PlayCtrl = 0xFF;
+				g_PlayCtrl = REG_PLAY_CONTROL_EXIT;
 			});
 			connect(btnPause, &QPushButton::clicked, this, []() {
-				g_PlayCtrl = 0x0;
+				g_PlayCtrl = REG_PLAY_CONTROL_PAUSE;
 			});
 			connect(btnPlay, &QPushButton::clicked, this, []() {
-				g_PlayCtrl = 0x1;
+				g_PlayCtrl = REG_PLAY_CONTROL_PLAY;
 			});
-			connect(m_Inspector->ramReg(), &RamReg::regPlayControlChanged, this, [lbCurrPlayCtrl](int value) {
-				lbCurrPlayCtrl->setText("<b>(" + QString("0x%1").arg(value, 2, 16, QChar('0')) + ")</b>");
+			connect(m_Inspector->ramReg(), &RamReg::regPlayControlChanged, this, [lbCurrPlayCtrl, intToHexStr](int value) {
+				lbCurrPlayCtrl->setText(QString("<b>(%1)</b>").arg(intToHexStr(value)));
 			});
 			connect(this, &MainWindow::deviceChanged, this, [ctrlGroup]() {
 				ctrlGroup->setVisible(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815);
@@ -2747,6 +2751,9 @@ void MainWindow::actNew(bool addClear)
 		m_Macro->replaceLine(1, pa);
 	}
 	
+	//Reset REG_ROTATE
+	m_Rotate->setValue(REG_ROTATE_DEFAULT);
+	
 	// clear undo stacks
 	clearUndoStack();
 
@@ -2991,6 +2998,7 @@ void MainWindow::openFile(const QString &fileName)
 		QJsonObject registers = root["registers"].toObject();
 		m_HSize->setValue(((QJsonValue)registers["hSize"]).toVariant().toInt());
 		m_VSize->setValue(((QJsonValue)registers["vSize"]).toVariant().toInt());
+		m_Rotate->setValue(((QJsonValue)registers["rotate"]).toVariant().toInt());
 		documentFromJsonArray(m_Macro->codeEditor(), registers["macro"].toArray());
 		QJsonArray content = root["content"].toArray();
 		m_ContentManager->suppressOverlapCheck();
@@ -3201,6 +3209,7 @@ QByteArray MainWindow::toJson(bool exportScript)
 	QJsonObject registers;
 	registers["hSize"] = g_HSize;
 	registers["vSize"] = g_VSize;
+	registers["rotate"] = m_Rotate->value();
 	registers["macro"] = documentToJsonArray(m_Macro->codeEditor()->document(), false, exportScript);
 	root["registers"] = registers;
 	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document(), false, exportScript);

@@ -18,6 +18,10 @@ FILE(GLOB INSPECTOR
     src/inspector/*.cpp
 )
 
+FILE(GLOB DEFINE
+    src/define/*.h
+)
+
 IF (WIN32)
 	FILE(GLOB RSRC *.rc)
 ENDIF (WIN32)
@@ -29,6 +33,7 @@ SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
 SOURCE_GROUP("customize" FILES ${CUSTOMIZE})
 SOURCE_GROUP("utils" FILES ${UTILS})
 SOURCE_GROUP("inspector" FILES ${INSPECTOR})
+SOURCE_GROUP("define" FILES ${DEFINE})
 
 # Find the QtWidgets library, minimum 5.15 or 6.0
 # https://doc.qt.io/qt-6/cmake-qt5-and-qt6-compatibility.html
@@ -57,6 +62,7 @@ qt_add_resources(RESOURCE_ADDED ${RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/transla
 
 INCLUDE_DIRECTORIES(src/)
 INCLUDE_DIRECTORIES(.)
+INCLUDE_DIRECTORIES(src/define/)
 
 IF (FTEDITOR_DEVICE_MANAGER)
   INCLUDE_DIRECTORIES(
@@ -86,6 +92,7 @@ ADD_EXECUTABLE(fteditor WIN32
   ${CUSTOMIZE}
   ${UTILS}
   ${INSPECTOR}
+  ${DEFINE}
 	)
 
 IF(FTEDITOR_DEVICE_MANAGER)
