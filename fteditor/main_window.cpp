@@ -1673,34 +1673,25 @@ void MainWindow::createDockWindows()
 
 		// Rotate
 		{
-			QLabel *label;
 			QGroupBox *group = new QGroupBox(widget);
-			group->setTitle(tr("Rotate (debug mode only)"));
-			QVBoxLayout *groupLayout = new QVBoxLayout();
-			QHBoxLayout *hboxLayout;
+			group->setTitle(tr("Rotate"));
+			QVBoxLayout *groupLayout = new QVBoxLayout;
 
 			m_Rotate = new QSpinBox(widget);
 			m_Rotate->setMinimum(0);
 			m_Rotate->setMaximum(7);
 			connect(m_Rotate, SIGNAL(valueChanged(int)), this, SLOT(rotateChanged(int)));
-			hboxLayout = new QHBoxLayout();
-			label = new QLabel(widget);
-			label->setText(tr("Rotate"));
+			auto hboxLayout = new QHBoxLayout;
+			auto label = new QLabel(widget);
+			label->setText(tr("REG_ROTATE"));
 			hboxLayout->addWidget(label);
 			hboxLayout->addWidget(m_Rotate);
 			groupLayout->addLayout(hboxLayout);
 
 			group->setLayout(groupLayout);
 			layout->addWidget(group);
-
-			// NOTE: This widget does not save to project yet
-			// NOTE: This widget does not downgrade rotate between device versions
-
-#if !_DEBUG
-			group->setVisible(false);
-#endif
 		}
-
+		
 		// Macro
 		{
 			QGroupBox *macroGroup = new QGroupBox(widget);
@@ -1712,12 +1703,7 @@ void MainWindow::createDockWindows()
 			m_Macro->setPropertiesEditor(m_PropertiesEditor);
 			m_Macro->setUndoStack(m_UndoStack);
 			m_Macro->setModeMacro();
-			//QHBoxLayout *macroLayout = new QHBoxLayout();
-			//QLabel *macroLabel = new QLabel(widget);
-			//macroLabel->setText(tr("Macro"));
-			//layout->addWidget(macroLabel);
 			macroLayout->addWidget(m_Macro);
-			//layout->addLayout(macroLayout);
 			
 			macroGroup->setLayout(macroLayout);
 			macroGroup->setMaximumHeight(80);
