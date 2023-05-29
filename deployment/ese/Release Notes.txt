@@ -9,13 +9,14 @@ Feature updates:
 •   Add one more example project "Circle Line".
 •   Add the support of IDM2040-7A board in export menu.
 •   Apply the anti-aliasing effect to the inner circle in the "stencil fanshape" example project.
-•   Add NOP into register MACRO 0 and 1
+•   Add NOP into register MACRO 0 and 1.
 •   Add one more chapter Work with EAB in the user guide of ESE.
 •   Add button in toolbar to toggle on/off alignment behaviour.
 •   Enhance 3rd party lib usage.
 •   Change font size of Coprocessor and Display List editor.
 •   Keep one instance of inspector window when it is poped up.
 •   Add VM880C module (480x272) submenu in the export menu.
+•   Support screen rotation by configuring the REG_ROTATE without touch coordination system rotation.
 
 Resolved issues:
 •   The Properties window should not pop up when changing steps in the Controls window
@@ -26,6 +27,9 @@ Resolved issues:
 •   The app crashes when the line limit for the Coprocessor/Display List editor is exceeded.
 •   The error popup does not close when we already have a content item.
 •   Unable to build the export project successfully with FT81X devices.
+
+Limitation:
+•   When the REG_ROTATE is changed, the emulator does not allow for item selection on the newly rotated screen. Instead, users must select items from the previous position.
 
 =======================
 Version 4.5.0
