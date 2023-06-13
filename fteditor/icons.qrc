@@ -84,5 +84,9 @@
     <file>icons/align.png</file>
     <file>icons/dock-back.png</file>
     <file>icons/logo.png</file>
+    <file>icons/search.png</file>
+    <file>icons/cross-black.png</file>
+    <file>icons/return.png</file>
+    <file>icons/black.png</file>
   </qresource>
 </RCC>

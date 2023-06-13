@@ -19,7 +19,7 @@ class WelcomeDialog : public QDialog {
   ~WelcomeDialog() = default;
 
  private:
-  MainWindow *m_MainWindow;
+  MainWindow *m_mainWindow;
 };
 
 }  // namespace FTEDITOR

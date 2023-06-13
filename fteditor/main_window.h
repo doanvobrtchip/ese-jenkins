@@ -399,6 +399,7 @@ private:
 	QAction *m_OpenAct;
 	QAction *m_SaveAct;
 	QAction *m_SaveAsAct;
+	QAction *m_WelcomeAct;
 	QAction *m_CloseProjectAct;
 	QAction *m_ImportAct;
 	QAction *m_ExportAct;

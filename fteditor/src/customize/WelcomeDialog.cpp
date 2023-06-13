@@ -16,14 +16,16 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
+#include "ExampleDialog.h"
 #include "main_window.h"
 
 namespace FTEDITOR {
 WelcomeDialog::WelcomeDialog(MainWindow *mainWindow) : QDialog(mainWindow) {
   setWindowTitle(tr("Welcome"));
   setFont(QFont("Segoe UI", 10));
+  setAttribute(Qt::WA_DeleteOnClose);
 
-  m_MainWindow = mainWindow;
+  m_mainWindow = mainWindow;
   auto vBoxLyt = new QVBoxLayout;
 
   QPixmap pixmapLogo(":/icons/logo.png");
@@ -56,18 +58,19 @@ WelcomeDialog::WelcomeDialog(MainWindow *mainWindow) : QDialog(mainWindow) {
   setLayout(vBoxLyt);
 
   connect(btnCreate, &QPushButton::clicked, this, [this]() {
-    if (m_MainWindow->actSaveAs()) close();
+    if (m_mainWindow->actSaveAs()) close();
   });
   connect(btnExamples, &QPushButton::clicked, this, [this]() {
-	// To do
-    debugLog("To do");
+    close();
+    auto exampleDialog = new ExampleDialog(m_mainWindow);
+    exampleDialog->open();
   });
   connect(btnOpen, &QPushButton::clicked, this, [this]() {
-    if (m_MainWindow->actOpen()) close();
+    if (m_mainWindow->actOpen()) close();
   });
   connect(listWidget, &QListWidget::itemClicked, this,
           [this](QListWidgetItem *item) {
-            m_MainWindow->openProject(item->data(Qt::UserRole).toString());
+            m_mainWindow->openProject(item->data(Qt::UserRole).toString());
             close();
           });
 }
