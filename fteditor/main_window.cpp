@@ -389,7 +389,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	startEmulatorInternal();
 
 	bindCurrentDevice();
-
+	
 	actNew(true);
 	 
 	connect(this, &MainWindow::windowActivate, this, [this](){
@@ -397,11 +397,21 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 		dlgWelcome->open();
 		disconnect(this,  &MainWindow::windowActivate, nullptr, nullptr);
 	});
+	
+	emit currentFileNameChanged();
 }
 
 const QList<QAction *> &MainWindow::RecentActionList() const
 {
 	return m_RecentActionList;
+}
+
+void MainWindow::setCurrentFileName(const QString &newCurrentFileName)
+{
+	if (m_CurrentFileName == newCurrentFileName)
+		return;
+	m_CurrentFileName = newCurrentFileName;
+	emit currentFileNameChanged();
 }
 
 MainWindow::~MainWindow()
@@ -664,7 +674,7 @@ void MainWindow::runScript(const QString &script)
 	QByteArray scriptNa = script.toUtf8();
 	char *scriptName = scriptNa.data();
 	statusBar()->showMessage(tr("Executed Python script '%1'").arg(scriptName));
-	QString outputName = QFileInfo(m_CurrentFile).completeBaseName();
+	QString outputName = QFileInfo(m_CurrentFileName).completeBaseName();
 	if (outputName.isEmpty())
 		outputName = "untitled";
 	QByteArray outN = outputName.toUtf8();
@@ -977,6 +987,11 @@ void MainWindow::createActions()
 	m_SaveAct = new QAction(this);
 	m_SaveAct->setShortcuts(QKeySequence::Save);
 	connect(m_SaveAct, SIGNAL(triggered()), this, SLOT(actSave()));
+	connect(this, &MainWindow::currentFileNameChanged, m_SaveAct, [this]() {
+		m_SaveAct->setText(m_CurrentFileName.isEmpty() ? tr("Unsaved")
+		                                               : tr("Saved"));
+	});
+
 	m_SaveAsAct = new QAction(this);
 	connect(m_SaveAsAct, SIGNAL(triggered()), this, SLOT(actSaveAs()));
 	
@@ -1062,7 +1077,6 @@ void MainWindow::translateActions()
 	m_OpenAct->setText(tr("Open"));
 	m_OpenAct->setStatusTip(tr("Open an existing project"));
 	m_OpenAct->setIcon(QIcon(":/icons/folder-horizontal-open.png"));
-	m_SaveAct->setText(tr("Save"));
 	m_SaveAct->setStatusTip(tr("Save the current project"));
 	m_SaveAct->setIcon(QIcon(":/icons/disk.png"));
 	m_SaveAsAct->setText(tr("Save As"));
@@ -2412,7 +2426,7 @@ void MainWindow::updateWindowTitle()
 	{
 		QString title = QString("%1%2 - %3 - ")
 			.arg(QString(m_CleanUndoStack ? "" : "*"))
-			.arg(m_CurrentFile.isEmpty() ? tr("New Project") : QFileInfo(m_CurrentFile).completeBaseName())
+			.arg(m_CurrentFileName.isEmpty() ? tr("New Project") : QFileInfo(m_CurrentFileName).completeBaseName())
 			.arg(QDir::currentPath());
 		setWindowTitle(title + titleSuffix);
 	}
@@ -2448,7 +2462,7 @@ bool MainWindow::maybeSave()
 	if (res && m_AddRecentProjectFlag)
 	{
 		m_AddRecentProjectFlag = false;
-		addRecentProject(m_CurrentFile);
+		addRecentProject(m_CurrentFileName);
 	}
 
 	return res;
@@ -2683,7 +2697,7 @@ void MainWindow::actCloseProject()
 	clearEditor();
 
 	// reset filename
-	m_CurrentFile = QString();
+	setCurrentFileName(QString());
 
 	// clear undo stacks
 	clearUndoStack();
@@ -2727,7 +2741,7 @@ void MainWindow::actNew(bool addClear)
 	clearEditor();
 
 	// reset filename
-	m_CurrentFile = QString();
+	setCurrentFileName(QString());
 
 	// add clear
 	int editLine;
@@ -2965,8 +2979,8 @@ bool MainWindow::actOpen(QString projectPath)
 void MainWindow::openFile(const QString &fileName)
 {
 	toggleUI(true);
-
-	m_CurrentFile = fileName;
+	
+	setCurrentFileName(fileName);
 
 	// Remove temporary paths
 	if (m_TemporaryDir)
@@ -3058,7 +3072,7 @@ void MainWindow::openFile(const QString &fileName)
 	{
 		// Reset editor and paths
 		clearEditor();
-		m_CurrentFile = QString();
+		setCurrentFileName(QString());
 #ifdef FTEDITOR_TEMP_DIR
 		QDir::setCurrent(QDir::tempPath());
 		m_TemporaryDir = new QTemporaryDir("ese-");
@@ -3105,7 +3119,7 @@ void MainWindow::setFlashFileNameToLabel(const QString &fileName)
 
 const bool MainWindow::isProjectSaved(void)
 {
-	return (false == m_CurrentFile.isEmpty());
+	return (false == m_CurrentFileName.isEmpty());
 }
 
 bool MainWindow::eventFilter(QObject *watched, QEvent *event)
@@ -3256,13 +3270,13 @@ QByteArray MainWindow::toJson(bool exportScript)
 
 void MainWindow::actSave()
 {
-	if (m_CurrentFile.isEmpty())
+	if (m_CurrentFileName.isEmpty())
 	{
 		actSaveAs();
 		return;
 	}
 
-	QFile file(m_CurrentFile);
+	QFile file(m_CurrentFileName);
 	file.open(QIODevice::WriteOnly);
 	QDataStream out(&file);
 
@@ -3393,7 +3407,7 @@ bool MainWindow::actSaveAs()
 	}
 
 	// Save the project itself
-	m_CurrentFile = fileName;
+	setCurrentFileName(fileName);
 	actSave();
 
 	// Update window title in case project folder changed
@@ -3425,8 +3439,8 @@ void MainWindow::actImport()
 
 	// reset editors to their default state
 	clearEditor();
-
-	m_CurrentFile = QString();
+	
+	setCurrentFileName(QString());
 
 	// set working directory to temporary directory
 #ifdef FTEDITOR_TEMP_DIR
@@ -4172,7 +4186,7 @@ void MainWindow::aboutQt()
 
 QString MainWindow::getProjectContent() const
 {
-	QFile file(m_CurrentFile);
+	QFile file(m_CurrentFileName);
 	file.open(QIODevice::ReadOnly);
 	QTextStream ts(&file);
 	QString projectContent = ts.readAll();
