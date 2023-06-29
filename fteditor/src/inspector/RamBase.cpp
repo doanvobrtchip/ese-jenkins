@@ -18,6 +18,7 @@ RamBase::RamBase(Inspector *parent)
     : QDockWidget(parent->mainWindow()), m_insp(parent) {
   setFloating(true);
   setFocusPolicy(Qt::StrongFocus);
+  setFont(QFont("Segoe UI", 10));
 
   m_btnOpenDlg = new QPushButton;
   m_btnOpenDlg->setContentsMargins(0, 0, 0, 0);
