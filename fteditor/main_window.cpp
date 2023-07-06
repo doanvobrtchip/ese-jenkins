@@ -267,6 +267,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_OpenAct(NULL)
     , m_SaveAct(NULL)
     , m_SaveAsAct(NULL)
+    , m_WelcomeAct(NULL)
     , m_CloseProjectAct(NULL)
     , m_ImportAct(NULL)
     , m_ExportAct(NULL)
@@ -989,7 +990,14 @@ void MainWindow::createActions()
 	connect(m_SaveAct, SIGNAL(triggered()), this, SLOT(actSave()));
 	m_SaveAsAct = new QAction(this);
 	connect(m_SaveAsAct, SIGNAL(triggered()), this, SLOT(actSaveAs()));
-
+	
+	m_WelcomeAct = new QAction(this);
+	m_WelcomeAct->setShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_W));
+	connect(m_WelcomeAct, &QAction::triggered, this, [this](bool checked){
+		auto dlgWelcome = new WelcomeDialog(this);
+		dlgWelcome->open();
+	});
+	
 	m_CloseProjectAct = new QAction(this);
 	m_CloseProjectAct->setShortcuts(QKeySequence::Close);
 	connect(m_CloseProjectAct, SIGNAL(triggered()), this, SLOT(actCloseProject()));
@@ -1071,6 +1079,8 @@ void MainWindow::translateActions()
 	m_SaveAsAct->setText(tr("Save As"));
 	m_SaveAsAct->setStatusTip(tr("Save the current project to a new file"));
 	m_SaveAsAct->setIcon(QIcon(":/icons/disk--pencil.png"));
+	m_WelcomeAct->setText(tr("Show Welcome Dialog"));
+	m_WelcomeAct->setStatusTip(tr("Show a welcome dialog to support some actions"));
 	m_CloseProjectAct->setText(tr("Close Project"));
 	m_CloseProjectAct->setStatusTip(tr("Close the current project"));
 	m_ImportAct->setText(tr("Import"));
@@ -1125,6 +1135,8 @@ void MainWindow::createMenus()
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_SaveAct);
 	m_FileMenu->addAction(m_SaveAsAct);
+	m_FileMenu->addSeparator();
+	m_FileMenu->addAction(m_WelcomeAct);
 	m_FileMenu->addSeparator();
 	m_FileMenu->addAction(m_CloseProjectAct);
 	m_FileMenu->addSeparator();
