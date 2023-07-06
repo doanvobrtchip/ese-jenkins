@@ -83,5 +83,6 @@
     <file>icons/external-link.png</file>
     <file>icons/align.png</file>
     <file>icons/dock-back.png</file>
+    <file>icons/logo.png</file>
   </qresource>
 </RCC>
