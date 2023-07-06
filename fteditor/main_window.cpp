@@ -501,48 +501,45 @@ static QString scriptDisplayName(const QString &script)
 
 const char *scriptFolder = "export_scripts";
 
-const char *scriptDeviceFolder[FTEDITOR_DEVICE_NB] = {
-	"ft80x",
-	"ft80x",
-	"ft81x",
-	"ft81x",
-	"ft81x",
-	"ft81x",
-	"bt88x",
-	"bt88x",
-	"bt88x",
-	"bt88x",
-	"bt81x",
-	"bt81x",
-	"bt81x",
-	"bt81x"
+const QStringList scriptDeviceFolders[FTEDITOR_DEVICE_NB] = {
+	{ "ft80x", "ft800" },
+	{ "ft80x", "ft801" },
+	{ "ft81x", "ft810" },
+	{ "ft81x", "ft811" },
+	{ "ft81x", "ft812" },
+	{ "ft81x", "ft813" },
+	{ "bt88x", "bt880" },
+	{ "bt88x", "bt881" },
+	{ "bt88x", "bt882" },
+	{ "bt88x", "bt883" },
+	{ "bt81x", "bt815" },
+	{ "bt81x", "bt816" },
+	{ "bt81x", "bt817" },
+	{ "bt81x", "bt818" }
 };
 
-QString MainWindow::scriptModule()
+QString MainWindow::scriptModule(QString name)
 {
 	return QString(scriptFolder)
 	    + QString(".")
-	    + scriptDeviceFolder[FTEDITOR_CURRENT_DEVICE];
+	    + name;
 }
 
-QString MainWindow::scriptDir()
+QString MainWindow::scriptDir(QString name)
 {
 	return m_ApplicationDataDir + "/"
 	    + scriptFolder + "/"
-	    + scriptDeviceFolder[FTEDITOR_CURRENT_DEVICE];
+	    + name;
 }
 #endif
 
 void MainWindow::refreshScriptsMenu()
 {
 #ifdef FT800EMU_PYTHON
-	QDir currentDir = scriptDir();
 	// printf("Look in %s\n", currentDir.absolutePath().toUtf8().data());
 
 	QStringList filters;
-
 	filters.push_back("*.py");
-	// QStringList scriptFiles = currentDir.entryList(filters);
 
 	std::map<QString, RunScript *> scriptActs;
 	scriptActs.swap(m_ScriptActs);
@@ -552,100 +549,92 @@ void MainWindow::refreshScriptsMenu()
 	m_ScriptFolderMenus["."] = m_ScriptsMenu;
 	scriptFolderMenus.erase(".");
 
-	//Fill up empty m_ScriptActs from previous values in scriptActs
-	// for (int i = 0; i < scriptFiles.size(); ++i)
-	QDirIterator it(currentDir.absolutePath(), filters, QDir::Files, QDirIterator::Subdirectories);
-	while (it.hasNext())
+	// Fill up empty m_ScriptActs from previous values in scriptActs
+	for (auto dirName : scriptDeviceFolders[FTEDITOR_CURRENT_DEVICE])
 	{
-		QString scriptFile = it.next();
-		// printf("script: %s\n", scriptFile.toLocal8Bit().data());
-		scriptFile = currentDir.relativeFilePath(scriptFile);
-
-		// Ignore root __init__.py
-		if (scriptFile == "__init__.py")
-			continue;
-
-		if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT815 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT816)
+		QDir currentDir = scriptDir(dirName);
+		QDirIterator it(currentDir.absolutePath(), filters, QDir::Files, QDirIterator::Subdirectories);
+		while (it.hasNext())
 		{
-			if (!scriptFile.contains("815") && !scriptFile.contains("816"))
+			QString scriptFile = it.next();
+			// printf("script: %s\n", scriptFile.toLocal8Bit().data());
+			scriptFile = currentDir.relativeFilePath(scriptFile);
+
+			// Ignore root __init__.py
+			if (scriptFile == "__init__.py")
 				continue;
-		}
-		else if (FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT817 || FTEDITOR_CURRENT_DEVICE == FTEDITOR_BT818)
-		{
-			if (!scriptFile.contains("817") && !scriptFile.contains("818"))
-				continue;
-		}
 
-		QString scriptMod = scriptModule() + "." + scriptFile.left(scriptFile.size() - 3).replace('/', '.');
-		// printf("module: %s\n", scriptMod.toLocal8Bit().data());
-		QString scriptDir = QFileInfo(scriptFile).dir().path();
-		// printf("dir: %s\n", scriptDir.toLocal8Bit().data());
+			QString scriptMod = scriptModule(dirName) + "." + scriptFile.left(scriptFile.size() - 3).replace('/', '.');
+			// printf("module: %s\n", scriptMod.toLocal8Bit().data());
+			QString scriptDir = QFileInfo(scriptFile).dir().path();
+			// printf("dir: %s\n", scriptDir.toLocal8Bit().data());
 
-		std::map<QString, QMenu *>::iterator menuIt = m_ScriptFolderMenus.find(scriptDir);
-		QMenu *menu;
-		if (menuIt == m_ScriptFolderMenus.end())
-		{
-			menuIt = scriptFolderMenus.find(scriptDir);
-			if (menuIt == scriptFolderMenus.end())
+			std::map<QString, QMenu *>::iterator menuIt = m_ScriptFolderMenus.find(scriptDir);
+			QMenu *menu;
+			if (menuIt == m_ScriptFolderMenus.end())
 			{
-				menu = new QMenu(scriptDir, this);
-				m_ScriptsMenu->addMenu(menu);
-				m_ScriptFolderMenus[scriptDir] = menu;
-				scriptFolderMenus.erase(scriptDir);
+				menuIt = scriptFolderMenus.find(scriptDir);
+				if (menuIt == scriptFolderMenus.end())
+				{
+					menu = new QMenu(scriptDir, this);
+					m_ScriptsMenu->addMenu(menu);
+					m_ScriptFolderMenus[scriptDir] = menu;
+					scriptFolderMenus.erase(scriptDir);
+				}
+				else
+				{
+					menu = menuIt->second;
+					m_ScriptFolderMenus[scriptDir] = menu;
+					scriptFolderMenus.erase(scriptDir);
+				}
 			}
 			else
 			{
 				menu = menuIt->second;
-				m_ScriptFolderMenus[scriptDir] = menu;
-				scriptFolderMenus.erase(scriptDir);
 			}
-		}
-		else
-		{
-			menu = menuIt->second;
-		}
 
-		if (QFileInfo(scriptFile).fileName() == "__init__.py")
-		{
-			// Set folder title
+			if (QFileInfo(scriptFile).fileName() == "__init__.py")
+			{
+				// Set folder title
 
-			menu->setTitle(scriptDisplayName(scriptMod));
+				menu->setTitle(scriptDisplayName(scriptMod));
 
-			continue;
-		}
+				continue;
+			}
 
-		// char *fileName = scriptFiles[i].toLocal8Bit().data();
-		// printf("Script: %s\n", fileName);
+			// char *fileName = scriptFiles[i].toLocal8Bit().data();
+			// printf("Script: %s\n", fileName);
 
-		//package.subpackage.module
-		// printf("Module: %s\n", scriptMod.toLocal8Bit().data());
+			// package.subpackage.module
+			//  printf("Module: %s\n", scriptMod.toLocal8Bit().data());
 
-		if (scriptActs.find(scriptMod) == scriptActs.end())
-		{
-			// printf("new script: %s\n", scriptFile.toLocal8Bit().data());
+			if (scriptActs.find(scriptMod) == scriptActs.end())
+			{
+				// printf("new script: %s\n", scriptFile.toLocal8Bit().data());
 
-			RunScript *rs = new RunScript();
-			QAction *act = new QAction(this);
+				RunScript *rs = new RunScript();
+				QAction *act = new QAction(this);
 
-			act->setText(scriptDisplayName(scriptMod));
-			act->setStatusTip(tr("Run Python script"));
-			menu->addAction(act);
+				act->setText(scriptDisplayName(scriptMod));
+				act->setStatusTip(tr("Run Python script"));
+				menu->addAction(act);
 
-			if (act->text() == "")
-				act->setVisible(false);
+				if (act->text() == "")
+					act->setVisible(false);
 
-			rs->Action = act;
+				rs->Action = act;
 
-			rs->Script = scriptMod;
-			rs->Window = this,
-			connect(act, SIGNAL(triggered()), rs, SLOT(runScript()));
-			m_ScriptActs[scriptMod] = rs;
-		}
-		else
-		{
-			//find existing script and add it to m_ScriptActs
-			m_ScriptActs[scriptMod] = scriptActs[scriptMod];
-			scriptActs.erase(scriptMod);
+				rs->Script = scriptMod;
+				rs->Window = this,
+				connect(act, SIGNAL(triggered()), rs, SLOT(runScript()));
+				m_ScriptActs[scriptMod] = rs;
+			}
+			else
+			{
+				// find existing script and add it to m_ScriptActs
+				m_ScriptActs[scriptMod] = scriptActs[scriptMod];
+				scriptActs.erase(scriptMod);
+			}
 		}
 	}
 
