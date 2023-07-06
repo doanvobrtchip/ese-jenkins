@@ -33,7 +33,6 @@ QHexView::QHexView(QWidget *parent)
       m_selectType(None),
       m_startAddress(0),
       m_useContentArea(true) {
-  setFont(QFont("Segoe UI", 10));
 
   m_charWidth = fontMetrics().horizontalAdvance(QLatin1Char('9'));
   m_charHeight = fontMetrics().height();
@@ -208,6 +207,8 @@ void QHexView::paintEvent(QPaintEvent *event) {
   }
 
   // Draw header
+  painter.drawText(m_posAddr + 2, GAP_HEADER, m_posHex - GAP_ADR_HEX, m_charHeight,
+	  Qt::AlignLeft | Qt::AlignBottom, tr("Address"));
   for (int i = 0, xPos = m_posHex, yPos = GAP_HEADER; i < m_bytesPerLine;
        ++i, xPos += wdRect + GAP_HEX_X) {
     if (!hasFocus() || i != ((m_cursorPos / 2) % m_bytesPerLine) ||
@@ -241,8 +242,8 @@ void QHexView::paintEvent(QPaintEvent *event) {
     }
     QString address = QString("%1").arg(
         m_startAddress + lineIdx * m_bytesPerLine, ADR_LENGTH, 16, QChar('0'));
-    painter.drawText(m_posAddr, y, m_posHex - GAP_ADR_HEX, m_charHeight,
-                     Qt::AlignHCenter | Qt::AlignBottom, address);
+    painter.drawText(m_posAddr + 2, y, m_posHex - GAP_ADR_HEX, m_charHeight,
+                     Qt::AlignLeft | Qt::AlignBottom, address);
 
     for (int x = m_posHex, i = 0, xAscii = m_posAscii;
          i < m_bytesPerLine &&

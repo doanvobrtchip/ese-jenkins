@@ -42,6 +42,7 @@ RamDL::RamDL(Inspector *parent)
   m_displayList->setSelectionMode(QAbstractItemView::ExtendedSelection);
   m_displayList->setSelectionBehavior(QAbstractItemView::SelectRows);
   m_displayList->setContextMenuPolicy(Qt::CustomContextMenu);
+  m_displayList->setIndentation(2);
   m_displayList->installEventFilter(this);
   m_displayList->viewport()->installEventFilter(this);
   m_focusWhenOpen = m_displayList;
@@ -52,7 +53,7 @@ RamDL::RamDL(Inspector *parent)
   m_menuContext->addAction(m_actCopy);
 
   QStringList dlHeaders;
-  dlHeaders.push_back(tr(""));
+  dlHeaders.push_back(tr("Offset\n(decimal)"));
   dlHeaders.push_back(tr("Raw"));
   dlHeaders.push_back(tr("Text"));
   m_displayList->setHeaderLabels(dlHeaders);
@@ -82,7 +83,7 @@ RamDL::RamDL(Inspector *parent)
   layout->setContentsMargins(0, 0, 0, 0);
   auto groupBox = new QGroupBox(this);
   auto vBoxLayout = new QVBoxLayout;
-  vBoxLayout->setContentsMargins(5, 5, 5, 5);
+  vBoxLayout->setContentsMargins(3, 3, 3, 3);
   vBoxLayout->addLayout(m_lytTitle);
   vBoxLayout->addWidget(m_displayList);
   groupBox->setLayout(vBoxLayout);

@@ -37,6 +37,7 @@ RamReg::RamReg(Inspector *parent) : RamBase(parent) {
   m_registers->setSelectionMode(QAbstractItemView::ExtendedSelection);
   m_registers->setSelectionBehavior(QAbstractItemView::SelectRows);
   m_registers->setContextMenuPolicy(Qt::CustomContextMenu);
+  m_registers->setIndentation(2);
   m_registers->installEventFilter(this);
   m_registers->viewport()->installEventFilter(this);
   m_focusWhenOpen = m_registers;
@@ -58,7 +59,7 @@ RamReg::RamReg(Inspector *parent) : RamBase(parent) {
   layout->setContentsMargins(0, 0, 0, 0);
   QGroupBox *groupBox = new QGroupBox(this);
   QVBoxLayout *vBoxLayout = new QVBoxLayout();
-  vBoxLayout->setContentsMargins(5, 5, 5, 5);
+  vBoxLayout->setContentsMargins(3, 3, 3, 3);
   vBoxLayout->addLayout(m_lytTitle);
   vBoxLayout->addWidget(m_registers);
   groupBox->setLayout(vBoxLayout);
