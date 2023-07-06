@@ -191,7 +191,7 @@ void DeviceAddNewDialog::addDevice()
 		QString deviceName = jo["Device Name"].toString();
 
 		if (isEdited) {
-			if (deviceName != QFileInfo(editPath).baseName() && isExistDeviceName(deviceName))
+			if (deviceName != QFileInfo(editPath).completeBaseName() && isExistDeviceName(deviceName))
 			{
 				QMessageBox::warning(this, "Exist Device Name", "Device name is existed!");
 				return;
