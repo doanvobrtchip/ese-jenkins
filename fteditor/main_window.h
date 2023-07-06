@@ -169,6 +169,7 @@ public:
 	void updateLoadingIcon();
 	
 	const QList<QAction *> &RecentActionList() const;
+	void setCurrentFileName(const QString &newCurrentFileName);
 	
 private slots:
 	// void applyEmulatorConfig();
@@ -424,7 +425,7 @@ private:
 	std::map<QString, RunScript *> m_ScriptActs;
 	std::map<QString, QMenu *> m_ScriptFolderMenus;
 
-	QString m_CurrentFile;
+	QString m_CurrentFileName;
 	QTemporaryDir *m_TemporaryDir;
 	QString m_LastProjectDir;
 
@@ -435,6 +436,7 @@ private:
 	QList<QObject *> busyList;
 	
 signals:
+	void currentFileNameChanged();
 	void utilizationDisplayListCmdChanged(int value);
 	void ramGChanged(uint8_t *value);
 	void readyToSetup(QObject *obj);
