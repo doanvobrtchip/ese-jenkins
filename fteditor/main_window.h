@@ -256,8 +256,8 @@ private:
 	void saveCoproToBinaryFile(QString fileName, bool isBigEndian);
 
 #ifdef FT800EMU_PYTHON
-	QString scriptModule();
-	QString scriptDir();
+	QString scriptModule(QString folderName);
+	QString scriptDir(QString folderName);
 #endif
 
 	void bindCurrentDevice();
