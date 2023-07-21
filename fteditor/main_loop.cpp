@@ -90,6 +90,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "constant_mapping.h"
 #include "constant_common.h"
 #include "constant_mapping_flash.h"
+#include "utils/LoggerUtil.h"
 
 namespace FTEDITOR {
 
@@ -116,6 +117,7 @@ ContentManager *g_ContentManager = NULL;
 DlEditor *g_DlEditor = NULL;
 DlEditor *g_CmdEditor = NULL;
 DlEditor *g_Macro = NULL;
+DlEditor *g_ScriptCmdEditor = NULL;
 
 // Utilization
 int g_UtilizationDisplayListCmd = 0;
@@ -805,36 +807,40 @@ void loop()
 	g_ContentManager->unlockContent();
 
 	// switch to next resolution
-	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE)) != g_HSize)
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), g_HSize);
-	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE)) != g_VSize)
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), g_VSize);
-	// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
-	if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE)) != g_Rotate)
-		wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE), g_Rotate);
-	if (g_PlayCtrl == 1) {
-		s_WantReloopCmd = true;
+	{
+		if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE)) != g_HSize)
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), g_HSize);
+		if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE)) != g_VSize)
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), g_VSize);
+		// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
+		if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE)) != g_Rotate)
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE), g_Rotate);
+		if (g_PlayCtrl == 1) {
+			s_WantReloopCmd = true;
+		}
 	}
 	
 	// switch to next macro list
-	g_Macro->lockDisplayList();
-	bool macroModified = g_Macro->isDisplayListModified();
-	// if (macroModified) // Always write macros to intial user value, in case changed by coprocessor
-	// {
+	{
+		g_Macro->lockDisplayList();
 		if (g_Macro->getDisplayListParsed()[0].ValidId
 			&& rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_0)) != g_Macro->getDisplayList()[0]) // Do a read test so we don't change the ram if not necessary
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_0), g_Macro->getDisplayList()[0]); // (because ram writes cause the write count to increase and force a display render)
 		if (g_Macro->getDisplayListParsed()[1].ValidId
 			&& rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_1)) != g_Macro->getDisplayList()[1])
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_MACRO_1), g_Macro->getDisplayList()[1]);
-	// }
-	g_Macro->unlockDisplayList();
+		g_Macro->unlockDisplayList();
+	}
+	
 	// switch to next display list
 	g_DlEditor->lockDisplayList();
 	g_CmdEditor->lockDisplayList();
+	g_ScriptCmdEditor->lockDisplayList();
 	bool dlModified = g_DlEditor->isDisplayListModified();
 	bool cmdModified = g_CmdEditor->isDisplayListModified();
-	if (dlModified || cmdModified || /*reuploadFontSetup ||*/ (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd || (s_HasContentReadCoCmd && contentPoked))
+	bool scriptMdModified = g_ScriptCmdEditor->isDisplayListModified();
+	
+	if (scriptMdModified || dlModified || cmdModified || /*reuploadFontSetup ||*/ (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd || (s_HasContentReadCoCmd && contentPoked))
 	{
 		bool warnMissingClear = true;
 		s_WantReloopCmd = false;
@@ -863,9 +869,13 @@ void loop()
 		int strParamRead = 0;
 		int cmdParamIdx[FTEDITOR_DL_SIZE + 1];
 		bool cmdValid[FTEDITOR_DL_SIZE];
-		uint32_t *cmdListPtr = g_CmdEditor->getDisplayList();
-		const DlParsed *cmdParsedPtr = g_CmdEditor->getDisplayListParsed();
-		// Make local copy, necessary in case of blocking commands
+		uint32_t *cmdListPtr = scriptMdModified
+								   ? g_ScriptCmdEditor->getDisplayList()
+								   : g_CmdEditor->getDisplayList();
+		const DlParsed *cmdParsedPtr =
+			scriptMdModified ? g_ScriptCmdEditor->getDisplayListParsed()
+							 : g_CmdEditor->getDisplayListParsed();
+        // Make local copy, necessary in case of blocking commands
 		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)
 		{
 			cmdList[i] = cmdListPtr[i];
@@ -891,6 +901,7 @@ void loop()
 		}
 		cmdParamIdx[FTEDITOR_DL_SIZE] = (int)s_CmdParamCache.size();
 		g_CmdEditor->unlockDisplayList();
+		g_ScriptCmdEditor->unlockDisplayList();
 		g_WarnMissingClear = warnMissingClear;
 
 		g_ShowCoprocessorBusy = true;
@@ -1743,6 +1754,7 @@ void loop()
 	{
 		g_CmdEditor->unlockDisplayList();
 		g_DlEditor->unlockDisplayList();
+		g_ScriptCmdEditor->unlockDisplayList();
 	}
 
 	if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 && s_MediaFifoStream && s_MediaFifoSize)

@@ -1,11 +1,20 @@
 Version 4.7.0
-Alpha
+Beta
 Feature updates:
-•   Add one welcome screen.
+•   Add python-like editor to write a simple emulator based application.
 •   Add example brower dialog.
-•   Define "Unsaved"/"Saved" states for Save toolbutton.
+•   Add one welcome screen.
 •   Add IDM2040-43A support in the submenu of export menu.
+•   Define "Unsaved"/"Saved" states for Save toolbutton.
 •   Add more custom device in the device manager.
+•   Add HSF support in Registers.
+•   Update the text of device manager syncup feature.
+•   Add example project for cmd_runanim in loop mode.
+•   Improve content manager.
+•   Improve the user manual.
+•   Update the copyright date to 2023.
+Resolved issues:
+•   ESE crashes when drag and drop cmd_fillwidth into view port.
 
 =======================
 Version 4.6.0

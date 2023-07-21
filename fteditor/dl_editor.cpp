@@ -376,6 +376,11 @@ void DlEditor::lockDisplayList() { m_Mutex.lock(); }
 
 void DlEditor::unlockDisplayList() { m_Mutex.unlock(); }
 
+void DlEditor::setDisplayListModified(bool modified)
+{
+	m_DisplayListModified = modified;
+}
+
 // reloads the entire display list from m_DisplayListShared
 void DlEditor::reloadDisplayList(bool fromEmulator)
 {

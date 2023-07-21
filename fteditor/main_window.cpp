@@ -4,7 +4,7 @@ Copyright (C) 2016-2023  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
-#include "RegDefine.h"
+#include "define/RegDefine.h"
 #pragma warning(disable : 26812)
 #pragma warning(disable : 26495)
 #pragma warning(disable : 26444)
@@ -79,6 +79,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // Project includes
 #include "customize/SaveOptionDialog.h"
 #include "customize/WelcomeDialog.h"
+#include "custom_script/ScriptComponent.h"
 #include "utils/ReadWriteUtil.h"
 #include "dl_editor.h"
 #include "interactive_viewport.h"
@@ -115,6 +116,7 @@ extern ContentManager *g_ContentManager;
 extern DlEditor *g_DlEditor;
 extern DlEditor *g_CmdEditor;
 extern DlEditor *g_Macro;
+extern DlEditor *g_ScriptCmdEditor;
 
 extern int g_UtilizationDisplayListCmd;
 extern volatile bool g_WaitingCoprocessorAnimation;
@@ -232,6 +234,8 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_DlEditorDock(NULL)
     , m_CmdEditor(NULL)
     , m_CmdEditorDock(NULL)
+    , m_scriptComp(NULL)
+    , m_scriptEditorDock(NULL)
     , m_PropertiesEditor(NULL)
     , m_PropertiesEditorScroll(NULL)
     , m_PropertiesEditorDock(NULL)
@@ -387,6 +391,7 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	g_DlEditor = m_DlEditor;
 	g_CmdEditor = m_CmdEditor;
 	g_Macro = m_Macro;
+	g_ScriptCmdEditor = m_scriptComp->cmdEditor();
 
 	startEmulatorInternal();
 
@@ -401,6 +406,11 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	});
 	
 	emit currentFileNameChanged();
+}
+
+ScriptComponent *MainWindow::scriptComponent() const
+{
+	return m_scriptComp;
 }
 
 const QList<QAction *> &MainWindow::RecentActionList() const
@@ -424,6 +434,7 @@ MainWindow::~MainWindow()
 	g_DlEditor = NULL;
 	g_CmdEditor = NULL;
 	g_Macro = NULL;
+	g_ScriptCmdEditor = NULL;
 	g_ContentManager = NULL;
 	m_ContentManager->unlockContent();
 	//s_BitmapSetup = NULL;
@@ -1573,7 +1584,27 @@ void MainWindow::createDockWindows()
 		});
 		m_WidgetsMenu->addAction(m_CmdEditorDock->toggleViewAction());
 	}
-
+	
+	// Script (Python)
+	{
+		m_scriptEditorDock = new QDockWidget(this);
+		m_scriptEditorDock->setAllowedAreas(Qt::BottomDockWidgetArea);
+		m_scriptEditorDock->setObjectName("ScriptEditor");
+		m_scriptEditorDock->setWindowTitle(tr("Script (Python)"));
+		m_scriptComp = new ScriptComponent(this);
+		m_scriptComp->cmdEditor()->setPropertiesEditor(m_PropertiesEditor);
+		emit readyToSetup(m_scriptComp);
+		m_scriptEditorDock->setWidget(m_scriptComp);
+		addDockWidget(Qt::BottomDockWidgetArea, m_scriptEditorDock);
+		connect(m_scriptEditorDock, &QDockWidget::visibilityChanged, this, [this](bool visible) {
+			if (visible)
+			{
+				m_scriptComp->focus();
+			}
+		});
+		m_WidgetsMenu->addAction(m_scriptEditorDock->toggleViewAction());
+	}
+	
 	// Controls
 	{
 		m_ControlsDock = new QDockWidget(this);
@@ -1900,6 +1931,7 @@ void MainWindow::createDockWindows()
 	
 	tabifyDockWidget(m_InspectorDock, m_DlEditorDock);
 	tabifyDockWidget(m_DlEditorDock, m_CmdEditorDock);
+	tabifyDockWidget(m_CmdEditorDock, m_scriptEditorDock);
 
 	// Event for editor tab change
 	/*QTabBar *editorTabbar = NULL;
@@ -2778,7 +2810,8 @@ void MainWindow::actNew(bool addClear)
 		return;
 
 	printf("** New **\n");
-
+	
+	emit eventNew();
 	// reset editors to their default state
 	clearEditor();
 

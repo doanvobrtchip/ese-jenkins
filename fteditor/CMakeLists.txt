@@ -18,8 +18,17 @@ FILE(GLOB INSPECTOR
     src/inspector/*.cpp
 )
 
+FILE(GLOB EXTENSION_MODULE
+    src/extension_module/*.cpp
+)
+
 FILE(GLOB DEFINE
     src/define/*.h
+)
+
+FILE(GLOB CUSTOM_SCRIPT
+    src/custom_script/*.h
+    src/custom_script/*.cpp
 )
 
 IF (WIN32)
@@ -33,7 +42,9 @@ SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
 SOURCE_GROUP("customize" FILES ${CUSTOMIZE})
 SOURCE_GROUP("utils" FILES ${UTILS})
 SOURCE_GROUP("inspector" FILES ${INSPECTOR})
+SOURCE_GROUP("custom_script" FILES ${CUSTOM_SCRIPT})
 SOURCE_GROUP("define" FILES ${DEFINE})
+SOURCE_GROUP("extension_module" FILES ${EXTENSION_MODULE})
 
 # Find the QtWidgets library, minimum 5.15 or 6.0
 # https://doc.qt.io/qt-6/cmake-qt5-and-qt6-compatibility.html
@@ -60,9 +71,11 @@ configure_file(translations.qrc.in translations.qrc COPYONLY)
 
 qt_add_resources(RESOURCE_ADDED ${RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/translations.qrc)
 
-INCLUDE_DIRECTORIES(src/)
-INCLUDE_DIRECTORIES(.)
-INCLUDE_DIRECTORIES(src/define/)
+INCLUDE_DIRECTORIES(
+  .  
+  src
+  ../QScintilla/src
+)
 
 IF (FTEDITOR_DEVICE_MANAGER)
   INCLUDE_DIRECTORIES(
@@ -92,7 +105,9 @@ ADD_EXECUTABLE(fteditor WIN32
   ${CUSTOMIZE}
   ${UTILS}
   ${INSPECTOR}
+  ${CUSTOM_SCRIPT}
   ${DEFINE}
+  ${EXTENSION_MODULE}
 	)
 
 IF(FTEDITOR_DEVICE_MANAGER)
@@ -105,12 +120,15 @@ TARGET_LINK_LIBRARIES(fteditor
 	bt8xxemu
 	)
 
+TARGET_LINK_LIBRARIES(fteditor
+  QScintilla
+)
+
 IF (WITH_SDL2)
   ADD_DEFINITIONS(-DFT800EMU_SDL2)
 ENDIF ()
 
 IF (WITH_PYTHON)
-
   FIND_PACKAGE(PythonLibs REQUIRED)
   INCLUDE_DIRECTORIES(
     ${PYTHON_INCLUDE_DIRS}
@@ -215,6 +233,7 @@ endif()
 
 
 ADD_DEFINITIONS(-DFT800EMU_REFERENCE_DIR="${FT800_REFERENCE_DIR}")
+ADD_DEFINITIONS(-DQSCINTILLA_DLL)
 
 #Windeployqt
 if(WITH_WINDEPLOYQT)

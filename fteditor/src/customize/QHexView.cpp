@@ -33,7 +33,7 @@ QHexView::QHexView(QWidget *parent)
       m_selectType(None),
       m_startAddress(0),
       m_useContentArea(true) {
-
+  setFont(QFont("Segoe UI", 10));
   m_charWidth = fontMetrics().horizontalAdvance(QLatin1Char('9'));
   m_charHeight = fontMetrics().height();
 

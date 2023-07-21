@@ -87,6 +87,7 @@ public:
 		m_DisplayListModified = false;
 		return result;
 	}
+	void setDisplayListModified(bool modified);
 
 	void setReadOut(int line, uint32_t *readOut)
 	{
