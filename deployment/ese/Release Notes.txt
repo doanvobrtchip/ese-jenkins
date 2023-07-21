@@ -1,3 +1,13 @@
+Version 4.7.0
+Alpha
+Feature updates:
+•   Add one welcome screen.
+•   Add example brower dialog.
+•   Define "Unsaved"/"Saved" states for Save toolbutton.
+•   Add IDM2040-43A support in the submenu of export menu.
+•   Add more custom device in the device manager.
+
+=======================
 Version 4.6.0
 RC1
 Feature updates:
