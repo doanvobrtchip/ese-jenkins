@@ -144,13 +144,13 @@ DeviceManager::DeviceManager(MainWindow *parent)
 
 	layout->addLayout(buttons);
 
-	// Upload RAM_G and RAM_DL
-	// Upload RAM and Coprocessor Commands
+	// Write to RAM_G and RAM_DL
+	// Write to RAM_G and RAM_CMD
 	// Upload Flash
 
 	m_UploadRamDlButton = new QPushButton(this);
 	m_UploadRamDlButton->setIcon(QIcon(":/icons/arrow-curve-090-left.png"));
-	m_UploadRamDlButton->setText(tr("Upload RAM_G and RAM_DL"));
+	m_UploadRamDlButton->setText(tr("Write to RAM_G and RAM_DL"));
 	m_UploadRamDlButton->setToolTip(tr("Sends the current memory and display list to the selected device"));
 	m_UploadRamDlButton->setVisible(false);
 	connect(m_UploadRamDlButton, &QPushButton::clicked, this, &DeviceManager::uploadRamDl);
@@ -158,7 +158,7 @@ DeviceManager::DeviceManager(MainWindow *parent)
 
 	m_UploadCoprocessorContentButton = new QPushButton(this);
 	m_UploadCoprocessorContentButton->setIcon(QIcon(":/icons/arrow-curve-090-left.png"));
-	m_UploadCoprocessorContentButton->setText(tr("Upload RAM and Coprocessor"));
+	m_UploadCoprocessorContentButton->setText(tr("Write to RAM_G and RAM_CMD"));
 	m_UploadCoprocessorContentButton->setToolTip(tr(""));
 	m_UploadCoprocessorContentButton->setVisible(false);
 	connect(m_UploadCoprocessorContentButton, &QPushButton::clicked, this, &DeviceManager::uploadCoprocessorContent);
@@ -166,7 +166,7 @@ DeviceManager::DeviceManager(MainWindow *parent)
 
 	m_UploadFlashContentButton = new QPushButton(this);
 	m_UploadFlashContentButton->setIcon(QIcon(":/icons/lightning--pencil.png"));
-	m_UploadFlashContentButton->setText(tr("Write Flash Content"));
+	m_UploadFlashContentButton->setText(tr("Program Eve connected Flash(if any)"));
 	m_UploadFlashContentButton->setToolTip(tr(""));
 	m_UploadFlashContentButton->setVisible(false);
 	connect(m_UploadFlashContentButton, &QPushButton::clicked, this, &DeviceManager::uploadFlashContent);
