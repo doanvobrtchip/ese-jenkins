@@ -135,6 +135,7 @@ struct ContentInfo
 
 	QString SourcePath; // Relative source path
 	QString DestName; // Local destination name
+	QString DisplayName; // Display name
 	ConverterType Converter;
 
 	bool MemoryLoaded; //Present; // Whether this is loaded in ram
@@ -163,6 +164,8 @@ struct ContentInfo
 	void fromJson(QJsonObject &j, bool meta);
 	bool equalsMeta(const ContentInfo *other) const;
 	bool requirePaletteAddress();
+	void mapToConverter(QString suffix);
+	void mapDestNameFromConverter();
 
 	bool UploadMemoryDirty;
 	bool UploadFlashDirty;
@@ -265,7 +268,7 @@ public:
 
 	// Changes
 	void changeSourcePath(ContentInfo *contentInfo, const QString &value);
-	void changeDestName(ContentInfo *contentInfo, const QString &value);
+	void changeDisplayName(ContentInfo *contentInfo, const QString &value);
 	void changeConverter(ContentInfo *contentInfo, ContentInfo::ConverterType value);
 	void changeImageFormat(ContentInfo *contentInfo, int value);
 	void changeImageMono(ContentInfo *contentInfo, bool value);
@@ -304,7 +307,7 @@ private:
 	class Remove;
 
 	class ChangeSourcePath;
-	class ChangeDestName;
+	class ChangeDisplayName;
 	class ChangeConverter;
 	class ChangeImageFormat;
 	class ChangeImageMono;
@@ -411,10 +414,10 @@ public slots:
 private slots:
 	void selectionChanged(QTreeWidgetItem *current, QTreeWidgetItem *previous);
 	void propertiesSetterChanged(QWidget *setter);
-
+	
+	void onDisplayNameChanged();
 	void propertiesCommonSourcePathChanged();
 	void propertiesCommonSourcePathBrowse();
-	void propertiesCommonDestNameChanged();
 	void propertiesCommonConverterChanged(int value);
 	void propertiesImageFormatChanged(int value);
 	void propertiesImageMonoChanged(int value);

@@ -7,11 +7,13 @@
 #define COMMONUTIL_H
 
 class QTreeWidget;
+class QString;
 
 class CommonUtil
 {
 public:
 	static void copy(const QTreeWidget *widget);
+	static bool existProject(QString path);
 };
 
 #endif // COMMONUTIL_H

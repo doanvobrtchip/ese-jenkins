@@ -20,6 +20,7 @@
 #include "ThumbnailView.h"
 #include "WelcomeDialog.h"
 #include "main_window.h"
+#include "utils/CommonUtil.h"
 
 namespace FTEDITOR {
 FTEDITOR::ExampleDialog::ExampleDialog(MainWindow *mainWindow)
@@ -43,6 +44,7 @@ void ExampleDialog::setupTabs() {
   auto tabBar = new TabBar;
   auto entryList = dirExample.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
   for (auto &item : entryList) {
+    if (!CommonUtil::existProject(dirExample.absoluteFilePath(item))) continue;
     auto view = new ThumbnailView(this, dirExample.absoluteFilePath(item));
     m_tabWidget->addTab(view, item);
     connect(view, &ThumbnailView::itemPressed, this,
