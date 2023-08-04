@@ -982,6 +982,7 @@ void MainWindow::createActions()
 	m_NewAct->setShortcuts(QKeySequence::New);
 	connect(m_NewAct, SIGNAL(triggered()), this, SLOT(actNew()));
 	m_OpenAct = new QAction(this);
+	m_OpenAct->setShortcut(QKeySequence::Open);
 	connect(m_OpenAct, SIGNAL(triggered()), this, SLOT(actOpen()));
 
 	m_SaveAct = new QAction(this);

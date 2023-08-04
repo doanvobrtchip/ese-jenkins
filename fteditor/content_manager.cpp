@@ -77,6 +77,7 @@ ContentInfo::ContentInfo(const QString &filePath)
 {
 	SourcePath = filePath;
 	DestName = QFileInfo(filePath).completeBaseName();
+	DisplayName = QFileInfo(filePath).fileName();
 	View = NULL;
 	Converter = ContentInfo::Invalid;
 	MemoryLoaded = false;
@@ -110,6 +111,7 @@ QJsonObject ContentInfo::toJson(bool meta) const
 	if (!meta)
 	{
 		j["destName"] = DestName;
+		j["displayName"] = DisplayName;
 		j["memoryLoaded"] = MemoryLoaded;
 		j["memoryAddress"] = MemoryAddress;
 		switch (DataStorage)
@@ -169,6 +171,8 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 	if (!meta)
 	{
 		DestName = j["destName"].toString();
+		QString displayName = j["displayName"].toString();
+		DisplayName = displayName.isEmpty() ? QFileInfo(SourcePath).fileName() : displayName;
 		MemoryLoaded = ((QJsonValue)j["memoryLoaded"]).toVariant().toBool();
 		MemoryAddress = ((QJsonValue)j["memoryAddress"]).toVariant().toInt();
 		if (j.contains("dataEmbedded"))
@@ -295,6 +299,42 @@ bool ContentInfo::requirePaletteAddress()
 	return false;
 }
 
+void ContentInfo::mapToConverter(QString suffix)
+{
+	QVector<QString> imgConverter = { "jpg", "png", "bmp" };
+	if (imgConverter.contains(suffix))
+	{
+		Converter = Image;
+		return;
+	}
+
+	QVector<QString>  fontConverter = { "ttf", "otf", "pfa", "pfb", "cff",
+		"pcf", "fnt", "bdf", "pfr" };
+	if (fontConverter.contains(suffix)) {
+		Converter = Font;
+		return;
+	}
+}
+
+void ContentInfo::mapDestNameFromConverter()
+{
+	switch (Converter)
+	{
+	case ContentInfo::ImageCoprocessor:
+		DestName = "images/" + DestName;
+		break;
+	case ContentInfo::Image:
+		DestName = "images/" + DestName;
+		break;
+	case ContentInfo::Font:
+		DestName = "fonts/" + DestName;
+		break;
+	default:
+		DestName = "content/" + DestName;
+		break;
+	}
+}
+
 int ContentInfo::bitmapAddress(int deviceIntf) const
 {
 	if (Converter == ContentInfo::Image)
@@ -380,9 +420,10 @@ ContentManager::ContentManager(MainWindow * parent)
 	m_ContentList->setAcceptDrops(true);
 	m_ContentList->setDragEnabled(true);
 	// m_ContentList->header()->close();
-	m_ContentList->setColumnCount(2);
+	m_ContentList->setColumnCount(3);
 	QStringList headers;
 	headers.push_back(tr("Status"));
+	headers.push_back(tr("Address"));
 	headers.push_back(tr("Name"));
 	m_ContentList->setHeaderLabels(headers);
 	layout->addWidget(m_ContentList);
@@ -446,7 +487,7 @@ ContentManager::ContentManager(MainWindow * parent)
 	m_PropertiesCommonName = new UndoStackDisabler<QLineEdit>(this);
 	m_PropertiesCommonName->setUndoStack(m_MainWindow->undoStack());
 	addLabeledWidget(this, propCommonLayout, tr("Name: "), m_PropertiesCommonName);
-	connect(m_PropertiesCommonName, SIGNAL(editingFinished()), this, SLOT(propertiesCommonDestNameChanged()));
+	connect(m_PropertiesCommonName, &QLineEdit::editingFinished, this, &ContentManager::onDisplayNameChanged);
 	QComboBox *propCommonConverter = new QComboBox(this);
 	m_PropertiesCommonConverter = propCommonConverter;
 	propCommonConverter->addItem("");
@@ -729,8 +770,6 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	printf("ContentManager::add(filePath)\n");
 
 	ContentInfo *contentInfo = new ContentInfo(filePath);
-	QString fileExt = QFileInfo(filePath).suffix().toLower();
-
 	auto updateFlashSize = [&]() {
 		size_t globalSize = g_Flash ? BT8XXEMU_Flash_size(g_Flash) : 0;
 		auto contentSize = getFlashSize(contentInfo);
@@ -745,18 +784,9 @@ ContentInfo *ContentManager::add(const QString &filePath)
 		};
 	};
 
-	if (fileExt == "jpg")      contentInfo->Converter = ContentInfo::Image;
-	else if (fileExt == "png") contentInfo->Converter = ContentInfo::Image;
-    else if (fileExt == "bmp") contentInfo->Converter = ContentInfo::Image;
-	else if (fileExt == "ttf") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "otf") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "pfa") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "pfb") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "cff") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "pcf") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "fnt") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "bdf") contentInfo->Converter = ContentInfo::Font;
-	else if (fileExt == "pfr") contentInfo->Converter = ContentInfo::Font;
+	QString fileExt = QFileInfo(filePath).suffix().toLower();
+	contentInfo->mapToConverter(fileExt);
+	contentInfo->mapDestNameFromConverter();
 
 	if (contentInfo->MapInfoFileType.contains(fileExt))
 	{
@@ -858,7 +888,6 @@ ContentInfo *ContentManager::add(const QString &filePath)
 		contentInfo->MemoryLoaded = true;
 		contentInfo->WantAutoLoad = false;
 	}
-
 	else if (contentInfo->Converter != ContentInfo::Invalid && contentInfo->DataStorage != ContentInfo::Flash)
 	{
 		int freeAddress = getFreeMemoryAddress();
@@ -868,34 +897,16 @@ ContentInfo *ContentManager::add(const QString &filePath)
 			contentInfo->MemoryAddress = freeAddress;
 		}
 	}
-
 	else if (contentInfo->Converter == ContentInfo::Invalid)
 	{
 		contentInfo->WantAutoLoad = true;
 	}
-
-	switch (contentInfo->Converter)
-	{
-	case ContentInfo::ImageCoprocessor:
-		contentInfo->DestName = "images/" + contentInfo->DestName;
-		break;
-	case ContentInfo::Image:
-		contentInfo->DestName = "images/" + contentInfo->DestName;
-		break;
-	case ContentInfo::Font:
-		contentInfo->DestName = "fonts/" + contentInfo->DestName;
-		break;
-	default:
-		contentInfo->DestName = "content/" + contentInfo->DestName;
-		break;
-	}
-
+	
 	add(contentInfo);
 
 	if (contentInfo->DataStorage == ContentInfo::Flash) { 
 		updateFlashSize();
 	}
-
 	return contentInfo;
 }
 
@@ -1130,7 +1141,7 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	}
 
 	// Ensure no duplicate names are used
-	contentInfo->DestName = createName(contentInfo->DestName);
+	contentInfo->DisplayName = createName(contentInfo->DisplayName);
 
 	// Add to the content list
 	QTreeWidgetItem *view = new QTreeWidgetItem(m_ContentList);
@@ -1200,7 +1211,7 @@ bool ContentManager::nameExists(const QString &name)
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
-		if (info->DestName == name)
+		if (info->DisplayName == name)
 		{
 			return true;
 		}
@@ -1210,55 +1221,22 @@ bool ContentManager::nameExists(const QString &name)
 
 QString ContentManager::createName(const QString &name)
 {
-	// Strip invalid characters
-	QString destName;
-	bool lastIsSlash = true;
-	for (QString::const_iterator it(name.begin()), end (name.end()); it != end; ++it)
-	{
-		QChar c = *it;
-		if (c == '.'
-			|| c == ' ')
-		{
-			if (!lastIsSlash)
-			{
-				destName += c;
-			}
-		}
-		else if (c.isLetterOrNumber()
-			|| c == '_'
-			|| c == '-'
-			|| c == '('
-			|| c == ')'
-			|| c == '['
-			|| c == ']'
-			|| c == '+')
-		{
-			destName += c;
-			lastIsSlash = false;
-		}
-		else if (c == '\\' || c == '/')
-		{
-			if (!lastIsSlash)
-			{
-				destName += '/';
-				lastIsSlash = true;
-			}
-		}
-	}
-	destName = destName.simplified();
-	// Cannot have empty name
-	if (destName.isEmpty())
-		destName = "untitled";
+	QString newName = name.simplified();
+	if (newName.isEmpty())
+		newName = "untitled";
 	// Renumber in case of duplicate
-	QString resultDestName = destName;
-	int renumber = 2;
-	while (nameExists(resultDestName))
+	QString temp;
+	QString currentName = newName;
+	int i = 0;
+	while (nameExists(newName))
 	{
-		resultDestName = destName + "_" + QString::number(renumber);
-		++renumber;
+		++i;
+		temp = currentName;
+		// Replace in font of suffix
+		int pos = name.lastIndexOf('.') != -1 ? name.lastIndexOf('.') : name.length();
+		newName = temp.insert(pos, QString("_%1").arg(i));
 	}
-	// printf("%s\n", resultDestName.toLocal8Bit().data());
-	return resultDestName;
+	return newName;
 }
 
 void ContentManager::add()
@@ -1361,8 +1339,8 @@ void ContentManager::addInternal(QStringList fileNameList)
 		QFileInfo fi(fileName);
 		newName = dir.absolutePath() + '/' + fi.fileName();
 		QString suffix = fi.suffix();
-
-		i = 1;
+		
+		i = 0;
 		while (QFileInfo::exists(newName))
 		{
 			++i;
@@ -1400,7 +1378,7 @@ void ContentManager::addInternal(QStringList fileNameList)
 					msgBox.setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
 					msgBox.setText(
 					    tr("A valid %1 file is found for the imported content: %2 "
-					       "file.\nThe imported content is a EVE asset and you may drag "
+					       "file.\nThe imported content is an EVE asset and you may drag "
 					       "it to viewport later.")
 					        .arg(QString(infoFileType).toUpper(), originalInfoFile));
 
@@ -1808,6 +1786,7 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 {
 	QString text;
 	QIcon icon;
+	QString address;
 
 	if (!contentInfo->BuildError.isEmpty())
 	{
@@ -1819,6 +1798,7 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 		if ((contentInfo->MemoryLoaded && contentInfo->OverlapMemoryFlag)
 			|| ((contentInfo->DataStorage == ContentInfo::Flash) && contentInfo->OverlapFlashFlag))
 		{
+			address = "N/A";
 			if (contentInfo->OverlapFlashFlag)
 			{
 				size_t globalSize = g_Flash ? BT8XXEMU_Flash_size(g_Flash) : 0;
@@ -1849,18 +1829,21 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 		{
 			text = "Loaded";
 			icon = QIcon(":/icons/tick");
+			address = QString::number(contentInfo->MemoryAddress);
 		}
-		else if ((contentInfo->DataStorage == ContentInfo::Flash))
+		else if (contentInfo->DataStorage == ContentInfo::Flash)
 		{
 			text = "Flash";
 			icon = QIcon(":/icons/tick");
+			address = QString::number(contentInfo->FlashAddress);
 		}
 	}
 
 	// contentInfo->View->setText(0, contentInfo->SourcePath);
 	contentInfo->View->setText(0, text);
 	contentInfo->View->setIcon(0, icon);
-	contentInfo->View->setText(1, contentInfo->DestName);
+	contentInfo->View->setText(1, address);
+	contentInfo->View->setText(2, contentInfo->DisplayName);
 
 	m_ContentList->resizeColumnToContents(1);
 }
@@ -1895,7 +1878,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 	// Set common widget values
 	m_PropertiesCommonSourceFile->setText(contentInfo->SourcePath);
 	m_PropertiesCommonSourceFile->setToolTip(QDir(m_PropertiesCommonSourceFile->text()).absolutePath());
-	m_PropertiesCommonName->setText(contentInfo->DestName);
+	m_PropertiesCommonName->setText(contentInfo->DisplayName);
 	if (contentInfo->Converter < ContentInfo::FlashMap)
 	{
 		m_PropertiesCommonConverter->setCurrentIndex((int)contentInfo->Converter);
@@ -3867,76 +3850,34 @@ void ContentManager::propertiesCommonSourcePathBrowse()
 
 ////////////////////////////////////////////////////////////////////////
 
-class ContentManager::ChangeDestName : public QUndoCommand
+class ContentManager::ChangeDisplayName : public QUndoCommand
 {
 public:
-	ChangeDestName(ContentManager *contentManager, ContentInfo *contentInfo, const QString &value) :
+	ChangeDisplayName(ContentManager *contentManager, ContentInfo *contentInfo, const QString &value) :
 		QUndoCommand(),
 		m_ContentManager(contentManager),
 		m_ContentInfo(contentInfo),
-		m_OldValue(contentInfo->DestName),
+		m_OldValue(contentInfo->DisplayName),
 		m_NewValue(value)
 	{
-		setText(tr("Change content destination name"));
+		setText(tr("Change display name"));
 	}
 
-	virtual ~ChangeDestName()
+	virtual ~ChangeDisplayName()
 	{
 
-	}
-
-private:
-	void renameFileExt(const QString &from, const QString &to, const QString &ext) const
-	{
-		if (!QFile::rename(from + ext, to + ext))
-		{
-			// printf("cannot rename '%s' to '%s'\n", (from + ext).toLocal8Bit().data(), (to + ext).toLocal8Bit().data());
-			if (QFile::copy(from + ext, to + ext))
-			{
-				QFile::remove(from + ext);
-			}
-			else
-			{
-				// printf("cannot copy\n");
-			}
-		}
-	}
-
-protected:
-	void renameFiles(const QString &from, const QString &to) const
-	{
-		m_ContentManager->lockContent();
-		// Create destination directory
-		if (to.contains('/'))
-		{
-			QString destDir = to.left(to.lastIndexOf('/'));
-			if (!QDir(QDir::currentPath()).mkpath(destDir))
-			{
-				// Will fail at copy, and a rebuild will happen which will also fail with mkpath failure
-				printf("Unable to create destination path\n");
-			}
-		}
-		// Rename files to their new destination name
-		const std::vector<QString> &fileExt = ContentManager::getFileExtensions();
-		for (std::vector<QString>::const_iterator it(fileExt.begin()), end(fileExt.end()); it != end; ++it)
-		{
-			renameFileExt(from, to, (*it));
-		}
-		m_ContentManager->unlockContent();
 	}
 
 public:
 	virtual void undo()
 	{
-		m_ContentInfo->DestName = m_OldValue;
-		renameFiles(m_NewValue, m_OldValue);
+		m_ContentInfo->DisplayName = m_OldValue;
 		m_ContentManager->reprocessInternal(m_ContentInfo);
 	}
 
 	virtual void redo()
 	{
-		m_ContentInfo->DestName = m_NewValue;
-		renameFiles(m_OldValue, m_NewValue);
+		m_ContentInfo->DisplayName = m_NewValue;
 		m_ContentManager->reprocessInternal(m_ContentInfo);
 	}
 
@@ -3947,7 +3888,7 @@ public:
 
 	virtual bool mergeWith(const QUndoCommand *command)
 	{
-		const ChangeDestName *c = static_cast<const ChangeDestName *>(command);
+		const ChangeDisplayName *c = static_cast<const ChangeDisplayName *>(command);
 
 		if (c->m_ContentInfo != m_ContentInfo)
 			return false;
@@ -3966,22 +3907,22 @@ private:
 	QString m_NewValue;
 };
 
-void ContentManager::changeDestName(ContentInfo *contentInfo, const QString &value)
+void ContentManager::changeDisplayName(ContentInfo *contentInfo, const QString &value)
 {
 	// Create undo/redo
-	if (contentInfo->DestName != value)
+	if (contentInfo->DisplayName != value)
 	{
-		ChangeDestName *changeDestName = new ChangeDestName(this, contentInfo, createName(value));
-		m_MainWindow->undoStack()->push(changeDestName);
+		ChangeDisplayName *changeDisplayName = new ChangeDisplayName(this, contentInfo, createName(value));
+		m_MainWindow->undoStack()->push(changeDisplayName);
 	}
 }
 
-void ContentManager::propertiesCommonDestNameChanged()
+void ContentManager::onDisplayNameChanged()
 {
-	printf("ContentManager::propertiesCommonDestNameChanged(value)\n");
+	printf("ContentManager::onDisplayNameChanged(value)\n");
 
 	if (current())
-		changeDestName(current(), m_PropertiesCommonName->text());
+		changeDisplayName(current(), m_PropertiesCommonName->text());
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -5300,6 +5241,7 @@ ContentTreeWidget::ContentTreeWidget(QWidget *parent)
     : QTreeWidget(parent)
 {
 	setAcceptDrops(true);
+	setIndentation(2);
 }
 
 ContentTreeWidget::~ContentTreeWidget()

@@ -21,6 +21,7 @@
 
 #include "ExampleDialog.h"
 #include "utils/ImageUtil.h"
+#include "define/ValueDefine.h"
 
 namespace FTEDITOR {
 
@@ -156,7 +157,7 @@ ThumbnailView::ThumbnailView(ExampleDialog *parent, QString path)
 
   auto mainLyt = new QHBoxLayout;
   auto addProject = [&, this](QFileInfo item) {
-    if (item.isFile() && item.suffix() == "ese") {
+    if (item.isFile() && item.suffix() == PROJECT_EXTENSION) {
       m_fileInfoList.append(item);
     }
   };
