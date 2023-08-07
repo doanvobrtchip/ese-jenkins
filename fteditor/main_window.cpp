@@ -148,6 +148,8 @@ static int s_CoCmdReadChanged[FTEDITOR_DL_SIZE];
 void cleanupMediaFifo();
 void emuMain(BT8XXEMU_Emulator *sender, void *context);
 void closeDummy(BT8XXEMU_Emulator *sender, void *context);
+void wr32(ramaddr address, uint32_t value);
+uint32_t rd32(size_t address);
 void resetemu();
 
 static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
@@ -1810,6 +1812,40 @@ void MainWindow::createDockWindows()
 				ctrlGroup->setVisible(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815);
 			});
 		}
+		
+		// HSF
+		{
+			auto hsfGroup = new QGroupBox(widget);
+			hsfGroup->setTitle(tr("HSF"));
+			hsfGroup->setToolTip(tr("Set by CMD_HSF"));
+			
+			auto hsfLabel = new QLabel(widget);
+			hsfLabel->setText(tr("Width of HSF:"));
+			m_hsf = new QSpinBox(widget);
+			m_hsf->setMinimum(0);
+			m_hsf->setValue(REG_HSF_HSIZE_DEFAULT);
+			
+			auto hsfLayout = new QHBoxLayout;
+			hsfLayout->addWidget(hsfLabel);
+			hsfLayout->addWidget(m_hsf);
+			
+			hsfGroup->setLayout(hsfLayout);
+			layout->addWidget(hsfGroup);
+			
+			connect(m_HSize, &QSpinBox::valueChanged, this, [this](int i){
+				m_hsf->setMaximum(i);
+			});
+			connect(m_hsf, &QSpinBox::valueChanged, this, [](int i) {
+				if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSF_HSIZE)) != i)
+				{
+					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSF_HSIZE), i);
+				}
+			});
+			connect(this, &MainWindow::deviceChanged, this, [hsfGroup]() {
+				hsfGroup->setVisible(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817);
+			});
+		}
+		
 		layout->addStretch();
 		widget->setLayout(layout);
 		scrollArea->setWidget(widget);
@@ -2780,6 +2816,7 @@ void MainWindow::actNew(bool addClear)
 	
 	//Reset REG_ROTATE
 	m_Rotate->setValue(REG_ROTATE_DEFAULT);
+	m_hsf->setValue(REG_HSF_HSIZE_DEFAULT);
 	
 	// clear undo stacks
 	clearUndoStack();
@@ -3024,9 +3061,11 @@ void MainWindow::openFile(const QString &fileName)
 			m_ProjectDevice->setCurrentIndex(FTEDITOR_FT801);
 		}
 		QJsonObject registers = root["registers"].toObject();
-		m_HSize->setValue(((QJsonValue)registers["hSize"]).toVariant().toInt());
-		m_VSize->setValue(((QJsonValue)registers["vSize"]).toVariant().toInt());
-		m_Rotate->setValue(((QJsonValue)registers["rotate"]).toVariant().toInt());
+		m_HSize->setValue(registers["hSize"].toVariant().toInt());
+		m_VSize->setValue(registers["vSize"].toVariant().toInt());
+		m_Rotate->setValue(registers.contains("rotate") ? registers["rotate"].toVariant().toInt() : REG_ROTATE_DEFAULT);
+		m_hsf->setValue(registers.contains("hsf") ? registers["hsf"].toVariant().toInt() : REG_HSF_HSIZE_DEFAULT);
+		
 		documentFromJsonArray(m_Macro->codeEditor(), registers["macro"].toArray());
 		QJsonArray content = root["content"].toArray();
 		m_ContentManager->suppressOverlapCheck();
@@ -3241,6 +3280,7 @@ QByteArray MainWindow::toJson(bool exportScript)
 	registers["hSize"] = g_HSize;
 	registers["vSize"] = g_VSize;
 	registers["rotate"] = m_Rotate->value();
+	registers["hsf"] = m_hsf->value();
 	registers["macro"] = documentToJsonArray(m_Macro->codeEditor()->document(), false, exportScript);
 	root["registers"] = registers;
 	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document(), false, exportScript);

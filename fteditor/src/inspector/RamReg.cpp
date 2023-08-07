@@ -198,8 +198,8 @@ void RamReg::initDisplayReg() {
   m_registerCopy.reserve(FTEDITOR_REG_NB);
   m_registerItems.reserve(FTEDITOR_REG_NB);
   for (int regEnum = 0; regEnum < FTEDITOR_REG_NB; ++regEnum) {
-    uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, regEnum);
     if (wantRegister(regEnum)) {
+	  uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, regEnum);
       QTreeWidgetItem *item = new QTreeWidgetItem(m_registers);
       item->setText(0, ConvertUtil::asRaw(addr));
       item->setText(1, regToString(FTEDITOR_CURRENT_DEVICE, regEnum));
