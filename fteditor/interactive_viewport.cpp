@@ -3346,6 +3346,7 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 				DlParsed pa;
 				pa.ValidId = true;
 				pa.ExpectedStringParameter = false;
+				pa.VarArgCount = 0;
 				if (selectionType == FTEDITOR_SELECTION_CMD_STATE)
 				{
 					pa.IdLeft = 0xFFFFFF00;
@@ -3353,6 +3354,8 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					switch (selection)
 					{
 					case CMD_REGREAD:
+					case CMD_SETFONT:
+					case CMD_TRANSLATE:
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
 						pa.ExpectedParameterCount = 2;
@@ -3378,14 +3381,11 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.Parameter[1].I = 65536;
 						pa.ExpectedParameterCount = 2;
 						break;
+					case CMD_FLASHSOURCE:
+					case CMD_FILLWIDTH:
 					case CMD_ROTATE:
 						pa.Parameter[0].I = 0;
 						pa.ExpectedParameterCount = 1;
-						break;
-					case CMD_TRANSLATE:
-						pa.Parameter[0].I = 0;
-						pa.Parameter[1].I = 0;
-						pa.ExpectedParameterCount = 2;
 						break;
 					case CMD_SETSCRATCH:
 						pa.Parameter[0].I = 15;
@@ -3403,11 +3403,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							pa.Parameter[1].I = 31;
 						else
 							pa.Parameter[1].I = 34;
-						pa.ExpectedParameterCount = 2;
-						break;
-					case CMD_SETFONT:
-						pa.Parameter[0].I = 0;
-						pa.Parameter[1].I = 0;
 						pa.ExpectedParameterCount = 2;
 						break;
 					case CMD_SETFONT2:
@@ -3429,10 +3424,6 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							pa.Parameter[i].I = 0;
 						}
 						pa.ExpectedParameterCount = 13;
-						break;
-					case CMD_FLASHSOURCE:
-						pa.Parameter[0].I = 0;
-						pa.ExpectedParameterCount = 1;
 						break;
 					case CMD_ANIMXY:
 						pa.Parameter[0].I = 0;
