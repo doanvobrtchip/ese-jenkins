@@ -16,4 +16,6 @@
 #define REG_PLAY_CONTROL_PAUSE      0x00
 #define REG_PLAY_CONTROL_PLAY       0x01
 
+#define REG_HSF_HSIZE_DEFAULT       0
+
 #endif // REGDEFINE_H

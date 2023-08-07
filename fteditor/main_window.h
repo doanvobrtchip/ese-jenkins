@@ -369,6 +369,7 @@ private:
 	QSpinBox *m_HSize;
 	QSpinBox *m_VSize;
 	QSpinBox *m_Rotate;
+	QSpinBox *m_hsf;
 
 	std::vector<QTabBar *> m_HookedTabs;
 
