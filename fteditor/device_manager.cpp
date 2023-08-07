@@ -1,6 +1,6 @@
 /*
 Copyright (C) 2014-2016  Future Technology Devices International Ltd
-Copyright (C) 2016-2022  Bridgetek Pte Lte
+Copyright (C) 2016-2023  Bridgetek Pte Lte
 */
 
 #pragma warning(disable : 26812) // Unscoped enum
