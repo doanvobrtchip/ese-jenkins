@@ -1841,11 +1841,16 @@ void MainWindow::createDockWindows()
 					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSF_HSIZE), i);
 				}
 			});
-			connect(this, &MainWindow::deviceChanged, this, [hsfGroup]() {
-				hsfGroup->setVisible(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817);
+			connect(this, &MainWindow::deviceChanged, this, [hsfGroup, this]() {
+				if (bool visible = FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817;
+				    visible != hsfGroup->isVisible())
+				{
+					hsfGroup->setVisible(visible);
+					if (visible) emit m_hsf->setValue(0);
+				}
 			});
 		}
-		
+
 		layout->addStretch();
 		widget->setLayout(layout);
 		scrollArea->setWidget(widget);

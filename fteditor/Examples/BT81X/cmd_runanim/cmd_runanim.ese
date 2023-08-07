@@ -1,0 +1,45 @@
+{
+    "content": [
+        {
+            "converter": "Raw",
+            "dataCompressed": false,
+            "dataStorage": "Flash",
+            "destName": "content/9squares.anim_2",
+            "displayName": "9squares.anim_2.flash",
+            "flashAddress": 4096,
+            "memoryAddress": 0,
+            "memoryLoaded": false,
+            "rawLength": 0,
+            "rawStart": 0,
+            "sourcePath": "resources/9squares.anim_2.flash"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "",
+        "",
+        "CMD_FLASHFAST()",
+        "CMD_FLASHSOURCE(4096)",
+        "",
+        "CMD_MEMSET(0, 1,0)",
+        "",
+        "CMD_ANIMSTART(0, 144448, ANIM_LOOP)",
+        "CMD_ANIMXY(0,400,200)",
+        "CMD_RUNANIM(0xffffff,0)"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2071
+    },
+    "registers": {
+        "hSize": 800,
+        "macro": [
+            "NOP()",
+            "NOP()"
+        ],
+        "rotate": 0,
+        "vSize": 480
+    }
+}
