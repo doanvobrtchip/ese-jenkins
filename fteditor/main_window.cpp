@@ -2465,11 +2465,14 @@ void MainWindow::clearEditor()
 	m_StepCount->setValue(1);
 	m_StepCmdEnabled->setChecked(false);
 	m_StepCmdCount->setValue(1);
+	m_Rotate->setValue(REG_ROTATE_DEFAULT);
+	m_hsf->setValue(REG_HSF_HSIZE_DEFAULT);
 	setTraceEnabled(false);
 	setTraceX(0);
 	setTraceY(0);
 	m_DlEditor->clear();
 	m_CmdEditor->clear();
+	m_scriptComp->clear();
 	m_Macro->clear();
 	m_ContentManager->clear(true);
 	//m_BitmapSetup->clear();
@@ -2713,6 +2716,7 @@ void MainWindow::toggleDockWindow(bool isShow)
 	m_InspectorDock->setVisible(isShow);
 	m_DlEditorDock->setVisible(false);
 	m_CmdEditorDock->setVisible(isShow);
+	m_scriptEditorDock->setVisible(isShow);
 	m_ProjectDock->setVisible(isShow);
 #if FT800_DEVICE_MANAGER
 	m_DeviceManagerDock->setVisible(isShow);
@@ -2851,10 +2855,6 @@ void MainWindow::actNew(bool addClear)
 		m_Macro->replaceLine(0, pa);
 		m_Macro->replaceLine(1, pa);
 	}
-	
-	//Reset REG_ROTATE
-	m_Rotate->setValue(REG_ROTATE_DEFAULT);
-	m_hsf->setValue(REG_HSF_HSIZE_DEFAULT);
 	
 	// clear undo stacks
 	clearUndoStack();

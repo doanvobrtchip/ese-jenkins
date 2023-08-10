@@ -31,6 +31,7 @@ class ScriptComponent : public QWidget {
   void initialiseFont();
   QString exampleFilePath();
   void focus();
+  void clear();
 
  public slots:
   void loadExample(bool checked);

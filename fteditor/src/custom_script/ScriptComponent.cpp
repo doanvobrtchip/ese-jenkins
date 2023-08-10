@@ -25,7 +25,7 @@ ScriptComponent::ScriptComponent(MainWindow *parent)
   m_cmdEditor = new DlEditor(parent, true);
   m_cmdEditor->setVisible(false);
   m_cmdEditor->setDisplayListModified(false);
-  
+
   initialiseFont();
   m_scriptEditor = new ScriptEditor(m_LexerPy, this);
 
@@ -127,8 +127,10 @@ QString ScriptComponent::exampleFilePath() {
 
 void ScriptComponent::focus() {
   setFocus();
-  //Liem noted because it does not work
+  // Liem noted because it does not work
 }
+
+void ScriptComponent::clear() { m_scriptEditor->clear(); }
 
 void ScriptComponent::loadExample(bool checked) {
   QFile file(exampleFilePath());
@@ -145,18 +147,18 @@ void ScriptComponent::stopScript() { m_thread->stopRunning(); }
 void ScriptComponent::setup(QObject *obj) {
   auto cmdEditor = m_mainWindow->cmdEditor()->codeEditor();
   if (cmdEditor && (obj == cmdEditor || obj == nullptr)) {
-	  connect(cmdEditor, &QPlainTextEdit::textChanged, this,
-		  &ScriptComponent::stopScript);
-	  connect(cmdEditor, &CodeEditor::cursorChanged, this,
-		  &ScriptComponent::stopScript);
+    connect(cmdEditor, &QPlainTextEdit::textChanged, this,
+            &ScriptComponent::stopScript);
+    connect(cmdEditor, &CodeEditor::cursorChanged, this,
+            &ScriptComponent::stopScript);
   }
-  
+
   auto dlEditor = m_mainWindow->dlEditor()->codeEditor();
   if (dlEditor && (obj == dlEditor || obj == nullptr)) {
-	  connect(dlEditor, &QPlainTextEdit::textChanged, this,
-		  &ScriptComponent::stopScript);
-	  connect(dlEditor, &CodeEditor::cursorChanged, this,
-		  &ScriptComponent::stopScript);
+    connect(dlEditor, &QPlainTextEdit::textChanged, this,
+            &ScriptComponent::stopScript);
+    connect(dlEditor, &CodeEditor::cursorChanged, this,
+            &ScriptComponent::stopScript);
   }
 }
 

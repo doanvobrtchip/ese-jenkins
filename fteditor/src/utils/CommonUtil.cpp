@@ -5,7 +5,7 @@
  */
 #include "CommonUtil.h"
 
-#include <ValueDefine.h>
+#include <define/ValueDefine.h>
 
 #include <QApplication>
 #include <QClipboard>
