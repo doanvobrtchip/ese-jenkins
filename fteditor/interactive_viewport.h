@@ -107,6 +107,7 @@ protected:
 public slots:
 	virtual void zoomIn() override;
 	virtual void zoomOut() override;
+	void setup(QObject *obj = nullptr);
 
 private slots:
 	void automaticChecked();
@@ -187,6 +188,7 @@ private:
 	bool m_IsDrawAlgnHorizontal;
 	bool m_IsDrawAlgnVertical;
 	bool m_IsDrawAlgn;
+	bool m_selectable;
 
 signals:
 	void selectedLinesChanged(const QList<int> &newSelectedLines);

@@ -90,6 +90,7 @@ Source: "{#BuildDir}\ftd2xx.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BuildDir}\libFT4222-64.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BuildDir}\libMPSSE.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BuildDir}\eve_hal.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#BuildDir}\QScintilla.dll"; DestDir: "{app}"; Flags: ignoreversion
 
 ;Qt
 Source: "{#BuildDir}\qt-deployment\*.*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion

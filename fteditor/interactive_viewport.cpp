@@ -42,17 +42,18 @@
 #include <bt8xxemu_diag.h>
 
 // Project includes
+#include "code_editor.h"
+#include "constant_common.h"
+#include "constant_mapping.h"
+#include "content_manager.h"
+#include "custom_script/ScriptComponent.h"
+#include "inspector.h"
+#include "main_window.h"
+#include "properties_editor.h"
+#include "toolbox.h"
+#include "utils/DLUtil.h"
 #include "utils/LoggerUtil.h"
 #include "utils/ReadWriteUtil.h"
-#include "utils/DLUtil.h"
-#include "main_window.h"
-#include "code_editor.h"
-#include "toolbox.h"
-#include "inspector.h"
-#include "content_manager.h"
-#include "properties_editor.h"
-#include "constant_mapping.h"
-#include "constant_common.h"
 
 namespace FTEDITOR {
 
@@ -269,6 +270,10 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 	    [this](const QPoint &pos) {
 		    m_ContextMenu->exec(this->mapToGlobal(pos));
 	    });
+	
+	setup();
+	connect(m_MainWindow, &MainWindow::readyToSetup, this,
+	    &InteractiveViewport::setup);
 }
 
 QAction *InteractiveViewport::ActionRuler() const
@@ -278,6 +283,20 @@ QAction *InteractiveViewport::ActionRuler() const
 
 InteractiveViewport::~InteractiveViewport()
 {
+}
+
+void InteractiveViewport::setup(QObject *obj)
+{
+	auto scripComp = m_MainWindow->scriptComponent();
+	if (scripComp && (obj == scripComp || obj == nullptr))
+	{
+		connect(scripComp, &ScriptComponent::started, this, [this]() {
+			m_selectable = false;
+		});
+		connect(scripComp, &ScriptComponent::finished, this, [this]() {
+			m_selectable = true;
+		});
+	}
 }
 
 void InteractiveViewport::zoomIn()
@@ -559,7 +578,7 @@ void InteractiveViewport::paintEvent(QPaintEvent *e)
 	// Draw image overlays
 	/*QPainter p;
 	p.begin(image);*/
-	if (m_LineEditor)
+	if (m_LineEditor && m_selectable)
 	{
 		auto drawAlignment = [&](DlParsed &parsed, int specX = -1, int specY = -1) {
 #define COLOR_FIT_VERTICALLY Qt::green
@@ -2186,6 +2205,8 @@ void InteractiveViewport::mousePressEvent(QMouseEvent *e)
 		emit this->customContextMenuRequested(e->position().toPoint());
 		return;
 	}
+	
+	if (!m_selectable) return;
 	m_FirstPoint = m_SecondPoint = e->position().toPoint();
 	m_MainWindow->cmdEditor()->codeEditor()->setKeyHandler(this);
 	m_MainWindow->dlEditor()->codeEditor()->setKeyHandler(this);

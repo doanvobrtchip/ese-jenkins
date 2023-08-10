@@ -52,6 +52,7 @@ class QTextEdit;
 
 namespace FTEDITOR {
 
+class ScriptComponent;
 class InteractiveViewport;
 class DlEditor;
 class PropertiesEditor;
@@ -170,6 +171,8 @@ public:
 	
 	const QList<QAction *> &RecentActionList() const;
 	void setCurrentFileName(const QString &newCurrentFileName);
+	
+	ScriptComponent *scriptComponent() const;
 	
 private slots:
 	// void applyEmulatorConfig();
@@ -311,6 +314,8 @@ private:
 	QDockWidget *m_DlEditorDock;
 	DlEditor *m_CmdEditor;
 	QDockWidget *m_CmdEditorDock;
+	ScriptComponent *m_scriptComp;
+	QDockWidget *m_scriptEditorDock;
 
 	QWidget *m_ErrorFrame;
 	QLabel *m_ErrorLabel;
@@ -443,6 +448,7 @@ signals:
 	void readyToSetup(QObject *obj);
 	void deviceChanged();
 	void windowActivate();
+	void eventNew();
 }; /* class MainWindow */
 
 } /* namespace FTEDITOR */

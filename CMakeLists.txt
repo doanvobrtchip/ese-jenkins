@@ -179,7 +179,6 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 IF (WITH_SDL2)
   ADD_SUBDIRECTORY(gl3w)
 ENDIF (WITH_SDL2)
-
 IF (WITH_BT8XXEMU)
   ADD_SUBDIRECTORY(ft8xxemu_platform)
   IF (WITH_FT800EMU)
@@ -238,4 +237,5 @@ IF (WITH_MX25LEMU)
   ADD_SUBDIRECTORY(mx25lemu)
 ENDIF (WITH_MX25LEMU)
 
+ADD_SUBDIRECTORY(QScintilla)
 ########################################################################
