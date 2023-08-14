@@ -52,7 +52,7 @@ void ScriptThread::stopRunning() {
     file.remove();
     QFile fileOutput(outputPath());
     fileOutput.remove();
-
+	
     emit stateChanged(NotRunning);
     exit();
   }
