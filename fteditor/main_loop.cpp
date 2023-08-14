@@ -838,9 +838,9 @@ void loop()
 	g_ScriptCmdEditor->lockDisplayList();
 	bool dlModified = g_DlEditor->isDisplayListModified();
 	bool cmdModified = g_CmdEditor->isDisplayListModified();
-	bool scriptMdModified = g_ScriptCmdEditor->isDisplayListModified();
+	bool scriptModified = g_ScriptCmdEditor->isDisplayListModified();
 	
-	if (scriptMdModified || dlModified || cmdModified || /*reuploadFontSetup ||*/ (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd || (s_HasContentReadCoCmd && contentPoked))
+	if (scriptModified || dlModified || cmdModified || /*reuploadFontSetup ||*/ (g_StepCmdLimit != s_StepCmdLimitCurrent) || s_WantReloopCmd || (s_HasContentReadCoCmd && contentPoked))
 	{
 		bool warnMissingClear = true;
 		s_WantReloopCmd = false;
@@ -869,11 +869,11 @@ void loop()
 		int strParamRead = 0;
 		int cmdParamIdx[FTEDITOR_DL_SIZE + 1];
 		bool cmdValid[FTEDITOR_DL_SIZE];
-		uint32_t *cmdListPtr = scriptMdModified
+		uint32_t *cmdListPtr = scriptModified
 								   ? g_ScriptCmdEditor->getDisplayList()
 								   : g_CmdEditor->getDisplayList();
 		const DlParsed *cmdParsedPtr =
-			scriptMdModified ? g_ScriptCmdEditor->getDisplayListParsed()
+			scriptModified ? g_ScriptCmdEditor->getDisplayListParsed()
 							 : g_CmdEditor->getDisplayListParsed();
         // Make local copy, necessary in case of blocking commands
 		for (int i = 0; i < FTEDITOR_DL_SIZE; ++i)

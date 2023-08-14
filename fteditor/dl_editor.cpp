@@ -376,6 +376,16 @@ void DlEditor::lockDisplayList() { m_Mutex.lock(); }
 
 void DlEditor::unlockDisplayList() { m_Mutex.unlock(); }
 
+void DlEditor::setDLParsedItem(DlParsed dlp, int index)
+{
+	m_DisplayListParsed[index] = dlp;
+}
+
+void DlEditor::setDLSharedItem(uint32_t dls, int index)
+{
+	m_DisplayListShared[index] = dls;
+}
+
 void DlEditor::setDisplayListModified(bool modified)
 {
 	m_DisplayListModified = modified;

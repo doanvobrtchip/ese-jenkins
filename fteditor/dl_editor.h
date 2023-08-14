@@ -81,6 +81,8 @@ public:
 	void unlockDisplayList(); // mutex
 	inline uint32_t *getDisplayList() { return m_DisplayListShared; }
 	inline const DlParsed *getDisplayListParsed() { return m_DisplayListParsed; }
+	void setDLParsedItem(DlParsed dlp, int index);
+	void setDLSharedItem(uint32_t dls, int index);
 	inline bool isDisplayListModified()
 	{
 		bool result = m_DisplayListModified;
