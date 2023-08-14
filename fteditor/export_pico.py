@@ -58,7 +58,7 @@ def generateProjectFiles(destDir, filesToTestFolder):
 def run(projectName, document, ram, moduleName, screenResolution):
     
     deviceType = document["project"]["device"]
-    if deviceType not in [2069, 2070, 2071, 2072]:
+    if deviceType not in [2179, 2069, 2070, 2071, 2072]:
         raise Exception("Board is currently unsupported: " + moduleName)
         
     resultText = "<b>EVE HAL Export</b><br>"
