@@ -150,8 +150,6 @@ static int s_CoCmdReadChanged[FTEDITOR_DL_SIZE];
 void cleanupMediaFifo();
 void emuMain(BT8XXEMU_Emulator *sender, void *context);
 void closeDummy(BT8XXEMU_Emulator *sender, void *context);
-void wr32(ramaddr address, uint32_t value);
-uint32_t rd32(size_t address);
 void resetemu();
 
 static const int s_StandardResolutionNb[FTEDITOR_DEVICE_NB] = {
@@ -1867,11 +1865,22 @@ void MainWindow::createDockWindows()
 			connect(m_HSize, &QSpinBox::valueChanged, this, [this](int i){
 				m_hsf->setMaximum(i);
 			});
-			connect(m_hsf, &QSpinBox::valueChanged, this, [](int i) {
-				if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSF_HSIZE)) != i)
-				{
-					wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSF_HSIZE), i);
-				}
+			connect(m_hsf, &QSpinBox::valueChanged, this, [this](int i) {
+				// Inject CMD_HSF in the current list
+				DlParsed parsedCmdHSF;
+				parsedCmdHSF.ValidId = true;
+				parsedCmdHSF.IdLeft = 0xFFFFFF00;
+				parsedCmdHSF.IdRight = CMD_HSF & 0xFF;
+				parsedCmdHSF.ExpectedStringParameter = false;
+				parsedCmdHSF.VarArgCount = 0;
+				parsedCmdHSF.Parameter[0].I = i;
+				parsedCmdHSF.ExpectedParameterCount = 1;
+				
+				int index = m_CmdEditor->codeEditor()->blockCount();
+				m_CmdEditor->setDLSharedItem(
+				    DlParser::compile(FTEDITOR_CURRENT_DEVICE, parsedCmdHSF), index);
+				m_CmdEditor->setDLParsedItem(parsedCmdHSF, index);
+				m_CmdEditor->setDisplayListModified(true);
 			});
 			connect(this, &MainWindow::deviceChanged, this, [hsfGroup, this]() {
 				if (bool visible = FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817;
