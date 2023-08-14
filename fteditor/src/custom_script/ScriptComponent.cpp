@@ -82,7 +82,6 @@ ScriptComponent::ScriptComponent(MainWindow *parent)
 
   connect(m_mainWindow, &MainWindow::readyToSetup, this,
           &ScriptComponent::setup);
-
   connect(m_mainWindow, &MainWindow::eventNew, this,
           &ScriptComponent::handleNewEvent);
   setup();
@@ -131,6 +130,12 @@ void ScriptComponent::focus() {
 }
 
 void ScriptComponent::clear() { m_scriptEditor->clear(); }
+
+void ScriptComponent::ensureStopPython() {
+  stopScript();
+  while (m_thread->isRunning()) {
+  }
+}
 
 void ScriptComponent::loadExample(bool checked) {
   QFile file(exampleFilePath());

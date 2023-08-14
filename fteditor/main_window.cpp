@@ -560,7 +560,8 @@ void MainWindow::refreshScriptsMenu()
 {
 #ifdef FT800EMU_PYTHON
 	// printf("Look in %s\n", currentDir.absolutePath().toUtf8().data());
-
+	
+	m_scriptComp->ensureStopPython();
 	QStringList filters;
 	filters.push_back("*.py");
 

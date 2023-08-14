@@ -32,6 +32,7 @@ class ScriptComponent : public QWidget {
   QString exampleFilePath();
   void focus();
   void clear();
+  void ensureStopPython();
 
  public slots:
   void loadExample(bool checked);
