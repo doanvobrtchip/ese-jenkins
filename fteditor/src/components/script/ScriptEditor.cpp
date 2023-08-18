@@ -14,12 +14,12 @@ ScriptEditor::ScriptEditor(QsciLexer *lexer, QWidget *parent)
     : QsciScintilla(parent) {
   QFont font(lexer->defaultFont());
   QFontMetrics fontmetrics(font);
-  
+
   // Current line visible with special background color
   setCaretLineVisible(true);
   setCaretForegroundColor(palette().text().color());
   setCaretLineBackgroundColor(palette().color(QPalette::Midlight));
-  
+
   setMarginsFont(font);
   setMarginLineNumbers(0, true);
   setMarginsBackgroundColor(palette().window().color());
@@ -36,7 +36,7 @@ ScriptEditor::ScriptEditor(QsciLexer *lexer, QWidget *parent)
   setIndentationWidth(4);
   setIndentationGuides(true);
   setIndentationsUseTabs(false);
-  
+
   setLexer(lexer);
 }
 

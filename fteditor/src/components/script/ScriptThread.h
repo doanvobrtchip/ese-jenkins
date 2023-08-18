@@ -8,14 +8,14 @@
 
 #include <QThread>
 
-#include "ScriptComponent.h"
+#include "Script.h"
 
 class ScriptThread : public QThread {
   Q_OBJECT
 
  public:
   enum State { NotRunning, Starting, Running, Error };
-  ScriptThread(FTEDITOR::ScriptComponent *parent = 0);
+  ScriptThread(FTEDITOR::Script *parent = 0);
   ~ScriptThread();
   QString tempFilePath();
   QString outputPath();
@@ -32,7 +32,7 @@ class ScriptThread : public QThread {
   const QString m_tempFileName = "temp.py";
   const QString m_outputFileName = "output";
 
-  FTEDITOR::ScriptComponent *m_scriptComp;
+  FTEDITOR::Script *m_scriptComp;
   QTimer *m_timer;
 
  signals:

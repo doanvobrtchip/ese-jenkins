@@ -1,9 +1,9 @@
 /*!
- * @file ScriptComponent.cpp
+ * @file Script.cpp
  * @date 7/13/2023
  * @author Liem Do <liem.do@brtchip.com>
  */
-#include "ScriptComponent.h"
+#include "Script.h"
 
 #include <Qsci/qscilexerpython.h>
 
@@ -20,7 +20,7 @@
 
 namespace FTEDITOR {
 
-ScriptComponent::ScriptComponent(MainWindow *parent)
+Script::Script(MainWindow *parent)
     : QWidget(parent), m_mainWindow(parent), m_thread(NULL) {
   m_cmdEditor = new DlEditor(parent, true);
   m_cmdEditor->setVisible(false);
@@ -43,8 +43,7 @@ ScriptComponent::ScriptComponent(MainWindow *parent)
   });
 
   m_btnLoadExample = new QPushButton(tr("Load Example"));
-  connect(m_btnLoadExample, &QPushButton::clicked, this,
-          &ScriptComponent::loadExample);
+  connect(m_btnLoadExample, &QPushButton::clicked, this, &Script::loadExample);
 
   auto hBoxLyt = new QHBoxLayout;
   hBoxLyt->addWidget(m_lblStatus, 1);
@@ -54,15 +53,12 @@ ScriptComponent::ScriptComponent(MainWindow *parent)
   vBoxLyt->addLayout(hBoxLyt);
 
   m_thread = new ScriptThread(this);
-  connect(this, &ScriptComponent::buttonCheckedChanged, this,
-          [this](bool checked) {
-            m_btnRun->setText(checked ? tr("Stop") : tr("Execute"));
-          });
+  connect(this, &Script::buttonCheckedChanged, this, [this](bool checked) {
+    m_btnRun->setText(checked ? tr("Stop") : tr("Execute"));
+  });
 
-  connect(m_thread, &ScriptThread::started, this,
-          &ScriptComponent::handleStarted);
-  connect(m_thread, &ScriptThread::finished, this,
-          &ScriptComponent::handleFinished);
+  connect(m_thread, &ScriptThread::started, this, &Script::handleStarted);
+  connect(m_thread, &ScriptThread::finished, this, &Script::handleFinished);
   connect(m_thread, &ScriptThread::textChanged, m_lblStatus, &QLabel::setText);
   connect(m_thread, &ScriptThread::stateChanged, this,
           [this](ScriptThread::State state) {
@@ -80,15 +76,11 @@ ScriptComponent::ScriptComponent(MainWindow *parent)
     m_cmdEditor->codeEditor()->setPlainText(text);
   });
 
-  connect(m_mainWindow, &MainWindow::readyToSetup, this,
-          &ScriptComponent::setup);
-  connect(m_mainWindow, &MainWindow::eventNew, this,
-          &ScriptComponent::handleNewEvent);
-  setup();
-  emit m_mainWindow->readyToSetup(this);
+  connect(m_mainWindow, &MainWindow::clearEvent, this, &Script::onClearEvent);
+  ComponentBase::finishedSetup(this, m_mainWindow);
 }
 
-void ScriptComponent::initialiseFont() {
+void Script::initialiseFont() {
   m_LexerPy = new QsciLexerPython(this);
   m_LexerPy->setDefaultFont(QFont("Segoe UI", 10));
   m_LexerPy->setFoldComments(true);
@@ -120,24 +112,32 @@ void ScriptComponent::initialiseFont() {
                       QsciLexerPython::HighlightedIdentifier);
 }
 
-QString ScriptComponent::exampleFilePath() {
-  return m_mainWindow->applicationDataDir() + "/Examples/script/animation.py";
+QString Script::exampleFilePath() {
+  QString defaultFilePath =
+      m_mainWindow->applicationDataDir() + "/Examples/scripts/animation.py";
+  if (m_mainWindow->CurrentFileName().isEmpty()) return defaultFilePath;
+  QFileInfo fi(m_mainWindow->CurrentFileName());
+  QString scriptFilePath =
+      fi.absolutePath() + "/scripts/" + (fi.completeBaseName() + ".py");
+  QFileInfo scriptFI(scriptFilePath);
+  if (scriptFI.exists()) return scriptFilePath;
+  return defaultFilePath;
 }
 
-void ScriptComponent::focus() {
+void Script::focus() {
   setFocus();
   // Liem noted because it does not work
 }
 
-void ScriptComponent::clear() { m_scriptEditor->clear(); }
+void Script::clear() { m_scriptEditor->clear(); }
 
-void ScriptComponent::ensureStopPython() {
+void Script::ensureStopPython() {
   stopScript();
   while (m_thread->isRunning()) {
   }
 }
 
-void ScriptComponent::loadExample(bool checked) {
+void Script::loadExample(bool checked) {
   QFile file(exampleFilePath());
   if (!file.open(QIODevice::ReadOnly)) return;
   QTextStream stream(&file);
@@ -145,48 +145,50 @@ void ScriptComponent::loadExample(bool checked) {
   m_scriptEditor->setText(content);
 }
 
-void ScriptComponent::executeScript() { m_thread->startRuning(); }
+void Script::executeScript() { m_thread->startRuning(); }
 
-void ScriptComponent::stopScript() { m_thread->stopRunning(); }
+void Script::stopScript() { m_thread->stopRunning(); }
 
-void ScriptComponent::setup(QObject *obj) {
-  auto cmdEditor = m_mainWindow->cmdEditor()->codeEditor();
-  if (cmdEditor && (obj == cmdEditor || obj == nullptr)) {
-    connect(cmdEditor, &QPlainTextEdit::textChanged, this,
-            &ScriptComponent::stopScript);
-    connect(cmdEditor, &CodeEditor::cursorChanged, this,
-            &ScriptComponent::stopScript);
+void Script::setupConnections(QObject *obj) {
+  if (auto cmd = m_mainWindow->cmdEditor(); cmd != nullptr) {
+    if (auto cmdEditor = cmd->codeEditor();
+        cmdEditor && (obj == cmdEditor || obj == nullptr)) {
+      connect(cmdEditor, &QPlainTextEdit::textChanged, this,
+              &Script::stopScript);
+      connect(cmdEditor, &CodeEditor::cursorChanged, this, &Script::stopScript);
+    }
   }
 
-  auto dlEditor = m_mainWindow->dlEditor()->codeEditor();
-  if (dlEditor && (obj == dlEditor || obj == nullptr)) {
-    connect(dlEditor, &QPlainTextEdit::textChanged, this,
-            &ScriptComponent::stopScript);
-    connect(dlEditor, &CodeEditor::cursorChanged, this,
-            &ScriptComponent::stopScript);
+  if (auto dl = m_mainWindow->dlEditor(); dl != nullptr) {
+    if (auto dlEditor = dl->codeEditor();
+        dlEditor && (obj == dlEditor || obj == nullptr)) {
+      connect(dlEditor, &QPlainTextEdit::textChanged, this,
+              &Script::stopScript);
+      connect(dlEditor, &CodeEditor::cursorChanged, this, &Script::stopScript);
+    }
   }
 }
 
-void ScriptComponent::handleStarted() { emit started(); }
+void Script::handleStarted() { emit started(); }
 
-void ScriptComponent::handleFinished() {
+void Script::handleFinished() {
   m_cmdEditor->setDisplayListModified(false);
   m_mainWindow->dlEditor()->setDisplayListModified(true);
   m_mainWindow->cmdEditor()->setDisplayListModified(true);
   emit finished();
 }
 
-void ScriptComponent::handleNewEvent() { m_scriptEditor->clear(); }
+void Script::onClearEvent() { m_scriptEditor->clear(); }
 
-void ScriptComponent::setButtonChecked(bool checked) {
+void Script::setButtonChecked(bool checked) {
   m_btnRun->setChecked(checked);
   emit buttonCheckedChanged(checked);
 }
 
-MainWindow *ScriptComponent::mainWindow() const { return m_mainWindow; }
+MainWindow *Script::mainWindow() const { return m_mainWindow; }
 
-ScriptEditor *ScriptComponent::editor() const { return m_scriptEditor; }
+ScriptEditor *Script::editor() const { return m_scriptEditor; }
 
-DlEditor *ScriptComponent::cmdEditor() const { return m_cmdEditor; }
+DlEditor *Script::cmdEditor() const { return m_cmdEditor; }
 
 }  // namespace FTEDITOR

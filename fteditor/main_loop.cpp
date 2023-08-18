@@ -77,19 +77,19 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #endif
 
 // Project includes
+#include "code_editor.h"
+#include "constant_common.h"
+#include "constant_mapping.h"
+#include "constant_mapping_flash.h"
+#include "content_manager.h"
+#include "device_manager.h"
 #include "dl_editor.h"
+#include "emulator_navigator.h"
+#include "inspector/Inspector.h"
+#include "interactive_properties.h"
 #include "interactive_viewport.h"
 #include "properties_editor.h"
-#include "code_editor.h"
 #include "toolbox.h"
-#include "device_manager.h"
-#include "inspector.h"
-#include "content_manager.h"
-#include "interactive_properties.h"
-#include "emulator_navigator.h"
-#include "constant_mapping.h"
-#include "constant_common.h"
-#include "constant_mapping_flash.h"
 #include "utils/LoggerUtil.h"
 
 namespace FTEDITOR {

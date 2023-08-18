@@ -22,7 +22,7 @@
 // Emulator includes
 #include <bt8xxemu_diag.h>
 
-#include "inspector.h"
+#include "Inspector.h"
 #include "utils/CommonUtil.h"
 #include "utils/ConvertUtil.h"
 
@@ -46,7 +46,7 @@ RamDL::RamDL(Inspector *parent)
   m_displayList->installEventFilter(this);
   m_displayList->viewport()->installEventFilter(this);
   m_focusWhenOpen = m_displayList;
-  
+
   m_actCopy = new QAction(parent);
   m_actCopy->setText(tr("Copy"));
   m_menuContext = new QMenu(parent);
@@ -90,7 +90,7 @@ RamDL::RamDL(Inspector *parent)
   layout->addWidget(groupBox);
   m_widget->setLayout(layout);
   resize(500, 304);
-  
+
   updateData();
   updateView();
   connect(m_actCopy, &QAction::triggered, this, &RamDL::onCopy);
@@ -98,6 +98,8 @@ RamDL::RamDL(Inspector *parent)
           &RamDL::onPrepareContextMenu);
   connect(m_insp, &Inspector::updateData, this, &RamDL::updateData);
   connect(m_insp, &Inspector::updateView, this, &RamDL::updateView);
+
+  ComponentBase::finishedSetup(this, m_insp->mainWindow());
 }
 
 void RamDL::updateData() {

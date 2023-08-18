@@ -36,6 +36,7 @@
 // Project includes
 #include "undo_stack_disabler.h"
 #include "constant_mapping.h"
+#include "ComponentBase.h"
 
 class QTreeWidgetItem;
 class QPushButton;
@@ -193,7 +194,7 @@ struct ContentInfo
  * \date 2014-01-31 16:56GMT
  * \author Jan Boon (Kaetemi)
  */
-class ContentManager : public QWidget
+class ContentManager : public QWidget, public ComponentBase
 {
 	Q_OBJECT
 
@@ -404,11 +405,11 @@ private slots:
 	void remove();
 
 public slots:
+	void setupConnections(QObject *obj) override;
 	void rebuildAll();
-
+	
 	void importFlashMapped();
 	void exportFlashMapped();
-	void setup(QObject *obj = nullptr);
 	void handleUpdateCurrentInfo(FTEDITOR::ContentInfo *contentInfo);
 
 private slots:

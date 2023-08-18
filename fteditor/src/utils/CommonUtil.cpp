@@ -10,8 +10,14 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QDir>
+#include <QJsonArray>
+#include <QPlainTextEdit>
+#include <QTextBlock>
+#include <QTextDocument>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
+
+#include "dl_editor.h"
 
 void CommonUtil::copy(const QTreeWidget *widget) {
   QList<QTreeWidgetItem *> selectedItems = widget->selectedItems();
@@ -55,4 +61,36 @@ bool CommonUtil::existProject(QString path) {
     }
   }
   return false;
+}
+
+void CommonUtil::documentFromJsonArray(QPlainTextEdit *textEditor,
+                                       const QJsonArray &arr) {
+  bool firstLine = true;
+  for (int i = 0; i < arr.size(); ++i) {
+    if (firstLine)
+      firstLine = false;
+    else
+      textEditor->textCursor().insertText("\n");
+    textEditor->textCursor().insertText(arr[i].toString());
+  }
+}
+
+QJsonArray CommonUtil::documentToJsonArray(const QTextDocument *textDocument,
+                                           bool coprocessor,
+                                           bool exportScript) {
+  QJsonArray result;
+  for (int i = 0; i < textDocument->blockCount(); ++i) {
+    QString line = textDocument->findBlockByNumber(i).text();
+    if (exportScript) {
+      FTEDITOR::DlParsed parsed;
+      FTEDITOR::DlParser::parse(FTEDITOR_CURRENT_DEVICE, parsed, line,
+                                coprocessor);
+      if (!parsed.ValidId)
+        line = "";
+      else
+        line = FTEDITOR::DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
+    }
+    result.push_back(line);
+  }
+  return result;
 }

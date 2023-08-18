@@ -26,6 +26,7 @@ class RamReg : public RamBase {
   bool eventFilter(QObject *watched, QEvent *event) override;
 
  public slots:
+  void setupConnections(QObject *obj) override{};
   void onCopy();
   void updateView(int dlCMDCount);
   void onPrepareContextMenu(const QPoint &pos);

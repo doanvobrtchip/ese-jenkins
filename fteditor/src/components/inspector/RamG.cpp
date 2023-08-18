@@ -17,9 +17,9 @@
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
 
+#include "Inspector.h"
 #include "content_manager.h"
 #include "customize/QHexView.h"
-#include "inspector.h"
 #include "main_window.h"
 #include "utils/LoggerUtil.h"
 
@@ -33,11 +33,10 @@ RamG::RamG(Inspector *parent) : RamBase(parent) {
   m_lbTitle->setText(tr("RAM_G"));
 
   m_hexView = new QHexView;
-  
+
   m_lbUint = new QLabel(tr("Uint:"));
   m_lbUint->setStatusTip(tr("Decimal value (4 bytes, Little Endian)"));
   m_lbUint->setMinimumWidth(25);
-
 
   // Set default width for QLineEdit
   m_leAddress = new QLineEdit;
@@ -82,21 +81,19 @@ RamG::RamG(Inspector *parent) : RamBase(parent) {
   connect(m_leAddress, &QLineEdit::returnPressed, this, &RamG::goToAddress);
   connect(m_hexView, &QHexView::uintChanged, this, &RamG::setLabelUint);
   connect(m_insp, &Inspector::updateView, this, &RamG::updateView);
-  connect(m_insp->mainWindow(), SIGNAL(readyToSetup(QObject *)), this,
-          SLOT(setupConnections(QObject *)));
-  setupConnections();
-  emit m_insp->mainWindow()->readyToSetup(this);
+
+  ComponentBase::finishedSetup(this, m_insp->mainWindow());
 }
 
 void RamG::setupConnections(QObject *obj) {
-  if (auto contentMgr = m_insp->mainWindow()->contentManager();
-      contentMgr && (obj == contentMgr || obj == nullptr)) {
-    auto currContentList = contentMgr->contentInfoList();
+  if (auto cm = m_insp->mainWindow()->contentManager();
+      cm && (obj == cm || obj == nullptr)) {
+    auto currContentList = cm->contentInfoList();
     for (auto &info : currContentList) {
       addContentItem(info);
     }
 
-    auto contentList = contentMgr->contentList();
+    auto contentList = cm->contentList();
     connect(contentList, &QTreeWidget::currentItemChanged, this,
             &RamG::currItemContentChanged, Qt::UniqueConnection);
     connect(contentList, &QTreeWidget::itemPressed, this,
@@ -106,15 +103,14 @@ void RamG::setupConnections(QObject *obj) {
     connect(contentList, &ContentTreeWidget::addItem, this,
             &RamG::addContentItem, Qt::UniqueConnection);
 
-    connect(contentMgr, &ContentManager::ramGlobalUsageChanged, this,
-            &RamG::updateView, Qt::UniqueConnection);
+    connect(cm, &ContentManager::ramGlobalUsageChanged, this, &RamG::updateView,
+            Qt::UniqueConnection);
     connect(m_hexView, &QHexView::currentInfoChanged, this,
             &RamG::handleCurrentInfoChanged, Qt::UniqueConnection);
   }
 
   if (auto inspDock = m_insp->mainWindow()->inspectorDock();
-      inspDock &&
-      (obj == m_insp->mainWindow()->inspectorDock() || obj == nullptr)) {
+      inspDock && (obj == inspDock || obj == nullptr)) {
     connect(inspDock, &QDockWidget::visibilityChanged, this, &RamG::bindVisible,
             Qt::UniqueConnection);
   }

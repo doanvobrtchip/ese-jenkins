@@ -8,12 +8,18 @@
 
 class QTreeWidget;
 class QString;
+class QPlainTextEdit;
+class QJsonArray;
+class QTextDocument;
 
-class CommonUtil
-{
-public:
-	static void copy(const QTreeWidget *widget);
-	static bool existProject(QString path);
+class CommonUtil {
+ public:
+  static void copy(const QTreeWidget *widget);
+  static bool existProject(QString path);
+  static void documentFromJsonArray(QPlainTextEdit *textEditor,
+                                    const QJsonArray &arr);
+  static QJsonArray documentToJsonArray(const QTextDocument *textDocument,
+                                        bool coprocessor, bool exportScript);
 };
 
-#endif // COMMONUTIL_H
+#endif  // COMMONUTIL_H

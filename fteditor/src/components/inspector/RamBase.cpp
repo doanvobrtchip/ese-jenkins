@@ -9,7 +9,7 @@
 #include <QLabel>
 #include <QPushButton>
 
-#include "inspector.h"
+#include "Inspector.h"
 #include "main_window.h"
 
 namespace FTEDITOR {

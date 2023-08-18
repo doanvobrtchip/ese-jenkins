@@ -25,7 +25,7 @@ class RamG : public RamBase {
   ~RamG() = default;
 
  public slots:
-  void setupConnections(QObject *obj = nullptr);
+  void setupConnections(QObject *obj) override;
   void currItemContentChanged(QTreeWidgetItem *current,
                               QTreeWidgetItem *previous = nullptr);
   void handleContentItemPressed(QTreeWidgetItem *item);

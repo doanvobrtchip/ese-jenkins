@@ -93,9 +93,8 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
 	    SLOT(documentBlockCountChanged(int)));
 	connect(m_CodeEditor, &CodeEditor::cursorChanged, this,
 	    &DlEditor::editorCursorPositionChanged);
-	connect(m_CodeEditor, &CodeEditor::focusIn, this, [this]() {
-		editorCursorPositionChanged();
-	});
+	connect(m_CodeEditor, &CodeEditor::focusIn, this,
+	    [this]() { editorCursorPositionChanged(); });
 
 	bindCurrentDevice();
 
@@ -267,9 +266,7 @@ DlEditor::DlEditor(MainWindow *parent, bool coprocessor)
 		};
 	}
 
-	setup();
-	connect(m_MainWindow, SIGNAL(readyToSetup(QObject *)), this,
-	    SLOT(setup(QObject *)));
+	ComponentBase::finishedSetup(this, m_MainWindow);
 }
 
 DlEditor::~DlEditor() { }
@@ -349,8 +346,8 @@ void DlEditor::setModeMacro()
 	m_CodeEditor->setBlockNumberTag("REG_MACRO_");
 	m_CodeEditor->setMaximumBlockCount(FT800EMU_MACRO_SIZE);
 	m_CodeEditor->installEventFilter(this);
-	
-	//Make Macro always has 2 lines for user easy to edit
+
+	// Make Macro always has 2 lines for user easy to edit
 	connect(m_CodeEditor, &QPlainTextEdit::textChanged, this, [this]() {
 		if (m_CodeEditor->blockCount() < FT800EMU_MACRO_SIZE)
 		{
@@ -358,7 +355,7 @@ void DlEditor::setModeMacro()
 		}
 	});
 }
-             
+
 void DlEditor::clear()
 {
 	m_CodeEditor->clear();
@@ -461,7 +458,7 @@ void DlEditor::editorCursorPositionChanged(bool popupProperties)
 
 	QTextBlock block = m_CodeEditor->document()->findBlock(
 	    m_CodeEditor->textCursor().position());
-	
+
 	if (block.blockNumber() >= FTEDITOR_DL_SIZE) return;
 	// switch between auto completers
 	if (m_DisplayListParsed[block.blockNumber()].ValidId && m_CompleterIdentifiersActive)
@@ -1008,12 +1005,11 @@ void DlEditor::frame()
 	m_CodeEditor->setStepHighlight(idx);
 }
 
-void DlEditor::setup(QObject *obj)
+void DlEditor::setupConnections(QObject *obj)
 {
-	if (m_MainWindow->viewport() && (obj == m_MainWindow->viewport() || obj == nullptr))
+	if (auto vp = m_MainWindow->viewport(); vp && (obj == vp || obj == nullptr))
 	{
-		connect(m_MainWindow->viewport(),
-		    &InteractiveViewport::selectedLinesChanged, m_CodeEditor,
+		connect(vp, &InteractiveViewport::selectedLinesChanged, m_CodeEditor,
 		    &CodeEditor::setSelectedLines);
 	}
 }

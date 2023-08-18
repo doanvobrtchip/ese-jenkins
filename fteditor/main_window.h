@@ -52,13 +52,14 @@ class QTextEdit;
 
 namespace FTEDITOR {
 
-class ScriptComponent;
+class Script;
 class InteractiveViewport;
 class DlEditor;
 class PropertiesEditor;
 class Toolbox;
 class DeviceManager;
 class Inspector;
+class Registers;
 class MainWindow;
 class ContentManager;
 // class BitmapSetup;
@@ -106,7 +107,6 @@ public:
 	inline DlEditor *cmdEditor() { return m_CmdEditor; }
 	inline InteractiveViewport *viewport() { return m_EmulatorViewport; }
 	inline Toolbox *toolbox() { return m_Toolbox; }
-	inline Inspector *inspector() { return m_Inspector; }
 	inline QUndoStack *undoStack() { return m_UndoStack; }
 	inline PropertiesEditor *propertiesEditor() { return m_PropertiesEditor; }
 	inline ContentManager *contentManager() { return m_ContentManager; }
@@ -147,8 +147,6 @@ public:
 
 	void actNew(bool addClear);
 
-	void userChangeResolution(int hsize, int vsize);
-
 	void openFile(const QString &fileName);
 
 	void setFlashFileNameToLabel(const QString &fileName);
@@ -170,9 +168,12 @@ public:
 	void updateLoadingIcon();
 	
 	const QList<QAction *> &RecentActionList() const;
+	const QString &CurrentFileName() const;
 	void setCurrentFileName(const QString &newCurrentFileName);
 	
-	ScriptComponent *scriptComponent() const;
+	Script *script() const;
+	Inspector *inspector() const;
+	DeviceManager *deviceManager() const;
 	
 private slots:
 	// void applyEmulatorConfig();
@@ -196,10 +197,6 @@ private slots:
 	void actDisplayListFromIntegers();
 
 	void undoCleanChanged(bool clean);
-
-	void hsizeChanged(int hsize);
-	void vsizeChanged(int vsize);
-	void rotateChanged(int rotate);
 
 	void stepEnabled(bool enabled);
 	void stepChanged(int step);
@@ -314,7 +311,7 @@ private:
 	QDockWidget *m_DlEditorDock;
 	DlEditor *m_CmdEditor;
 	QDockWidget *m_CmdEditorDock;
-	ScriptComponent *m_scriptComp;
+	Script *m_scriptComp;
 	QDockWidget *m_scriptEditorDock;
 
 	QWidget *m_ErrorFrame;
@@ -347,6 +344,9 @@ private:
 
 	QDockWidget *m_InspectorDock;
 	Inspector *m_Inspector;
+	
+	QDockWidget *m_RegistersDock;
+	Registers *m_registers;
 
   QDockWidget *m_RulerDock;
 
@@ -368,13 +368,6 @@ private:
 	QComboBox *m_ProjectFlash;
 	QPushButton *m_ProjectFlashImport;
 	QLabel *m_ProjectFlashFilename;
-
-	QDockWidget *m_RegistersDock;
-	DlEditor *m_Macro;
-	QSpinBox *m_HSize;
-	QSpinBox *m_VSize;
-	QSpinBox *m_Rotate;
-	QSpinBox *m_hsf;
 
 	std::vector<QTabBar *> m_HookedTabs;
 
@@ -443,12 +436,13 @@ private:
 	
 signals:
 	void currentFileNameChanged();
+	void displaySizeChanged(int hSize, int vSize);
 	void utilizationDisplayListCmdChanged(int value);
 	void ramGChanged(uint8_t *value);
 	void readyToSetup(QObject *obj);
 	void deviceChanged();
 	void windowActivate();
-	void eventNew();
+	void clearEvent();
 }; /* class MainWindow */
 
 } /* namespace FTEDITOR */

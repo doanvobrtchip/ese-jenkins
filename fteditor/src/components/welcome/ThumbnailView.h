@@ -7,8 +7,8 @@
 #ifndef THUMBNAILVIEW_H
 #define THUMBNAILVIEW_H
 
-#include <QWidget>
 #include <QGridLayout>
+#include <QWidget>
 
 class QPropertyAnimation;
 class QFileInfo;
@@ -27,7 +27,7 @@ class Thumbnail : public QWidget {
   Q_OBJECT
   Q_PROPERTY(qreal overlayHeight READ overlayHeight WRITE setOverlayHeight
                  NOTIFY overlayHeightChanged)
-  
+
  signals:
   void overlayHeightChanged();
   void itemPressed(QString path);
@@ -52,7 +52,7 @@ class Thumbnail : public QWidget {
   QString m_description;
   QString m_prjName;
   QString m_thumbnailPath;
-  QPropertyAnimation* m_animation;
+  QPropertyAnimation *m_animation;
 };
 
 class ThumbnailView : public QWidget {
@@ -62,7 +62,7 @@ class ThumbnailView : public QWidget {
   ThumbnailView(ExampleDialog *parent, QString path = QString());
   void addThumbnail(QString path, int row, int column);
   void updateViewContent(QStringList path);
-  
+
  public slots:
   void handleItemPressed(const QString &path);
   void onSeach(const QString &text);

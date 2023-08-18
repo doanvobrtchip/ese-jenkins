@@ -18,7 +18,7 @@
 
 #include "TabBar.h"
 #include "ThumbnailView.h"
-#include "WelcomeDialog.h"
+#include "Welcome.h"
 #include "main_window.h"
 #include "utils/CommonUtil.h"
 
@@ -74,8 +74,8 @@ void ExampleDialog::setupTabs() {
   backBtn->setToolTip(tr("Back"));
   connect(backBtn, &QPushButton::clicked, this, [this]() {
     close();
-    auto dlgWelcome = new WelcomeDialog(m_mainWindow);
-    dlgWelcome->open();
+    auto welcome = new Welcome(m_mainWindow);
+    welcome->open();
   });
 
   auto headerLyt = new QHBoxLayout;

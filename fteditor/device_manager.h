@@ -41,6 +41,8 @@
 #include <QWidget>
 #include <QMap>
 
+#include "ComponentBase.h"
+
 class QTreeWidget;
 class QTreeWidgetItem;
 class QPushButton;
@@ -64,7 +66,7 @@ struct CustomDeviceInfo;
  * \author Paul Jiao Shouwu
  * \author Jan Boon (Kaetemi)
  */
-class DeviceManager : public QWidget
+class DeviceManager : public QWidget, public ComponentBase
 {
 	Q_OBJECT
 
@@ -89,7 +91,8 @@ public:
 	typedef DeviceInfo *EveModuleDeviceInforPtr;
 	void setDeviceAndScreenSize(QString displaySize, QString syncDevice, QString jsonPath = QString(), bool custom = false);
 	const QString &getSelectedDeviceName() { return m_SelectedDeviceName; }
-
+public slots:
+	void setupConnections(QObject *obj) override{};
 private:
 	MainWindow *m_MainWindow;
 	QTreeWidget *m_DeviceList;
@@ -149,6 +152,8 @@ private:
 private:
 	DeviceManager(const DeviceManager &) = delete;
 	DeviceManager &operator=(const DeviceManager &) = delete;
+signals:
+	void displaySizeChanged(int hSize, int vSize);
 }; /* class DeviceManager */
 
 #else /* FT800_DEVICE_MANAGER */

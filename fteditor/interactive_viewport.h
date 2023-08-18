@@ -19,6 +19,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 // Emulator includes
 
 // Project includes
+#include "ComponentBase.h"
 #include "dl_editor.h"
 #include "emulator_viewport.h"
 
@@ -41,7 +42,7 @@ class MainWindow;
  * \date 2013-12-15 13:09GMT
  * \author Jan Boon (Kaetemi)
  */
-class InteractiveViewport : public EmulatorViewport
+class InteractiveViewport : public EmulatorViewport, public ComponentBase
 {
 	Q_OBJECT
 
@@ -105,9 +106,9 @@ protected:
 	virtual void dragEnterEvent(QDragEnterEvent *e) override;
 
 public slots:
+	void setupConnections(QObject *obj) override;
 	virtual void zoomIn() override;
 	virtual void zoomOut() override;
-	void setup(QObject *obj = nullptr);
 
 private slots:
 	void automaticChecked();

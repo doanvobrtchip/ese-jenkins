@@ -22,6 +22,7 @@ class RamCMD : public RamBase {
   ~RamCMD() = default;
 
  public slots:
+  void setupConnections(QObject *obj) override{};
   void updateView();
   void goToAddress();
   void setLabelUint(QString valueStr, uint value);
