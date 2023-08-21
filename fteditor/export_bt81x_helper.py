@@ -445,6 +445,8 @@ def exportCoprocessorCommand(document, filesToTestFolder):
             
         if cmd_name == "Gpu_CoCmd_FlashFast" and functionArgs == "":
             functionArgs = '0'
+        if cmd_name == "Gpu_CoCmd_MemCrc":
+            functionArgs = functionArgs + ", 0"
             
         #Attempt to append comments
         comments = cmd_comment

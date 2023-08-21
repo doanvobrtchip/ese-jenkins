@@ -452,8 +452,6 @@ void DlParser::initVC4()
 		s_CmdParamCount[CMD_SPINNER & 0xFF] = 4;
 		s_CmdIdMap["CMD_STOP"] = CMD_STOP & 0xFF;
 		s_CmdParamCount[CMD_STOP & 0xFF] = 0;
-		// s_CmdIdMap["CMD_MEMCRC"] = CMD_MEMCRC & 0xFF; // don't support reading values
-		// s_CmdParamCount[CMD_MEMCRC & 0xFF] = 3;
 		s_CmdIdMap["CMD_REGREAD"] = CMD_REGREAD & 0xFF; // don't support reading values
 		s_CmdParamCount[CMD_REGREAD & 0xFF] = 2;
 		s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF; // STREAMING DATA
@@ -625,6 +623,7 @@ void DlParser::initVC4()
 		// clang-format off
 		FTEDITOR_MAP_CMD(CMD_LINETIME,        1); // Outputs to RAM_G. NOTE: CMD_LINETIME and CMD_VIDEOSTARTF command identifiers are out-of-sequence
 		FTEDITOR_MAP_CMD(CMD_CALIBRATESUB,    4); // Plus 1 5th output parameter
+		FTEDITOR_MAP_CMD(CMD_MEMCRC,		  2); // Plus 1 3rd output parameter
 		FTEDITOR_MAP_CMD(CMD_TESTCARD,        0);
 		FTEDITOR_MAP_CMD(CMD_HSF,             1);
 		FTEDITOR_MAP_CMD(CMD_APILEVEL,        1);
@@ -1515,6 +1514,7 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 					compiled.push_back(0);
 					break;
 				}
+			    case CMD_MEMCRC:
 				case CMD_PCLKFREQ:
 				{
 					compiled.push_back(parsed.Parameter[0].U);
