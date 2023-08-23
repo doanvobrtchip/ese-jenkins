@@ -5,6 +5,7 @@ Feature updates:
 •   Add example brower dialog.
 •   Add one welcome screen.
 •   Add IDM2040-43A support in the submenu of export menu.
+•   Add missing command cmd_memcrc support in ESE.
 •   Define "Unsaved"/"Saved" states for Save toolbutton.
 •   Add more custom device in the device manager.
 •   Add HSF support in Registers.
@@ -15,6 +16,8 @@ Feature updates:
 •   Update the copyright date to 2023.
 Resolved issues:
 •   ESE crashes when drag and drop cmd_fillwidth into view port.
+Known issues:
+•   The Exporting feature does not work for BT817's commands
 
 =======================
 Version 4.6.0

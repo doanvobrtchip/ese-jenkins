@@ -1164,6 +1164,19 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
+		case CMD_MEMCRC:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_MEMCRC."));
+			if (editor)
+			{
+				setTitle("CMD_MEMCRC");
+				addSpinBox(0, 0, 0x7FFFFFFF, "Address: ", "Set address");
+				addSpinBox(1, 0, 0x7FFFFFFF, "Num: ", "Set num");
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
+			}
+			ok = true;
+			break;
+		}
 		case CMD_MEMWRITE:
 		{
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_MEMWRITE."));

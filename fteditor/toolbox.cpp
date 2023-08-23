@@ -320,7 +320,12 @@ Toolbox::Toolbox(MainWindow *parent)
 		item->setText(0, tr("Register Read"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_CMD_STATE));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_REGREAD));
-
+		
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Memory CRC"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_MEMCRC));
+		
 		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Memory Write"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));

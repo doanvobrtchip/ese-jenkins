@@ -788,6 +788,15 @@ Read a register value&lt;/p&gt;</translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="1170"/>
+        <source>DESCRIPTION_CMD_MEMCRC.</source>
+        <translation>&lt;p&gt;&lt;strong&gt;CMD_MEMCRC&lt;/strong&gt;(&lt;em&gt;ptr&lt;/em&gt;, &lt;em&gt;num&lt;/em&gt;,&lt;em&gt;ptr&lt;/em&gt;)&lt;br /&gt;
+&lt;strong&gt;ptr&lt;/strong&gt;:&amp;nbsp;Starting address of the memory block&lt;br /&gt;
+&lt;strong&gt;num&lt;/strong&gt;:&amp;nbsp;Number of bytes in the source memory block&lt;br /&gt;
+&lt;strong&gt;result&lt;/strong&gt;:&amp;nbsp;Output parameter; written with the CRC-32 after command execution&lt;/p&gt;
+&lt;p&gt;Computes a CRC-32 for a block of &lt;strong&gt;RAM_G&lt;/strong&gt; memory.&lt;/p&gt;</translation>
+    </message>
+    <message>
+        <location filename="interactive_properties.cpp" line="1170"/>
         <source>DESCRIPTION_CMD_MEMWRITE.</source>
         <translation>&lt;p&gt;&lt;strong&gt;CMD_MEMWRITE&lt;/strong&gt;(&lt;em&gt;ptr&lt;/em&gt;, &lt;em&gt;num&lt;/em&gt;)&lt;br /&gt;
 &lt;strong&gt;ptr&lt;/strong&gt;:&amp;nbsp;The memory address to be written&lt;br /&gt;

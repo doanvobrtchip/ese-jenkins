@@ -2762,6 +2762,12 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedStringParameter = true;
 						pa.ExpectedParameterCount = 2;
 						break;
+					case CMD_MEMCRC:
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.ExpectedStringParameter = false;
+						pa.ExpectedParameterCount = 2;
+						break;
 					case CMD_MEMWRITE:
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
