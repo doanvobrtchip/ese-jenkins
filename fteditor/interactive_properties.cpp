@@ -2020,7 +2020,16 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			ok = true;
 			break;
 		}
-		// case CMD_NOP:
+		case CMD_NOP:
+		{
+			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_NOP."));
+			if (editor)
+			{
+				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+			}
+			ok = true;
+			break;
+		}
 		// case CMD_SHA1:
 		// case CMD_HMAC:
 		// case CMD_LAST_:

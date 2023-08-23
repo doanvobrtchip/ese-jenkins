@@ -1225,6 +1225,11 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
 &lt;p&gt;This command draws the specified frame of an animation in &lt;strong&gt;RAM&lt;/strong&gt;.&lt;/p&gt;</translation>
     </message>
     <message>
+        <location filename="interactive_properties.cpp" line="1994"/>
+        <source>DESCRIPTION_CMD_NOP.</source>
+        <translation>&lt;b&gt;CMD_NOP&lt;/b&gt;()&lt;br&gt;&lt;br&gt;The nop command does nothing</translation>
+    </message>
+    <message>
         <location filename="interactive_properties.cpp" line="1984"/>
         <source>DESCRIPTION_CMD_VIDEOSTARTF.</source>
         <translation>&lt;b&gt;CMD_VIDEOSTARTF&lt;/b&gt;()&lt;br&gt;&lt;br&gt;Initializes the AVI video decoder. The video data should be present in flash memory, and its address previously set using CMD_FLASHSOURCE. This command processes the video header information, and completes when it has consumed it.</translation>

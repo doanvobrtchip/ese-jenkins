@@ -447,6 +447,9 @@ def exportCoprocessorCommand(document, filesToTestFolder):
             functionArgs = '0'
         if cmd_name == "Gpu_CoCmd_MemCrc":
             functionArgs = functionArgs + ", 0"
+        if cmd_name == "Gpu_CoCmd_Nop":
+            export += '\tGpu_CoCmd_Nop(phost);\n'
+            cmd_name = ""
             
         #Attempt to append comments
         comments = cmd_comment
