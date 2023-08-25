@@ -1,5 +1,5 @@
 Version 4.7.0
-Beta
+RC1
 Feature updates:
 •   Add python-like editor to write a simple emulator based application.
 •   Add example brower dialog.
