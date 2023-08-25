@@ -111,7 +111,24 @@ functionMap = {
     'CMD_NOP' : 'Gpu_CoCmd_Nop',
     'CMD_SHA1' : 'Gpu_CoCmd_Sha1',
     'CMD_VIDEOSTARTF' : 'Gpu_CoCmd_VideoStartF',
-    'CMD_BITMAP_TRANSFORM' : 'Gpu_CoCmd_Bitmap_Transform'
+    'CMD_BITMAP_TRANSFORM' : 'Gpu_CoCmd_Bitmap_Transform',
+    'CMD_CALIBRATESUB' : 'Gpu_CoCmd_CalibrateSub',
+    'CMD_TESTCARD' : 'Gpu_CoCmd_TestCard',
+    'CMD_HSF' : 'Gpu_CoCmd_Hsf',
+    'CMD_APILEVEL' : 'Gpu_CoCmd_ApiLevel',
+    'CMD_GETIMAGE' : 'Gpu_CoCmd_GetImage',
+    'CMD_WAIT' : 'Gpu_CoCmd_Wait',
+    'CMD_RETURN' : 'Gpu_CoCmd_Return',
+    'CMD_CALLLIST' : 'Gpu_CoCmd_CallList',
+    'CMD_NEWLIST' : 'Gpu_CoCmd_NewList',
+    'CMD_ENDLIST' : 'Gpu_CoCmd_EndList',
+    'CMD_PCLKFREQ' : 'Gpu_CoCmd_PclkFreq',
+    'CMD_FONTCACHE' : 'Gpu_CoCmd_FontCache',
+    'CMD_FONTCACHEQUERY' : 'Gpu_CoCmd_FontCacheQuery',
+    'CMD_ANIMFRAMERAM' : 'Gpu_CoCmd_AnimFrameRam',
+    'CMD_ANIMSTARTRAM' : 'Gpu_CoCmd_AnimStartRam',
+    'CMD_RUNANIM' : 'Gpu_CoCmd_RunAnim',
+    'CMD_FLASHPROGRAM' : 'Gpu_CoCmd_FlashProgram',
 }
 
 def convertArgs(functionArgs):
@@ -449,6 +466,15 @@ def exportCoprocessorCommand(document, filesToTestFolder):
             functionArgs = functionArgs + ", 0"
         if cmd_name == "Gpu_CoCmd_Nop":
             export += '\tGpu_CoCmd_Nop(phost);\n'
+            cmd_name = ""
+        if cmd_name == "Gpu_CoCmd_TestCard":
+            export += '\tGpu_CoCmd_TestCard(phost);\n'
+            cmd_name = ""
+        if cmd_name == "Gpu_CoCmd_Return":
+            export += '\tGpu_CoCmd_Return(phost);\n'
+            cmd_name = ""
+        if cmd_name == "Gpu_CoCmd_EndList":
+            export += '\tGpu_CoCmd_EndList(phost);\n'
             cmd_name = ""
             
         #Attempt to append comments

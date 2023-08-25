@@ -235,7 +235,7 @@ void astc_tile2(uint8_t *iData, uint16_t bw, uint16_t bh, uint32_t size, uint8_t
 	}
 }
 
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 #ifdef FT9XX_PLATFORM
 #include "ff.h"
 void Screen_Snapshot2(Gpu_Hal_Context_t *phost, FIL *pfile, uint8_t *pdlarray, int32_t dlsize, uint8_t rotate_index, uint16_t width, uint16_t height)
@@ -362,7 +362,7 @@ void Screen_Snapshot2(Gpu_Hal_Context_t *phost, FILE *pfile, uint8_t *pdlarray, 
 #endif
 #endif
 
-#if FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Set_GpuClock(Gpu_Hal_Context_t *phost)
 {
 	static uint32_t x = 1;

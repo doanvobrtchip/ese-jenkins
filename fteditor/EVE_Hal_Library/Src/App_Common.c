@@ -399,7 +399,7 @@ void App_Show_Logo(Gpu_Hal_Context_t *phost)
         Gpu_CoCmd_LoadIdentity(phost);
         Gpu_CoCmd_Scale(phost, scale*65536L,scale*65536L);
         Gpu_CoCmd_SetMatrix(phost );
-        //#ifdef FT81X_ENABLE
+        //#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
         //Gpu_CoCmd_SetBitmap(phost, 0, LOGO_FMT, w, h);
         //#else
         App_WrCoCmd_Buffer(phost,BITMAP_SOURCE(0));

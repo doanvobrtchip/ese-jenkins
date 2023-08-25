@@ -541,7 +541,7 @@ void Gpu_CoreReset(Gpu_Hal_Context_t *host)
 * Return Value             : void
 * Author                   :
 ****************************************************************************/
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_81X_SelectSysCLK(Gpu_Hal_Context_t *host, GPU_81X_PLL_FREQ_T freq)
 {
     if(GPU_SYSCLK_72M == freq)
@@ -908,7 +908,7 @@ int32_t Gpu_Hal_Dec2Ascii(char8_t *pSrc,int32_t value)
 *                            -1 - Error, 0 - Success
 * Author                   :
 ****************************************************************************/
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 int16_t Gpu_Hal_SetSPI(Gpu_Hal_Context_t *host,GPU_SPI_NUMCHANNELS_T numchnls,GPU_SPI_NUMDUMMYBYTES numdummy)
 {
     uint8_t writebyte = 0;
@@ -1167,7 +1167,7 @@ void BootupConfig(Gpu_Hal_Context_t *host)
     If we are here with FT4222 in multi channel, then
     an explicit switch to single channel is essential
     */
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
     Gpu_Hal_SetSPI(host, GPU_SPI_SINGLE_CHANNEL, GPU_SPI_ONEDUMMY);
 #endif
 
@@ -1267,7 +1267,7 @@ void BootupConfig(Gpu_Hal_Context_t *host)
     /* Touch configuration - configure the resistance value to 1200 - this value is specific to customer requirement and derived by experiment */
     Gpu_Hal_Wr16(host, REG_TOUCH_RZTHRESH,RESISTANCE_THRESHOLD);
 #endif
-#if defined(FT81X_ENABLE)
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
     Gpu_Hal_Wr16(host, REG_GPIOX_DIR, 0xffff);
     Gpu_Hal_Wr16(host, REG_GPIOX, 0xffff);
 #else
@@ -1310,7 +1310,7 @@ void BootupConfig(Gpu_Hal_Context_t *host)
 
 
     /* make the spi to quad mode - addition 2 bytes for silicon */
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
     /* api to set quad and numbe of dummy bytes */
 #ifdef ENABLE_SPI_QUAD
     Gpu_Hal_SetSPI(host,GPU_SPI_QUAD_CHANNEL,GPU_SPI_TWODUMMY);

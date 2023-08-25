@@ -29,9 +29,9 @@ Revision History:
 #ifndef _APP_COMMON_H_
 #define _APP_COMMON_H_
 
-#if defined(FT80X_ENABLE)
+#if defined(FT_80X_ENABLE)
     #define RAM_G_END_ADDR 0x40000 //General purpose graphics RAM 256 kB
-#elif defined(FT81X_ENABLE)
+#elif defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
     #define RAM_G_END_ADDR (0x100000) //General purpose graphics RAM 1024 kB
 #else
     #error "Should select a GPU chip in Platform.h"

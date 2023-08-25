@@ -65,7 +65,6 @@ Revision History:
     
 #ifdef ME817EV_MPSSE 
 /* Define all the macros specific to VM815 module */
-#define BT815_ENABLE
 #define BT817_ENABLE
 #define ENABLE_SPI_SINGLE                       (1)
 //#define DISPLAY_RESOLUTION_WSVGA                (1)
@@ -76,7 +75,6 @@ Revision History:
 
 #ifdef ME817EV_LIBFT4222
 /* Define all the macros specific to VM816 module */
-#define BT815_ENABLE
 #define BT817_ENABLE
 #define ENABLE_SPI_QUAD                         (1)
 //#define DISPLAY_RESOLUTION_WSVGA                (1)
@@ -85,13 +83,41 @@ Revision History:
 #define MSVC_PLATFORM_SPI_LIBFT4222             (1)
 #endif
 
-
+/// Re-Mapping FT800 Series to FT80X
 #if defined(FT800_ENABLE) || defined(FT801_ENABLE)
-#define FT80X_ENABLE                            (1)
+#define FT80X_ENABLE
 #endif
 
-#if (defined(FT810_ENABLE) || defined(FT811_ENABLE) || defined(FT812_ENABLE) || defined(FT813_ENABLE) || defined(BT815_ENABLE) || defined(BT816_ENABLE) || defined(BT817_ENABLE))
-#define FT81X_ENABLE                            (1)
+/// Re-Mapping FT810 Series to FT81X
+#if defined(FT810_ENABLE) || defined(FT811_ENABLE) || defined(FT812_ENABLE) || defined(FT813_ENABLE)
+#define FT81X_ENABLE
+#endif
+
+/// Re-Mapping BT880 Series to BT88X
+#if defined(BT880_ENABLE) || defined(BT881_ENABLE) || defined(BT882_ENABLE) || defined(BT883_ENABLE)
+#define BT88X_ENABLE
+#endif
+
+/// Re-Mapping BT815 Series to BT81X
+#if defined(BT815_ENABLE) || defined(BT816_ENABLE)
+#define BT81X_ENABLE
+#endif
+
+/// Re-Mapping BT817 Series to BT81XA
+#if defined(BT817_ENABLE) || defined(BT818_ENABLE)
+#define BT81XA_ENABLE
+#endif
+
+#if defined(FT80X_ENABLE)
+#define FT_80X_ENABLE
+#elif defined(FT81X_ENABLE)
+#define FT_81X_ENABLE
+#elif defined(BT88X_ENABLE)
+#define BT_88X_ENABLE
+#elif defined(BT81X_ENABLE)
+#define BT_81X_ENABLE
+#elif defined(BT81XA_ENABLE)
+#define BT_81XA_ENABLE
 #endif
 
 /* Type of file to load from SDCard or Windows file system */

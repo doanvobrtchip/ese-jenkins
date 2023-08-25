@@ -34,7 +34,7 @@ Revision History:
 #include "Platform.h"
 #include "App_Common.h"
 #include <stdarg.h>
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_SetBitmap(Gpu_Hal_Context_t *phost,uint32_t source, uint16_t fmt, uint16_t w, uint16_t h)
 {
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*4);    
@@ -78,7 +78,7 @@ void Gpu_CoCmd_Text(Gpu_Hal_Context_t *phost, int16_t x, int16_t y, int16_t font
 	//uint16_t l;
 	va_start(args, s);
 	
-#if defined(BT815_ENABLE) || defined(BT816_ENABLE) /* OPT_FORMAT not defined in FT8xx chip */
+#if defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE) /* OPT_FORMAT not defined in FT8xx chip */
 	//l = GetFormatStringList(s, args);
 	num = (options & OPT_FORMAT) ? (COUNT_ARGS(s)) : (0); //Only check % characters if option OPT_FORMAT is set 
 	//printf("num = %d %d\n",num, (len + 1 + 3) & ~3);
@@ -129,7 +129,7 @@ void Gpu_CoCmd_Toggle(Gpu_Hal_Context_t *phost,int16_t x, int16_t y, int16_t w, 
   uint8_t i, num = 0;
   uint8_t len = strlen(s);
   va_start(args, s);
-#if defined(BT815_ENABLE) || defined(BT816_ENABLE) /* OPT_FORMAT not defined in FT8xx chip */
+#if defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE) /* OPT_FORMAT not defined in FT8xx chip */
   num = (options & OPT_FORMAT) ? (COUNT_ARGS(s)) : (0); //Only check % characters if option OPT_FORMAT is set 
 #endif
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*(4 + num) + strlen(s) + 1);
@@ -165,7 +165,7 @@ void Gpu_CoCmd_RegRead(Gpu_Hal_Context_t *phost,uint32_t ptr, uint32_t result)
   Gpu_CoCmd_EndFunc(phost,(CMD_SIZE*3)); 
     
 }
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_VideoStart(Gpu_Hal_Context_t *phost)
 {
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*1);           
@@ -174,7 +174,7 @@ void Gpu_CoCmd_VideoStart(Gpu_Hal_Context_t *phost)
 }
 #endif
 
-#if defined(BT815_ENABLE) || defined(BT816_ENABLE)
+#if defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_VideoStartF(Gpu_Hal_Context_t *phost)
 {
 	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 1);
@@ -242,7 +242,7 @@ void Gpu_CoCmd_Stop(Gpu_Hal_Context_t *phost)
   Gpu_Copro_SendCmd(phost, CMD_STOP);
   Gpu_CoCmd_EndFunc(phost,(CMD_SIZE*1));    
 }
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_SetBase(Gpu_Hal_Context_t *phost,uint32_t base)
 {
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*2);    
@@ -262,7 +262,7 @@ void Gpu_CoCmd_Slider(Gpu_Hal_Context_t *phost,int16_t x, int16_t y, int16_t w, 
   Gpu_CoCmd_EndFunc(phost,(CMD_SIZE*5));    
 }
 
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_VideoFrame(Gpu_Hal_Context_t *phost,uint32_t dst, uint32_t ptr)
 {
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*3);    
@@ -319,7 +319,7 @@ void Gpu_CoCmd_Button(Gpu_Hal_Context_t *phost,int16_t x, int16_t y, int16_t w, 
   uint8_t i, num = 0;
   uint8_t len = strlen(s);
   va_start(args, s);
-#if defined(BT815_ENABLE) || defined(BT816_ENABLE) /* OPT_FORMAT not defined in FT8xx chip */
+#if defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE) /* OPT_FORMAT not defined in FT8xx chip */
   num = (options & OPT_FORMAT) ? (COUNT_ARGS(s)) : (0); //Only check % characters if option OPT_FORMAT is set 
 #endif
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*(4 + num) + strlen(s) + 1);            
@@ -388,7 +388,7 @@ void Gpu_CoCmd_CSketch(Gpu_Hal_Context_t *phost,int16_t x, int16_t y, uint16_t w
   Gpu_CoCmd_EndFunc(phost,(CMD_SIZE*5));         
 }
 #endif
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_RomFont(Gpu_Hal_Context_t *phost,uint32_t font, uint32_t romslot)
 {
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*3);         
@@ -421,7 +421,7 @@ void Gpu_CoCmd_GradColor(Gpu_Hal_Context_t *phost,uint32_t c)
   Gpu_Copro_SendCmd(phost, c);
   Gpu_CoCmd_EndFunc(phost,(CMD_SIZE*2));         
 }
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_Sync(Gpu_Hal_Context_t *phost)
 {
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*1);         
@@ -533,7 +533,7 @@ void Gpu_CoCmd_Track(Gpu_Hal_Context_t *phost,int16_t x, int16_t y, int16_t w, i
   Gpu_Copro_SendCmd(phost, tag);
   Gpu_CoCmd_EndFunc(phost,(CMD_SIZE*4));       
 }
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_Int_RAMShared(Gpu_Hal_Context_t *phost,uint32_t ptr)
 {
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*2);         
@@ -575,7 +575,7 @@ void Gpu_CoCmd_ColdStart(Gpu_Hal_Context_t *phost)
   Gpu_Copro_SendCmd(phost, CMD_COLDSTART);
   Gpu_CoCmd_EndFunc(phost,(CMD_SIZE*1));       
 }
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_MediaFifo(Gpu_Hal_Context_t *phost,uint32_t ptr, uint32_t size)
 {
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*3);       
@@ -605,7 +605,7 @@ void Gpu_CoCmd_Dial(Gpu_Hal_Context_t *phost,int16_t x, int16_t y, int16_t r, ui
   Gpu_Copro_SendCmd(phost, val);
   Gpu_CoCmd_EndFunc(phost,(CMD_SIZE*4));           
 }
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_Snapshot2(Gpu_Hal_Context_t *phost,uint32_t fmt, uint32_t ptr, int16_t x, int16_t y, int16_t w, int16_t h)
 {
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*5);           
@@ -625,7 +625,7 @@ void Gpu_CoCmd_LoadImage(Gpu_Hal_Context_t *phost,uint32_t ptr, uint32_t options
   Gpu_Copro_SendCmd(phost, options);
   Gpu_CoCmd_EndFunc(phost,(CMD_SIZE*3));           
 }
-#ifdef FT81X_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_SetFont2(Gpu_Hal_Context_t *phost,uint32_t font, uint32_t ptr, uint32_t firstchar)
 {
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*4);           
@@ -674,7 +674,7 @@ void Gpu_CoCmd_MemCrc(Gpu_Hal_Context_t *phost,uint32_t ptr, uint32_t num, uint3
   Gpu_CoCmd_EndFunc(phost,(CMD_SIZE*4));             
 }
 
-#if defined(BT815_ENABLE) || defined(BT816_ENABLE)
+#if defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Gpu_CoCmd_FillWidth(Gpu_Hal_Context_t *phost, uint32_t s)
 {
   Gpu_CoCmd_StartFunc(phost,CMD_SIZE*2);
@@ -1051,7 +1051,7 @@ void Gpu_CoCmd_EndFunc(Gpu_Hal_Context_t *phost,uint16_t count)
 
 
 }
-#if defined(BT815_ENABLE) || defined(BT816_ENABLE)
+#if defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 
 void Gpu_CoCmd_FlashHelper_Init(Gpu_Hal_Context_t *phost)
 {
@@ -1319,7 +1319,159 @@ uint8_t Gpu_CoCmd_FlashHelper_GetState(Gpu_Hal_Context_t *phost)
 }
 #endif
 
+#if defined(BT_81XA_ENABLE)
+void Gpu_CoCmd_CalibrateSub(Gpu_Hal_Context_t *phost, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint32_t result)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 4);
+	Gpu_Copro_SendCmd(phost, CMD_CALIBRATESUB);
+	Gpu_Copro_SendCmd(phost, ((uint32_t)y << 16)|(x & 0xffff));
+	Gpu_Copro_SendCmd(phost, ((uint32_t)h << 16)|(w & 0xffff));
+	Gpu_Copro_SendCmd(phost, 0);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE * 4);
+}
 
+void Gpu_CoCmd_TestCard(Gpu_Hal_Context_t *phost)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE);
+	Gpu_Copro_SendCmd(phost, CMD_TESTCARD);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE);
+}
+
+void Gpu_CoCmd_Hsf(Gpu_Hal_Context_t *phost, uint32_t w)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 2);
+	Gpu_Copro_SendCmd(phost, CMD_HSF);
+	Gpu_Copro_SendCmd(phost, w);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE * 2);
+}
+
+void Gpu_CoCmd_ApiLevel(Gpu_Hal_Context_t *phost, uint32_t level)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 2);
+	Gpu_Copro_SendCmd(phost, CMD_APILEVEL);
+	Gpu_Copro_SendCmd(phost, level);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE * 2);
+}
+
+void Gpu_CoCmd_GetImage(Gpu_Hal_Context_t *phost, uint32_t *source, uint32_t *fmt, uint32_t *w, uint32_t *h, uint32_t *palette)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 6);
+	Gpu_Copro_SendCmd(phost, CMD_GETIMAGE);
+	Gpu_Copro_SendCmd(phost, 0);
+	Gpu_Copro_SendCmd(phost, 0);
+	Gpu_Copro_SendCmd(phost, 0);
+	Gpu_Copro_SendCmd(phost, 0);
+	Gpu_Copro_SendCmd(phost, 0);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE * 6);
+}
+
+void Gpu_CoCmd_Wait(Gpu_Hal_Context_t *phost, uint32_t us)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 2);
+	Gpu_Copro_SendCmd(phost, CMD_WAIT);
+	Gpu_Copro_SendCmd(phost, us);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE * 2);
+}
+
+void Gpu_CoCmd_Return(Gpu_Hal_Context_t *phost)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE);
+	Gpu_Copro_SendCmd(phost, CMD_RETURN);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE);
+}
+
+void Gpu_CoCmd_CallList(Gpu_Hal_Context_t *phost, uint32_t a)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 2);
+	Gpu_Copro_SendCmd(phost, CMD_CALLLIST);
+	Gpu_Copro_SendCmd(phost, a);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE * 2);
+}
+
+void Gpu_CoCmd_NewList(Gpu_Hal_Context_t *phost, uint32_t a)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 2);
+	Gpu_Copro_SendCmd(phost, CMD_NEWLIST);
+	Gpu_Copro_SendCmd(phost, a);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE * 2);
+}
+
+void Gpu_CoCmd_EndList(Gpu_Hal_Context_t *phost)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE);
+	Gpu_Copro_SendCmd(phost, CMD_ENDLIST);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE);
+}
+
+void Gpu_CoCmd_PclkFreq(Gpu_Hal_Context_t *phost, uint32_t ftarget, int32_t rounding, uint32_t factual)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 4);
+	Gpu_Copro_SendCmd(phost, CMD_PCLKFREQ);
+	Gpu_Copro_SendCmd(phost, ftarget);
+	Gpu_Copro_SendCmd(phost, rounding);
+	Gpu_Copro_SendCmd(phost, 0);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE  * 4);
+}
+
+void Gpu_CoCmd_FontCache(Gpu_Hal_Context_t *phost, uint32_t font, int32_t ptr, uint32_t num)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 4);
+	Gpu_Copro_SendCmd(phost, CMD_FONTCACHE);
+	Gpu_Copro_SendCmd(phost, font);
+	Gpu_Copro_SendCmd(phost, ptr);
+	Gpu_Copro_SendCmd(phost, num);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE  * 4);
+}
+
+void Gpu_CoCmd_FontCacheQuery(Gpu_Hal_Context_t *phost, uint32_t total, int32_t used)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 3);
+	Gpu_Copro_SendCmd(phost, CMD_FONTCACHEQUERY);
+	Gpu_Copro_SendCmd(phost, 0);
+	Gpu_Copro_SendCmd(phost, 0);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE  * 3);
+}
+
+void Gpu_CoCmd_AnimFrameRam(Gpu_Hal_Context_t *phost, int16_t x, int16_t y, uint32_t aoptr, uint32_t frame)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 4);
+	Gpu_Copro_SendCmd(phost, CMD_ANIMFRAMERAM);
+	Gpu_Copro_SendCmd(phost, ((uint32_t) y << 16)|(x & 0xffff));
+	Gpu_Copro_SendCmd(phost, aoptr);
+	Gpu_Copro_SendCmd(phost, frame);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE  * 4);
+}
+
+void Gpu_CoCmd_AnimStartRam(Gpu_Hal_Context_t *phost, int32_t ch, uint32_t aoptr, uint32_t loop)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 4);
+	Gpu_Copro_SendCmd(phost, CMD_ANIMSTARTRAM);
+	Gpu_Copro_SendCmd(phost, ch);
+	Gpu_Copro_SendCmd(phost, aoptr);
+	Gpu_Copro_SendCmd(phost, loop);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE  * 4);
+}
+
+void Gpu_CoCmd_RunAnim(Gpu_Hal_Context_t *phost, uint32_t waitmask, uint32_t play)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 3);
+	Gpu_Copro_SendCmd(phost, CMD_RUNANIM);
+	Gpu_Copro_SendCmd(phost, waitmask);
+	Gpu_Copro_SendCmd(phost, play);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE  * 3);
+}
+
+void Gpu_CoCmd_FlashProgram(Gpu_Hal_Context_t *phost, uint32_t dest, uint32_t src, uint32_t num)
+{
+	Gpu_CoCmd_StartFunc(phost, CMD_SIZE * 4);
+	Gpu_Copro_SendCmd(phost, CMD_ANIMSTARTRAM);
+	Gpu_Copro_SendCmd(phost, dest);
+	Gpu_Copro_SendCmd(phost, src);
+	Gpu_Copro_SendCmd(phost, num);
+	Gpu_CoCmd_EndFunc(phost, CMD_SIZE  * 4);
+}
+
+#endif
 /* Nothing beyond this */
 
 
