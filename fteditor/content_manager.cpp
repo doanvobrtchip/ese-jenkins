@@ -65,12 +65,12 @@ extern BT8XXEMU_Flash *g_Flash;
 std::vector<QString> ContentManager::s_FileExtensions;
 QMutex ContentManager::s_Mutex;
 
-const QMap<QString, QString> ContentInfo::MapInfoFileType = {
-	{ "raw", "json" },
-	{ "glyph", "json" },
-	{ "ram_g", "readme" },
-	{ "flash", "readme" },
-	{ "xfont", "" }
+const QMap<QString, QStringList> ContentInfo::MapInfoFileType = {
+	{ "raw", {"json"} },
+	{ "glyph", {"json"} },
+	{ "ram_g", {"json", "readme"} },
+	{ "flash", {"json", "readme"} },
+	{ "xfont", {} }
 };
 
 ContentInfo::ContentInfo(const QString &filePath)
@@ -791,83 +791,88 @@ ContentInfo *ContentManager::add(const QString &filePath)
 	if (contentInfo->MapInfoFileType.contains(fileExt))
 	{
 		contentInfo->Converter = ContentInfo::Raw;
-		QString infoFileType = ContentInfo::MapInfoFileType.value(fileExt, "");
-		if (!infoFileType.isEmpty())
-		{
-			QString infoFilePath = filePath.left(filePath.lastIndexOf('.') + 1).append(infoFileType);
-			if (filePath.contains("_index"))
+		QStringList infoFileTypes = ContentInfo::MapInfoFileType.value(fileExt, {});
+		bool existedFile = false;
+		for (const auto &infoFileType : infoFileTypes) {
+			if (existedFile) break;
+			if (!infoFileType.isEmpty())
 			{
-				infoFilePath.remove(filePath.lastIndexOf("_index"), 6);
-			}
-			auto infoJson = ReadWriteUtil::getJsonInfo(infoFilePath);
-			if (fileExt == "glyph")
-			{
-				auto addressType = infoJson["address_type"].toString().toLower();
-				int addressGlyph = infoJson["address_glyph"].toInt();
-				if (addressType == "flash")
+				QString infoFilePath = filePath.left(filePath.lastIndexOf('.') + 1).append(infoFileType);
+				if (filePath.contains("_index"))
 				{
+					infoFilePath.remove(filePath.lastIndexOf("_index"), 6);
+				}
+				auto infoJson = ReadWriteUtil::getJsonInfo(infoFilePath);
+				if (!infoJson.isEmpty()) existedFile = true;
+				if (fileExt == "glyph")
+				{
+					auto addressType = infoJson["address_type"].toString().toLower();
+					int addressGlyph = infoJson["address_glyph"].toInt();
+					if (addressType == "flash")
+					{
+						contentInfo->DataStorage = ContentInfo::Flash;
+						contentInfo->FlashAddress = addressGlyph;
+						contentInfo->DataCompressed = false;
+					}
+					else if (addressType == "ram_g")
+					{
+						contentInfo->MemoryAddress = addressGlyph;
+						contentInfo->WantAutoLoad = true;
+						contentInfo->DataCompressed = false;
+					}
+				}
+				else if (fileExt == "flash")
+				{
+					if (infoJson.contains("data"))
+					{
+						auto obj = infoJson.value("data").toObject();
+						contentInfo->FlashAddress = obj.value("offset").toInt();
+					}
 					contentInfo->DataStorage = ContentInfo::Flash;
-					contentInfo->FlashAddress = addressGlyph;
 					contentInfo->DataCompressed = false;
 				}
-				else if (addressType == "ram_g")
+				else if (fileExt == "ram_g")
 				{
-					contentInfo->MemoryAddress = addressGlyph;
+					if (infoJson.contains("data"))
+					{
+						auto obj = infoJson.value("data").toObject();
+						contentInfo->MemoryAddress = obj.value("offset").toInt();
+					}
 					contentInfo->WantAutoLoad = true;
 					contentInfo->DataCompressed = false;
 				}
-			}
-			else if (fileExt == "flash")
-			{
-				if (infoJson.contains("data"))
+				else if (fileExt == "raw")
 				{
-					auto obj = infoJson.value("data").toObject();
-					contentInfo->FlashAddress = obj.value("offset").toInt();
-				}
-				contentInfo->DataStorage = ContentInfo::Flash;
-				contentInfo->DataCompressed = false;
-			}
-			else if (fileExt == "ram_g")
-			{
-				if (infoJson.contains("data"))
-				{
-					auto obj = infoJson.value("data").toObject();
-					contentInfo->MemoryAddress = obj.value("offset").toInt();
-				}
-				contentInfo->WantAutoLoad = true;
-				contentInfo->DataCompressed = false;
-			}
-			else if (fileExt == "raw")
-			{
-				if (infoJson.contains("type"))
-				{
-					auto contentType = infoJson["type"].toString();
-					if (contentType == "bitmap")
+					if (infoJson.contains("type"))
 					{
-						contentInfo->CachedImageWidth = infoJson["width"].toInt();
-						contentInfo->CachedImageHeight = infoJson["height"].toInt();
-						contentInfo->CachedImageStride = infoJson["stride"].toInt();
-						contentInfo->ImageFormat = AssetConverter::imageStringToEnum(
-						    infoJson["format"].toString().toLocal8Bit().data());
-					}
-					else if (contentType == "legacyfont")
-					{
-						if (infoJson["eve_command"].toString() == "cmd_setfont")
+						auto contentType = infoJson["type"].toString();
+						if (contentType == "bitmap")
 						{
-							if (infoJson.contains("address"))
-							{
-								contentInfo->CachedBitmapSource = infoJson["address"].toInt();
-							}
+							contentInfo->CachedImageWidth = infoJson["width"].toInt();
+							contentInfo->CachedImageHeight = infoJson["height"].toInt();
 							contentInfo->CachedImageStride = infoJson["stride"].toInt();
-							contentInfo->CachedImageWidth = infoJson["font_width"].toInt();
-							contentInfo->CachedImageHeight = infoJson["font_height"].toInt();
 							contentInfo->ImageFormat = AssetConverter::imageStringToEnum(
 							    infoJson["format"].toString().toLocal8Bit().data());
 						}
-						contentInfo->MemoryAddress = infoJson["address"].toInt();
-						if (getFreeMemoryAddress() <= contentInfo->MemoryAddress)
+						else if (contentType == "legacyfont")
 						{
-							contentInfo->WantAutoLoad = true;
+							if (infoJson["eve_command"].toString() == "cmd_setfont")
+							{
+								if (infoJson.contains("address"))
+								{
+									contentInfo->CachedBitmapSource = infoJson["address"].toInt();
+								}
+								contentInfo->CachedImageStride = infoJson["stride"].toInt();
+								contentInfo->CachedImageWidth = infoJson["font_width"].toInt();
+								contentInfo->CachedImageHeight = infoJson["font_height"].toInt();
+								contentInfo->ImageFormat = AssetConverter::imageStringToEnum(
+								    infoJson["format"].toString().toLocal8Bit().data());
+							}
+							contentInfo->MemoryAddress = infoJson["address"].toInt();
+							if (getFreeMemoryAddress() <= contentInfo->MemoryAddress)
+							{
+								contentInfo->WantAutoLoad = true;
+							}
 						}
 					}
 				}
@@ -1351,47 +1356,52 @@ void ContentManager::addInternal(QStringList fileNameList)
 
 		if (ContentInfo::MapInfoFileType.contains(suffix))
 		{
-			QString infoFileType = ContentInfo::MapInfoFileType.value(suffix, QString());
-			QString originalInfoFile = fileName.left(fileName.lastIndexOf('.') + 1).append(infoFileType);
-			// PALETTED format
-			if (fi.completeBaseName().contains("_index"))
-			{
-				originalInfoFile.remove(fileName.lastIndexOf("_index"), 6);
-			}
-
-			if (QFileInfo::exists(originalInfoFile))
-			{
-				QString savedInfoFile = newName.left(newName.lastIndexOf('.') + 1).append(infoFileType);
+			QStringList infoFileTypes  = ContentInfo::MapInfoFileType.value(suffix, {});
+			bool existedFile = false;
+			for (const auto &infoFileType : infoFileTypes) {
+				if (existedFile) break;
+				QString originalInfoFile = fileName.left(fileName.lastIndexOf('.') + 1).append(infoFileType);
+				// PALETTED format
 				if (fi.completeBaseName().contains("_index"))
 				{
-					savedInfoFile.remove(newName.lastIndexOf("_index"), 6);
+					originalInfoFile.remove(fileName.lastIndexOf("_index"), 6);
 				}
-				QFile::copy(originalInfoFile, savedInfoFile);
-
-				if (!infoFileType.isEmpty() && m_ShowMsgBox)
+	
+				if (QFileInfo::exists(originalInfoFile))
 				{
-					QMessageBox msgBox;
-
-					auto showMsgCb = new QCheckBox(tr("Do not show this dialog again"));
-					msgBox.setCheckBox(showMsgCb);
-					msgBox.addButton(QMessageBox::Ok);
-					msgBox.setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
-					msgBox.setText(
-					    tr("A valid %1 file is found for the imported content: %2 "
-					       "file.\nThe imported content is an EVE asset and you may drag "
-					       "it to viewport later.")
-					        .arg(QString(infoFileType).toUpper(), originalInfoFile));
-
-					QObject::connect(showMsgCb, &QCheckBox::stateChanged, this,
-					    [this](int state) {
-						    if (static_cast<Qt::CheckState>(state) == Qt::CheckState::Checked)
-						    {
-							    this->m_ShowMsgBox = false;
-						    }
-						    else
-							    m_ShowMsgBox = true;
-					    });
-					msgBox.exec();
+					existedFile = true;
+					QString savedInfoFile = newName.left(newName.lastIndexOf('.') + 1).append(infoFileType);
+					if (fi.completeBaseName().contains("_index"))
+					{
+						savedInfoFile.remove(newName.lastIndexOf("_index"), 6);
+					}
+					QFile::copy(originalInfoFile, savedInfoFile);
+	
+					if (!infoFileType.isEmpty() && m_ShowMsgBox)
+					{
+						QMessageBox msgBox;
+	
+						auto showMsgCb = new QCheckBox(tr("Do not show this dialog again"));
+						msgBox.setCheckBox(showMsgCb);
+						msgBox.addButton(QMessageBox::Ok);
+						msgBox.setWindowIcon(QIcon(":/icons/eve-puzzle-16.png"));
+						msgBox.setText(
+							tr("A valid %1 file is found for the imported content: %2 "
+							   "file.\nThe imported content is an EVE asset and you may drag "
+							   "it to viewport later.")
+								.arg(QString(infoFileType).toUpper(), originalInfoFile));
+	
+						QObject::connect(showMsgCb, &QCheckBox::stateChanged, this,
+							[this](int state) {
+								if (static_cast<Qt::CheckState>(state) == Qt::CheckState::Checked)
+								{
+									this->m_ShowMsgBox = false;
+								}
+								else
+									m_ShowMsgBox = true;
+							});
+						msgBox.exec();
+					}
 				}
 			}
 		}
