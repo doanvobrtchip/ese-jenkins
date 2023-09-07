@@ -3076,56 +3076,61 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 							{
 								if (contentInfo->MapInfoFileType.contains(fileSuffix))
 								{
-									QString fileType = ContentInfo::MapInfoFileType.value(fileSuffix, "");
-									if (!fileType.isEmpty())
-									{
-										QString filePath = contentInfo->SourcePath.left(contentInfo->SourcePath.lastIndexOf('.') + 1).append(fileType);
-										if (contentInfo->SourcePath.contains("_index"))
+									QStringList fileTypes = ContentInfo::MapInfoFileType.value(fileSuffix, {});
+									bool existedFile = false;
+									for (const auto &fileType : fileTypes) {
+										if (existedFile) break;
+										if (!fileType.isEmpty())
 										{
-											filePath.remove(filePath.lastIndexOf("_index"), 6);
-										}
-										QJsonObject infoJson = ReadWriteUtil::getJsonInfo(filePath);
-										if (infoJson.contains("type"))
-										{
-											QString contentType = infoJson["type"].toString();
-											if (contentType == "bitmap")
+											QString filePath = contentInfo->SourcePath.left(contentInfo->SourcePath.lastIndexOf('.') + 1).append(fileType);
+											if (contentInfo->SourcePath.contains("_index"))
 											{
-												if (infoJson["format"].toString().toUpper().contains("PALETTED")
-												    && !infoJson["format"].toString().toUpper().contains("PALETTED8"))
-												{
-													QString searchedFile = contentInfo->DestName;
-													searchedFile.replace("_index", "_lut");
-													const ContentInfo *searchedContent = m_MainWindow->contentManager()->find(
-													    searchedFile);
-													DLUtil::addPalettedSrc(
-													    m_LineEditor, pa,
-													    (searchedContent
-													            ? searchedContent->bitmapAddress()
-													            : 0),
-													    hline);
-													line++;
-												}
-												DLUtil::addBitmapHandler(m_LineEditor, pa, contentInfo,
-												    bitmapHandle, line, hline);
+												filePath.remove(filePath.lastIndexOf("_index"), 6);
 											}
-											else if (contentType == "legacyfont")
+											QJsonObject infoJson = ReadWriteUtil::getJsonInfo(filePath);
+											if (!infoJson.isEmpty()) existedFile = true;
+											if (infoJson.contains("type"))
 											{
-												if (infoJson["eve_command"].toString() == "cmd_setfont")
+												QString contentType = infoJson["type"].toString();
+												if (contentType == "bitmap")
 												{
+													if (infoJson["format"].toString().toUpper().contains("PALETTED")
+														&& !infoJson["format"].toString().toUpper().contains("PALETTED8"))
+													{
+														QString searchedFile = contentInfo->DestName;
+														searchedFile.replace("_index", "_lut");
+														const ContentInfo *searchedContent = m_MainWindow->contentManager()->find(
+															searchedFile);
+														DLUtil::addPalettedSrc(
+															m_LineEditor, pa,
+															(searchedContent
+																	? searchedContent->bitmapAddress()
+																	: 0),
+															hline);
+														line++;
+													}
 													DLUtil::addBitmapHandler(m_LineEditor, pa, contentInfo,
-													    bitmapHandle, line, hline);
-													DLUtil::addSetFontCmd(m_LineEditor, pa,
-													    contentInfo->MemoryAddress,
-													    bitmapHandle, line, hline);
+														bitmapHandle, line, hline);
 												}
-												else
+												else if (contentType == "legacyfont")
 												{
-													int firstChar = 1;
-													if (infoJson.contains("first_character"))
-														firstChar = infoJson["first_character"].toInt();
-													DLUtil::addSetFont2Cmd(
-													    m_LineEditor, pa, bitmapHandle, contentInfo->MemoryAddress,
-													    firstChar, line, hline);
+													if (infoJson["eve_command"].toString() == "cmd_setfont")
+													{
+														DLUtil::addBitmapHandler(m_LineEditor, pa, contentInfo,
+															bitmapHandle, line, hline);
+														DLUtil::addSetFontCmd(m_LineEditor, pa,
+															contentInfo->MemoryAddress,
+															bitmapHandle, line, hline);
+													}
+													else
+													{
+														int firstChar = 1;
+														if (infoJson.contains("first_character"))
+															firstChar = infoJson["first_character"].toInt();
+														DLUtil::addSetFont2Cmd(
+															m_LineEditor, pa, bitmapHandle, contentInfo->MemoryAddress,
+															firstChar, line, hline);
+													}
 												}
 											}
 										}
@@ -3168,17 +3173,22 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						auto fileSuffix = QFileInfo(contentInfo->SourcePath).suffix().toLower();
 						if (contentInfo->MapInfoFileType.contains(fileSuffix))
 						{
-							QString fileType = ContentInfo::MapInfoFileType.value(fileSuffix, "");
-							if (!fileType.isEmpty())
-							{
-								QString filePath = contentInfo->SourcePath
-								                       .left(contentInfo->SourcePath.lastIndexOf('.') + 1)
-								                       .append(fileType);
-								if (contentInfo->SourcePath.contains("_index"))
+							QStringList fileTypes = ContentInfo::MapInfoFileType.value(fileSuffix, {});
+							bool existedFile = false;
+							for (const auto &fileType : fileTypes) {
+								if (existedFile) break;
+								if (!fileType.isEmpty())
 								{
-									filePath.remove(filePath.lastIndexOf("_index"), 6);
+									QString filePath = contentInfo->SourcePath
+														   .left(contentInfo->SourcePath.lastIndexOf('.') + 1)
+														   .append(fileType);
+									if (contentInfo->SourcePath.contains("_index"))
+									{
+										filePath.remove(filePath.lastIndexOf("_index"), 6);
+									}
+									infoJson = ReadWriteUtil::getJsonInfo(filePath);
+									if (!infoJson.isEmpty()) existedFile = true;
 								}
-								infoJson = ReadWriteUtil::getJsonInfo(filePath);
 							}
 						}
 
