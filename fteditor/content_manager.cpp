@@ -1851,7 +1851,7 @@ void ContentManager::rebuildViewInternal(ContentInfo *contentInfo)
 		}
 		else if (contentInfo->MemoryLoaded)
 		{
-			text = "Loaded";
+			text = "RAM_G";
 			icon = QIcon(":/icons/tick");
 			address = QString::number(contentInfo->MemoryAddress);
 		}
