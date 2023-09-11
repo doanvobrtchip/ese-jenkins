@@ -1257,6 +1257,9 @@ void MainWindow::translateToolBars()
 void MainWindow::createStatusBar()
 {
 	statusBar()->showMessage(tr("Ready"));
+	connect(statusBar(), &QStatusBar::messageChanged, this, [this](auto) {
+		statusBar()->setStyleSheet("QStatusBar{}");
+	});
 }
 
 void MainWindow::createDockWindows()

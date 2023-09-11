@@ -19,6 +19,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QLabel>
 #include <QSpinBox>
 #include <QLabel>
+#include <QStatusBar>
 
 // Emulator includes
 
@@ -393,6 +394,17 @@ void InteractiveProperties::addStream(int stream)
 	// TODO: More appropriate GUI
 	PropertiesLineEdit *propText = new PropertiesLineEdit(this, "Set stream", stream);
 	addLabeledWidget("Stream: ", propText);
+	connect(propText, &QLineEdit::textChanged, this, [this](const QString &newText) {
+		if (QFileInfo::exists(newText))
+		{
+			m_MainWindow->statusBar()->clearMessage();
+			return;
+		}
+		QString messsage = QString(tr("WARNING: \"%1\" is not found.")).arg(newText);
+		m_MainWindow->propertyErrorSet(messsage);
+		m_MainWindow->statusBar()->showMessage(messsage);
+		m_MainWindow->statusBar()->setStyleSheet("QStatusBar{color:red}");
+	});
 	m_CurrentProperties.push_back(propText);
 
 	// Help message
