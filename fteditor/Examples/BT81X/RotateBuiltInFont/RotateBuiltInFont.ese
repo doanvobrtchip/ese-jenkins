@@ -1,0 +1,41 @@
+{
+    "content": [
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "CMD_ROMFONT(1,34)  //Load the settings of built-in font 34 into bitmap handle 1",
+        "",
+        "BITMAP_LAYOUT_H(0,0)",
+        "BITMAP_SIZE(NEAREST, BORDER,BORDER, 0,0) //Update the visible area of bitmap handle 1 to the maximum",
+        "",
+        "CMD_LOADIDENTITY()",
+        "CMD_TRANSLATE(4128768, 3276800)",
+        "CMD_ROTATE(8192)",
+        "CMD_SETMATRIX()    //Configure transform matrix of bitmap",
+        "",
+        "CMD_TEXT(77, 111, 1, 0, \"TEST-ROTATED\")  //Draw the text to be rotated",
+        "",
+        "CMD_LOADIDENTITY()",
+        "CMD_SETMATRIX()    //Restore transform matrix of bitmap ",
+        "",
+        "CMD_ROMFONT(1,34)  //Re-load the setting of built-in font 34 into bitmap handle 1 to restore the visible area to normal",
+        "CMD_TEXT(100, 313, 1, 0, \"TEST-Normal\")  //Draw the normal text ",
+        ""
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2071
+    },
+    "registers": {
+        "hSize": 800,
+        "hsf": 0,
+        "macro": [
+            "NOP()",
+            "NOP()"
+        ],
+        "rotate": 0,
+        "vSize": 480
+    }
+}
