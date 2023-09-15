@@ -393,7 +393,6 @@ void InteractiveProperties::addStream(int stream)
 {
 	// TODO: More appropriate GUI
 	PropertiesLineEdit *propText = new PropertiesLineEdit(this, "Set stream", stream);
-	addLabeledWidget("Stream: ", propText);
 	connect(propText, &QLineEdit::textChanged, this, [this](const QString &newText) {
 		if (QFileInfo::exists(newText))
 		{
@@ -405,11 +404,29 @@ void InteractiveProperties::addStream(int stream)
 		m_MainWindow->statusBar()->showMessage(messsage);
 		m_MainWindow->statusBar()->setStyleSheet("QStatusBar{color:red}");
 	});
+	QPushButton *btnFind = new QPushButton("...");
+	btnFind->setFixedWidth(30);
+	connect(btnFind, &QPushButton::clicked, this, [this, propText]() {
+		QString prjPath = QDir::currentPath();
+		QString filePath = QFileDialog::getOpenFileName(
+		    this, tr("Select File"), prjPath);
+		if (filePath.isEmpty()) return;
+		if (filePath.contains(prjPath))
+			filePath = QDir(prjPath).relativeFilePath(filePath);
+		propText->setText(filePath);
+	});
+	addLabeledWidget("Data Bytes: ", propText, btnFind);
 	m_CurrentProperties.push_back(propText);
 
 	// Help message
-	addHelp(tr("<p><i>Direct filepath</i>:<br>Enter a relative or absolute filepath. String formatted in backslash escape format, use \\\\ for regular backslash.</p>"
-	           "<p><i>Content Manager</i>:<br>Enter the full content name suffixed with .raw or .bin (eg. content/catvideo.raw) for raw or compressed format respectively.</p>"));
+	addHelp(tr("<p>The data bytes shall be sourced from an already existing file, "
+	           "which the file path can either be an <b>absolute</b> or <b>relative</b> file path "
+	           "(using \"\\\" to escape backslashes).</p>"
+	           "<p><i>Absolute file path example</i>: \"c:\\\\pictures\\\\input.raw\" or \"c:/pictures/input.raw\"<br>"
+	           "<i>Relative file path example</i>: \"input.raw\" or \"./input.raw\" or \".\\\\input.raw\"</p>"
+	           "<p>If the file has been managed by content manager of ESE, "
+	           "it can be accessed through relative path \"content/input.raw\""
+	           "or \"content\\\\input.raw\".</p>"));
 }
 
 void InteractiveProperties::addValueSlider(int val, int maxim)

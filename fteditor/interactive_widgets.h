@@ -886,7 +886,7 @@ public:
 	    , m_SoftMod(false)
 	{
 		setUndoStack(parent->m_MainWindow->undoStack());
-		connect(this, SIGNAL(textEdited(const QString &)), this, SLOT(updateValue(const QString &)));
+		connect(this, SIGNAL(textChanged(const QString &)), this, SLOT(updateValue(const QString &)));
 		modifiedEditorLine();
 	}
 
