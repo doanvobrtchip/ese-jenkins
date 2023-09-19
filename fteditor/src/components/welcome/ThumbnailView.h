@@ -64,8 +64,7 @@ class ThumbnailView : public QWidget {
   void updateViewContent(QStringList path);
 
  public slots:
-  void handleItemPressed(const QString &path);
-  void onSeach(const QString &text);
+  QStringList search(const QString &text);
 
  signals:
   void itemPressed(QString path);

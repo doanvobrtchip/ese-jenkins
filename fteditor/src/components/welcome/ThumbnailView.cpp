@@ -193,13 +193,13 @@ void ThumbnailView::addThumbnail(QString path, int row, int column) {
   auto thumb = new Thumbnail(path);
   thumb->setFixedWidth(230);
   thumb->setFixedHeight(220);
-  connect(thumb, &Thumbnail::itemPressed, this,
-          &ThumbnailView::handleItemPressed);
-
+  connect(thumb, &Thumbnail::itemPressed, m_exampleDlg,
+          &ExampleDialog::onItemPressed);
   m_gridLyt->addWidget(thumb, row, column);
 }
 
 void ThumbnailView::updateViewContent(QStringList paths) {
+  m_gridLyt->clear();
   const int MAX_COLUMN = 4;
   int row = 0, column = 0;
   for (auto &path : paths) {
@@ -212,24 +212,21 @@ void ThumbnailView::updateViewContent(QStringList paths) {
   }
 }
 
-void ThumbnailView::handleItemPressed(const QString &path) {
-  emit itemPressed(path);
-}
-
-void ThumbnailView::onSeach(const QString &text) {
+QStringList ThumbnailView::search(const QString &text) {
+  QStringList result;
+  QRegularExpression regEx(text, QRegularExpression::CaseInsensitiveOption);
+  if (!regEx.isValid()) return result;
   QStringList nameList;
   QMap<QString, QString> mapPathAndName;
   for (auto &file : m_fileInfoList) {
     mapPathAndName.insert(file.absoluteFilePath(), file.fileName());
     nameList.append(file.fileName());
   }
-  m_gridLyt->clear();
-  nameList = nameList.filter(text, Qt::CaseInsensitive);
-  QStringList result;
+  nameList = nameList.filter(regEx);
   for (auto &path : nameList) {
     result.append(mapPathAndName.keys(path));
   }
-  updateViewContent(result);
+  return result;
 }
 
 }  // namespace FTEDITOR

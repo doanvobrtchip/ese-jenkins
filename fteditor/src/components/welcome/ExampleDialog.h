@@ -11,9 +11,11 @@
 class QWidget;
 class QTabWidget;
 class QLineEdit;
+class TabBar;
 
 namespace FTEDITOR {
 class MainWindow;
+class ThumbnailView;
 
 class ExampleDialog : public QDialog {
   Q_OBJECT
@@ -31,6 +33,9 @@ class ExampleDialog : public QDialog {
   MainWindow *m_mainWindow;
   QTabWidget *m_tabWidget;
   QLineEdit *m_searchEdit;
+  TabBar *m_tabBar;
+  int m_searchTabIndex;
+  ThumbnailView *m_searchView; 
 };
 
 }  // namespace FTEDITOR

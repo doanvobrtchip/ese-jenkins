@@ -24,7 +24,12 @@
 
 namespace FTEDITOR {
 FTEDITOR::ExampleDialog::ExampleDialog(MainWindow *mainWindow)
-    : QDialog(mainWindow), m_mainWindow(mainWindow) {
+    : QDialog(mainWindow),
+      m_mainWindow(mainWindow),
+      m_tabWidget(NULL),
+      m_searchEdit(NULL),
+      m_tabBar(NULL),
+      m_searchView(NULL) {
   m_tabWidget = new QTabWidget;
   m_tabWidget->tabBar()->setHidden(true);
 
@@ -41,17 +46,23 @@ void ExampleDialog::setupTabs() {
   QDir dirExample(pathExample);
   if (!dirExample.exists()) return;
 
-  auto tabBar = new TabBar;
+  m_tabBar = new TabBar;
   auto entryList = dirExample.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
   for (auto &item : entryList) {
     if (!CommonUtil::existProject(dirExample.absoluteFilePath(item))) continue;
     auto view = new ThumbnailView(this, dirExample.absoluteFilePath(item));
     m_tabWidget->addTab(view, item);
-    connect(view, &ThumbnailView::itemPressed, this,
-            &ExampleDialog::onItemPressed);
-    tabBar->addTab(item);
+    m_tabBar->addTab(item);
+    view->updateViewContent(view->search(""));
   }
-  connect(tabBar, &QTabBar::currentChanged, m_tabWidget,
+
+  // Search tab
+  m_searchView = new ThumbnailView(this, "");
+  m_tabWidget->addTab(m_searchView, "");
+  m_searchTabIndex = m_tabBar->addTab("");
+  m_tabBar->setTabVisible(m_searchTabIndex, false);
+
+  connect(m_tabBar, &QTabBar::currentChanged, m_tabWidget,
           &QTabWidget::setCurrentIndex);
 
   m_searchEdit = new QLineEdit;
@@ -63,7 +74,12 @@ void ExampleDialog::setupTabs() {
   auto clearAct = m_searchEdit->addAction(QIcon(":/icons/cross-black.png"),
                                           QLineEdit::TrailingPosition);
   clearAct->setToolTip(tr("Clear"));
-  connect(clearAct, &QAction::triggered, m_searchEdit, &QLineEdit::clear);
+  connect(clearAct, &QAction::triggered, m_searchEdit, [this]() {
+    m_searchEdit->clear();
+    m_tabBar->setTabText(m_searchTabIndex, "");
+    m_tabBar->setTabVisible(m_searchTabIndex, false);
+    m_tabBar->setCurrentIndex(0);
+  });
   connect(m_searchEdit, &QLineEdit::textChanged, this,
           &ExampleDialog::onSearch);
 
@@ -80,7 +96,7 @@ void ExampleDialog::setupTabs() {
 
   auto headerLyt = new QHBoxLayout;
   headerLyt->addWidget(backBtn);
-  headerLyt->addWidget(tabBar);
+  headerLyt->addWidget(m_tabBar);
   headerLyt->addStretch();
   headerLyt->addWidget(m_searchEdit, 0, Qt::AlignRight);
 
@@ -89,14 +105,21 @@ void ExampleDialog::setupTabs() {
   mainLyt->addWidget(m_tabWidget);
 
   setLayout(mainLyt);
-
-  onSearch(m_searchEdit->text());
+  m_tabBar->setCurrentIndex(0);
 }
 
 void ExampleDialog::onSearch(const QString &text) {
+  QStringList result;
   for (int i = 0; i < m_tabWidget->count(); ++i) {
-    static_cast<ThumbnailView *>(m_tabWidget->widget(i))->onSeach(text);
+    result.append(
+        static_cast<ThumbnailView *>(m_tabWidget->widget(i))->search(text));
   }
+  m_searchView->updateViewContent(result);
+
+  auto searchTitle = QString(tr("Seach: \"%1\"")).arg(text);
+  m_tabBar->setTabText(m_searchTabIndex, searchTitle);
+  m_tabBar->setTabVisible(m_searchTabIndex, true);
+  m_tabBar->setCurrentIndex(m_searchTabIndex);
 }
 
 void ExampleDialog::onItemPressed(const QString &path) {
