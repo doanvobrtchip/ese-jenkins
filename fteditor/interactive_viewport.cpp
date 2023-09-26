@@ -3203,40 +3203,26 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						if (fileSuffix == "ram_g")
 						{
 							debugLog("Create commands for .ram_g content file\n");
-							pa.IdLeft = 0xFFFFFF00;
-							pa.IdRight = CMD_ANIMFRAMERAM & 0xFF;
-							pa.Parameter[0].I = mappingX(e);
-							pa.Parameter[1].I = mappingY(e);
-
+							int objAddr = 0;
 							if (infoJson.contains("object"))
 							{
 								auto obj = infoJson.value("object").toObject();
-								pa.Parameter[2].I = obj.value("offset").toInt();
+								objAddr = obj.value("offset").toInt();
 							}
-							else
-								pa.Parameter[2].I = 0;
-							pa.ExpectedParameterCount = 3;
-							m_LineEditor->insertLine(line, pa);
-							++line;
+							DLUtil::addRunAnimRamG(m_LineEditor, pa, line, objAddr,
+							    mappingX(e), mappingY(e));
 						}
 						else if (fileSuffix == "flash")
 						{
 							debugLog("Create commands for .flash content file\n");
-							pa.IdLeft = 0xFFFFFF00;
-							pa.IdRight = CMD_ANIMFRAME & 0xFF;
-							pa.Parameter[0].I = mappingX(e);
-							pa.Parameter[1].I = mappingY(e);
-
+							int objAddr = 0;
 							if (infoJson.contains("object"))
 							{
 								auto obj = infoJson.value("object").toObject();
-								pa.Parameter[2].I = obj.value("offset").toInt();
+								objAddr = obj.value("offset").toInt();
 							}
-							else
-								pa.Parameter[2].I = 0;
-							pa.ExpectedParameterCount = 3;
-							m_LineEditor->insertLine(line, pa);
-							++line;
+							DLUtil::addRunAnimFlash(m_LineEditor, pa, line, contentInfo->FlashAddress,
+							    objAddr, mappingX(e), mappingY(e));
 						}
 						else if (fileSuffix == "xfont")
 						{

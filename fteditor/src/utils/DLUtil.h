@@ -32,6 +32,10 @@ class DLUtil {
                          uint32_t &bitmapHandle, QString text, int &line,
                          int32_t x, int32_t y);
   static void postProcessEditor(DlEditor *editor);
+  static bool addRunAnimFlash(DlEditor *lineEditor, DlParsed &pa, int &line,
+                              int address, int objAdress, int32_t x, int32_t y);
+  static bool addRunAnimRamG(DlEditor *lineEditor, DlParsed &pa, int &line,
+                             int objAdress, int32_t x, int32_t y);
 };
 
 }  // namespace FTEDITOR

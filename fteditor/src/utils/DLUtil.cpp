@@ -39,17 +39,20 @@ bool DLUtil::addPaletted8Cmds(DlEditor *lineEditor, DlParsed &pa, int address,
   pa.ExpectedParameterCount = 1;
   lineEditor->insertLine(line, pa);
   ++line;
+
   int lastVertex;
   pa.IdRight = FTEDITOR_DL_SAVE_CONTEXT;
   pa.ExpectedParameterCount = 0;
   lineEditor->insertLine(line, pa);
   ++line;
+
   pa.IdRight = FTEDITOR_DL_BLEND_FUNC;
   pa.Parameter[0].U = ONE;
   pa.Parameter[1].U = ZERO;
   pa.ExpectedParameterCount = 2;
   lineEditor->insertLine(line, pa);
   ++line;
+
   pa.IdRight = FTEDITOR_DL_COLOR_MASK;
   pa.Parameter[0].U = 0;
   pa.Parameter[1].U = 0;
@@ -61,12 +64,14 @@ bool DLUtil::addPaletted8Cmds(DlEditor *lineEditor, DlParsed &pa, int address,
   addPalettedSrc(lineEditor, pa, address + 3, line);
   lineEditor->insertLine(line, pav);
   ++line;
+
   pa.IdRight = FTEDITOR_DL_BLEND_FUNC;
   pa.Parameter[0].U = DST_ALPHA;
   pa.Parameter[1].U = ONE_MINUS_DST_ALPHA;
   pa.ExpectedParameterCount = 2;
   lineEditor->insertLine(line, pa);
   ++line;
+
   pa.IdRight = FTEDITOR_DL_COLOR_MASK;
   pa.Parameter[0].U = 1;
   pa.Parameter[1].U = 0;
@@ -75,6 +80,7 @@ bool DLUtil::addPaletted8Cmds(DlEditor *lineEditor, DlParsed &pa, int address,
   pa.ExpectedParameterCount = 4;
   lineEditor->insertLine(line, pa);
   ++line;
+
   addPalettedSrc(lineEditor, pa, address + 2, line);
   lineEditor->insertLine(line, pav);
   ++line;
@@ -86,9 +92,11 @@ bool DLUtil::addPaletted8Cmds(DlEditor *lineEditor, DlParsed &pa, int address,
   pa.ExpectedParameterCount = 4;
   lineEditor->insertLine(line, pa);
   ++line;
+
   addPalettedSrc(lineEditor, pa, address + 1, line);
   lineEditor->insertLine(line, pav);
   ++line;
+
   pa.IdRight = FTEDITOR_DL_COLOR_MASK;
   pa.Parameter[0].U = 0;
   pa.Parameter[1].U = 0;
@@ -97,13 +105,16 @@ bool DLUtil::addPaletted8Cmds(DlEditor *lineEditor, DlParsed &pa, int address,
   pa.ExpectedParameterCount = 4;
   lineEditor->insertLine(line, pa);
   ++line;
+
   addPalettedSrc(lineEditor, pa, address, line);
   lineEditor->insertLine(line, pav);
   ++line;
+
   pa.IdRight = FTEDITOR_DL_RESTORE_CONTEXT;
   pa.ExpectedParameterCount = 0;
   lineEditor->insertLine(line, pa);
   ++line;
+
   lastVertex = -2;
   pa.IdLeft = 0;
   pa.IdRight = FTEDITOR_DL_END;
@@ -409,6 +420,96 @@ void DLUtil::postProcessEditor(DlEditor *editor) {
     }
   }
 }
+
+bool DLUtil::addRunAnimFlash(DlEditor *lineEditor, DlParsed &pa, int &line,
+                             int address, int objAdress, int32_t x, int32_t y) {
+  pa.IdLeft = 0xFFFFFF00;
+  pa.IdRight = CMD_FLASHFAST & 0xFF;
+  pa.ExpectedParameterCount = 0;
+  lineEditor->insertLine(line, pa);
+  ++line;
+
+  pa.IdLeft = 0xFFFFFF00;
+  pa.IdRight = CMD_FLASHSOURCE & 0xFF;
+  pa.Parameter[0].U = address;
+  pa.ExpectedParameterCount = 1;
+  lineEditor->insertLine(line, pa);
+  ++line;
+
+  pa.IdLeft = 0xFFFFFF00;
+  pa.IdRight = CMD_MEMSET & 0xFF;
+  pa.Parameter[0].U = 0;
+  pa.Parameter[1].U = 1;
+  pa.Parameter[2].U = 0;
+  pa.ExpectedParameterCount = 3;
+  lineEditor->insertLine(line, pa);
+  ++line;
+
+  pa.IdLeft = 0xFFFFFF00;
+  pa.IdRight = CMD_ANIMSTART & 0xFF;
+  pa.Parameter[0].U = 0;
+  pa.Parameter[1].U = objAdress;
+  pa.Parameter[2].U = ANIM_LOOP;
+  pa.ExpectedParameterCount = 3;
+  lineEditor->insertLine(line, pa);
+  ++line;
+
+  pa.IdLeft = 0xFFFFFF00;
+  pa.IdRight = CMD_ANIMXY & 0xFF;
+  pa.Parameter[0].U = 0;
+  pa.Parameter[1].U = x;
+  pa.Parameter[2].U = y;
+  pa.ExpectedParameterCount = 3;
+  lineEditor->insertLine(line, pa);
+  ++line;
+
+  pa.IdLeft = 0xFFFFFF00;
+  pa.IdRight = CMD_RUNANIM & 0xFF;
+  pa.Parameter[0].U = 0xFFFFFF;
+  pa.Parameter[1].U = 0;
+  pa.ExpectedParameterCount = 2;
+  lineEditor->insertLine(line, pa);
+  lineEditor->selectLine(line);
+  return true;
+}
+
+bool DLUtil::addRunAnimRamG(DlEditor *lineEditor, DlParsed &pa, int &line,
+                            int objAdress, int32_t x, int32_t y) {
+  pa.IdLeft = 0xFFFFFF00;
+  pa.IdRight = CMD_ANIMSTARTRAM & 0xFF;
+  pa.Parameter[0].U = 0;
+  pa.Parameter[1].U = objAdress;
+  pa.Parameter[2].U = ANIM_LOOP;
+  pa.ExpectedParameterCount = 3;
+  lineEditor->insertLine(line, pa);
+  ++line;
+
+  pa.IdLeft = 0xFFFFFF00;
+  pa.IdRight = CMD_ANIMXY & 0xFF;
+  pa.Parameter[0].U = 0;
+  pa.Parameter[1].U = x;
+  pa.Parameter[2].U = y;
+  pa.ExpectedParameterCount = 3;
+  lineEditor->insertLine(line, pa);
+  ++line;
+
+  pa.IdLeft = 0xFFFFFF00;
+  pa.IdRight = CMD_ANIMDRAW & 0xFF;
+  pa.Parameter[0].U = 0;
+  pa.ExpectedParameterCount = 1;
+  lineEditor->insertLine(line, pa);
+  ++line;
+
+  pa.IdLeft = 0xFFFFFF00;
+  pa.IdRight = CMD_RUNANIM & 0xFF;
+  pa.Parameter[0].U = 1;
+  pa.Parameter[1].U = -1;
+  pa.ExpectedParameterCount = 2;
+  lineEditor->insertLine(line, pa);
+  lineEditor->selectLine(line);
+  return true;
+}
+
 }  // namespace FTEDITOR
 
 /* end of file */
