@@ -187,8 +187,9 @@ DeviceManager::DeviceManager(MainWindow *parent)
 	// Initial refresh of devices
 	// refreshDevices(); // TODO: Move to when device manager is first shown for faster bootup
 	QTimer::singleShot(0, this, &DeviceManager::refreshDevices);
-
 	// m_DisplaySettingsDialog = new DeviceDisplaySettingsDialog(this);
+	
+	ComponentBase::finishedSetup(this, m_MainWindow);
 }
 
 DeviceManager::~DeviceManager()
@@ -301,8 +302,8 @@ void DeviceManager::setDeviceAndScreenSize(QString displaySize, QString syncDevi
 
 	m_SelectedDisplaySize = displaySize;
 	m_SelectedDeviceName = syncDevice;
-
-	m_MainWindow->userChangeResolution(pieces[0].toUInt(), pieces[1].toUInt());
+	
+	emit displaySizeChanged(pieces[0].toUInt(), pieces[1].toUInt());
 }
 
 void DeviceManager::deviceManage()
@@ -508,7 +509,6 @@ void DeviceManager::connectDevice()
 	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)(phost->ChipId & 0xFFFF));
 	EVE_ConfigParameters configParams;
 	
-
 	QString projectDisplaySize = m_MainWindow->getDisplaySize();
 
 	if (m_IsCustomDevice)

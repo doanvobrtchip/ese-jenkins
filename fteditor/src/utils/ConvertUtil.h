@@ -20,6 +20,7 @@ public:
 	static QString asInt(uint32_t value);
 	static QString asSignedInt(uint32_t value);
 	static QString asSignedInt16F(uint32_t value);
+	static QString intToHexString(int value);
 };
 }
 

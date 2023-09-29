@@ -14,9 +14,9 @@
 #include <QLineEdit>
 #include <QPushButton>
 
+#include "Inspector.h"
 #include "constant_mapping.h"
 #include "customize/QHexView.h"
-#include "inspector.h"
 
 namespace FTEDITOR {
 extern BT8XXEMU_Emulator *g_Emulator;
@@ -33,7 +33,7 @@ RamCMD::RamCMD(Inspector *parent) : RamBase(parent) {
 
   m_lbUint = new QLabel(tr("Uint:"));
   m_lbUint->setStatusTip(tr("Decimal value (4 bytes, Little Endian)"));
-  m_lbUint->setMinimumWidth(25); 
+  m_lbUint->setMinimumWidth(25);
 
   // Set default width for QLineEdit
   m_leAddress = new QLineEdit;
@@ -59,7 +59,7 @@ RamCMD::RamCMD(Inspector *parent) : RamBase(parent) {
   m_lytSearch->addWidget(m_lbAddress);
   m_lytSearch->addWidget(m_leAddress, 2);
   m_lytSearch->addWidget(m_btnSearch, 1);
-  
+
   auto layout = new QVBoxLayout;
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setAlignment(Qt::AlignRight);
@@ -78,6 +78,8 @@ RamCMD::RamCMD(Inspector *parent) : RamBase(parent) {
   connect(m_leAddress, &QLineEdit::returnPressed, this, &RamCMD::goToAddress);
   connect(m_hexView, &QHexView::uintChanged, this, &RamCMD::setLabelUint);
   connect(m_insp, &Inspector::updateView, this, &RamCMD::updateView);
+
+  ComponentBase::finishedSetup(this, m_insp->mainWindow());
 }
 
 void RamCMD::goToAddress() {

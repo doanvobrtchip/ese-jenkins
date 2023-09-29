@@ -3,6 +3,33 @@ project(fteditor LANGUAGES CXX)
 SET(CMAKE_CXX_STANDARD 17)
 FILE(GLOB SRCS *.cpp)
 FILE(GLOB HDRS *.h)
+
+FILE(GLOB BASE
+    src/components/*.h
+    src/components/*.cpp
+)
+
+FILE(GLOB INSPECTOR
+    src/components/inspector/*.h
+    src/components/inspector/*.cpp
+)
+
+FILE(GLOB SCRIPT
+    src/components/script/*.h
+    src/components/script/*.cpp
+)
+
+FILE(GLOB WELCOME
+    src/components/welcome/*.h
+    src/components/welcome/*.cpp
+)
+
+
+FILE(GLOB REGISTERS
+    src/components/registers/*.h
+    src/components/registers/*.cpp
+)
+
 FILE(GLOB CUSTOMIZE
     src/customize/*.h
     src/customize/*.cpp
@@ -13,22 +40,12 @@ FILE(GLOB UTILS
     src/utils/*.cpp
 )
 
-FILE(GLOB INSPECTOR
-    src/inspector/*.h
-    src/inspector/*.cpp
-)
-
 FILE(GLOB EXTENSION_MODULE
     src/extension_module/*.cpp
 )
 
 FILE(GLOB DEFINE
     src/define/*.h
-)
-
-FILE(GLOB CUSTOM_SCRIPT
-    src/custom_script/*.h
-    src/custom_script/*.cpp
 )
 
 IF (WIN32)
@@ -39,10 +56,13 @@ FILE(GLOB RESOURCES *.qrc)
 SOURCE_GROUP("resources" FILES ${RESOURCES} ${RSRC})
 SOURCE_GROUP("ftdi" FILES ${SRCSFT} ${HDRSFT})
 SOURCE_GROUP("" FILES ${SRCS} ${HDRS})
+SOURCE_GROUP("components" FILES ${BASE})
+SOURCE_GROUP("components/inspector" FILES ${INSPECTOR})
+SOURCE_GROUP("components/script" FILES ${SCRIPT})
+SOURCE_GROUP("components/welcome" FILES ${WELCOME})
+SOURCE_GROUP("components/registers" FILES ${REGISTERS})
 SOURCE_GROUP("customize" FILES ${CUSTOMIZE})
 SOURCE_GROUP("utils" FILES ${UTILS})
-SOURCE_GROUP("inspector" FILES ${INSPECTOR})
-SOURCE_GROUP("custom_script" FILES ${CUSTOM_SCRIPT})
 SOURCE_GROUP("define" FILES ${DEFINE})
 SOURCE_GROUP("extension_module" FILES ${EXTENSION_MODULE})
 
@@ -74,6 +94,7 @@ qt_add_resources(RESOURCE_ADDED ${RESOURCES} ${CMAKE_CURRENT_BINARY_DIR}/transla
 INCLUDE_DIRECTORIES(
   .  
   src
+  src/components
   ../QScintilla/src
 )
 
@@ -104,8 +125,11 @@ ADD_EXECUTABLE(fteditor WIN32
 	${RESOURCE_ADDED}
   ${CUSTOMIZE}
   ${UTILS}
+  ${BASE}
   ${INSPECTOR}
-  ${CUSTOM_SCRIPT}
+  ${REGISTERS}
+  ${SCRIPT}
+  ${WELCOME}
   ${DEFINE}
   ${EXTENSION_MODULE}
 	)

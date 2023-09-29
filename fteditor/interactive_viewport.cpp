@@ -46,8 +46,8 @@
 #include "constant_common.h"
 #include "constant_mapping.h"
 #include "content_manager.h"
-#include "custom_script/ScriptComponent.h"
-#include "inspector.h"
+#include "script/Script.h"
+#include "inspector/Inspector.h"
 #include "main_window.h"
 #include "properties_editor.h"
 #include "toolbox.h"
@@ -271,9 +271,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
 		    m_ContextMenu->exec(this->mapToGlobal(pos));
 	    });
 	
-	setup();
-	connect(m_MainWindow, &MainWindow::readyToSetup, this,
-	    &InteractiveViewport::setup);
+	ComponentBase::finishedSetup(this, m_MainWindow);
 }
 
 QAction *InteractiveViewport::ActionRuler() const
@@ -285,15 +283,15 @@ InteractiveViewport::~InteractiveViewport()
 {
 }
 
-void InteractiveViewport::setup(QObject *obj)
+void InteractiveViewport::setupConnections(QObject *obj)
 {
-	auto scripComp = m_MainWindow->scriptComponent();
-	if (scripComp && (obj == scripComp || obj == nullptr))
+	if (auto script = m_MainWindow->script();
+	    script && (obj == script || obj == nullptr))
 	{
-		connect(scripComp, &ScriptComponent::started, this, [this]() {
+		connect(script, &Script::started, this, [this]() {
 			m_selectable = false;
 		});
-		connect(scripComp, &ScriptComponent::finished, this, [this]() {
+		connect(script, &Script::finished, this, [this]() {
 			m_selectable = true;
 		});
 	}

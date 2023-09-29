@@ -66,22 +66,22 @@ Source: "{#RootDir}\fteditor\firmware\*.*"; DestDir: "{app}\firmware"; Flags: re
 Source: "{#RootDir}\fteditor\untitled\*.*"; DestDir: "{app}\untitled"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 ;Python
-Source: "{#RootDir}\fteditor\astc_conv.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\aud_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\export_pico.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\export_pico_helper.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\export_pico_reg.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\export_common.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\export_bt81x.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\export_bt81x_helper.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\export_EVE_Arduino.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\export_ftdi_eve_hal2.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\export_GameDuino2.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\helperapi.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\img_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\png.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\pngp2pa.py"; DestDir: "{app}"; Flags: ignoreversion
-Source: "{#RootDir}\fteditor\raw_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\astc_conv.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\aud_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\export_pico.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\export_pico_helper.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\export_pico_reg.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\export_common.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\export_bt81x.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\export_bt81x_helper.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\export_EVE_Arduino.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\export_ftdi_eve_hal2.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\export_GameDuino2.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\helperapi.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\img_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\png.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\pngp2pa.py"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#DependenciesAppDir}\py_script\raw_cvt.py"; DestDir: "{app}"; Flags: ignoreversion
 
 Source: "{#BuildDir}\fteditor.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#BuildDir}\bt8xxemu.dll"; DestDir: "{app}"; Flags: ignoreversion

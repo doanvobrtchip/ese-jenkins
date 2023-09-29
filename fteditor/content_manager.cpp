@@ -42,18 +42,18 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "bt8xxemu_diag.h"
 
 // Project includes
+#include "asset_converter.h"
+#include "code_editor.h"
+#include "constant_common.h"
+#include "constant_mapping.h"
+#include "dl_editor.h"
+#include "dl_parser.h"
+#include "inspector/Inspector.h"
 #include "inspector/RamG.h"
-#include "utils/ReadWriteUtil.h"
 #include "main_window.h"
 #include "properties_editor.h"
 #include "undo_stack_disabler.h"
-#include "asset_converter.h"
-#include "dl_editor.h"
-#include "dl_parser.h"
-#include "inspector.h"
-#include "constant_mapping.h"
-#include "constant_common.h"
-#include "code_editor.h"
+#include "utils/ReadWriteUtil.h"
 
 namespace FTEDITOR {
 
@@ -636,9 +636,7 @@ ContentManager::ContentManager(MainWindow * parent)
 	m_ContentList->setLayout(helpLayout);
 
 	// bindCurrentDevice();
-	setup();
-	connect(m_MainWindow, SIGNAL(readyToSetup(QObject *)), this,
-		SLOT(setup(QObject *)));
+	ComponentBase::finishedSetup(this, m_MainWindow);
 }
 
 ContentManager::~ContentManager()
@@ -1528,7 +1526,7 @@ void ContentManager::exportFlashMapped()
 
 }
 
-void ContentManager::setup(QObject *obj)
+void ContentManager::setupConnections(QObject *obj)
 {
 	if (auto insp = m_MainWindow->inspector();
 	    insp && insp->ramG() && (obj == insp->ramG() || obj == nullptr))

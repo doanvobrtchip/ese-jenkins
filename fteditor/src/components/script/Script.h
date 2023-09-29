@@ -1,12 +1,14 @@
 /*!
- * @file ScriptComponent.h
+ * @file Script.h
  * @date 7/13/2023
  * @author Liem Do <liem.do@brtchip.com>
  */
-#ifndef SCRIPTCOMPONENT_H
-#define SCRIPTCOMPONENT_H
+#ifndef SCRIPT_H
+#define SCRIPT_H
 
 #include <QWidget>
+
+#include "ComponentBase.h"
 
 class QPushButton;
 class QsciLexerPython;
@@ -18,11 +20,11 @@ namespace FTEDITOR {
 class DlEditor;
 class MainWindow;
 
-class ScriptComponent : public QWidget {
+class Script : public QWidget, public ComponentBase {
   Q_OBJECT
 
  public:
-  ScriptComponent(MainWindow *parent = 0);
+  Script(MainWindow *parent = 0);
   void executeScript();
   void setButtonChecked(bool checked);
   MainWindow *mainWindow() const;
@@ -35,12 +37,12 @@ class ScriptComponent : public QWidget {
   void ensureStopPython();
 
  public slots:
+  void setupConnections(QObject *obj) override;
   void loadExample(bool checked);
   void stopScript();
-  void setup(QObject *obj = nullptr);
   void handleStarted();
   void handleFinished();
-  void handleNewEvent();
+  void onClearEvent();
 
  signals:
   void buttonCheckedChanged(bool checked);
@@ -48,8 +50,8 @@ class ScriptComponent : public QWidget {
   void finished();
 
  private:
-  ScriptEditor *m_scriptEditor;
   MainWindow *m_mainWindow;
+  ScriptEditor *m_scriptEditor;
   ScriptThread *m_thread;
   QPushButton *m_btnRun;
   QPushButton *m_btnLoadExample;
@@ -59,4 +61,4 @@ class ScriptComponent : public QWidget {
 };
 
 }  // namespace FTEDITOR
-#endif  // SCRIPTCOMPONENT_H
+#endif  // SCRIPT_H

@@ -19,7 +19,7 @@
 #include "main_window.h"
 #include "utils/PyUtil.h"
 
-ScriptThread::ScriptThread(FTEDITOR::ScriptComponent *parent) {
+ScriptThread::ScriptThread(FTEDITOR::Script *parent) {
   m_scriptComp = parent;
   m_timer = new QTimer(this);
   connect(m_timer, &QTimer::timeout, this, &ScriptThread::handleTimeout);

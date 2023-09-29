@@ -32,6 +32,7 @@
 #include <bt8xxemu_inttypes.h>
 
 // Project includes
+#include "ComponentBase.h"
 #include "dl_parser.h"
 #include "dl_state.h"
 
@@ -56,7 +57,7 @@ class PropertiesEditor;
  * \date 2013-11-05 09:02GMT
  * \author Jan Boon (Kaetemi)
  */
-class DlEditor : public QWidget
+class DlEditor : public QWidget, public ComponentBase
 {
 	Q_OBJECT
 
@@ -148,8 +149,8 @@ private slots:
 	void editorCursorPositionChanged(bool popupProperties = true);
 
 public slots:
+	void setupConnections(QObject *obj) override;
 	void frame();
-	void setup(QObject *obj = nullptr);
 
 private:
 	void parseLine(QTextBlock block);

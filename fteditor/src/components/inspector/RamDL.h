@@ -31,6 +31,7 @@ class RamDL : public RamBase {
   bool eventFilter(QObject *watched, QEvent *event) override;
 
  public slots:
+  void setupConnections(QObject *obj) override{};
   void onCopy();
   void updateView();
   void onPrepareContextMenu(const QPoint &pos);

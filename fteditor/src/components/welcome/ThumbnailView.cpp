@@ -20,8 +20,8 @@
 #include <QScrollArea>
 
 #include "ExampleDialog.h"
-#include "utils/ImageUtil.h"
 #include "define/ValueDefine.h"
+#include "utils/ImageUtil.h"
 
 namespace FTEDITOR {
 

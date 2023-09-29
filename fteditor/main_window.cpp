@@ -77,24 +77,26 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #endif
 
 // Project includes
+#include "code_editor.h"
+#include "constant_common.h"
+#include "constant_mapping.h"
+#include "constant_mapping_flash.h"
+#include "content_manager.h"
 #include "customize/SaveOptionDialog.h"
-#include "customize/WelcomeDialog.h"
-#include "custom_script/ScriptComponent.h"
-#include "utils/ReadWriteUtil.h"
+#include "device_manager.h"
 #include "dl_editor.h"
+#include "emulator_navigator.h"
+#include "inspector/Inspector.h"
+#include "interactive_properties.h"
 #include "interactive_viewport.h"
 #include "properties_editor.h"
-#include "code_editor.h"
+#include "registers/Registers.h"
+#include "script/Script.h"
 #include "toolbox.h"
-#include "device_manager.h"
-#include "inspector.h"
-#include "content_manager.h"
-#include "interactive_properties.h"
-#include "emulator_navigator.h"
-#include "constant_mapping.h"
-#include "constant_common.h"
-#include "constant_mapping_flash.h"
-#include "inspector/RamReg.h"
+#include "utils/CommonUtil.h"
+#include "utils/DLUtil.h"
+#include "utils/ReadWriteUtil.h"
+#include "welcome/Welcome.h"
 
 namespace FTEDITOR
 {
@@ -243,10 +245,6 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
     , m_ContentManagerDock(NULL)
     , m_ContentManager(NULL)
     , m_RegistersDock(NULL)
-    , m_Macro(NULL)
-    , m_HSize(NULL)
-    , m_VSize(NULL)
-    , m_Rotate(NULL)
     , m_ControlsDock(NULL)
     , m_StepEnabled(NULL)
     , m_StepCount(NULL)
@@ -388,7 +386,6 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 
 	g_DlEditor = m_DlEditor;
 	g_CmdEditor = m_CmdEditor;
-	g_Macro = m_Macro;
 	g_ScriptCmdEditor = m_scriptComp->cmdEditor();
 
 	startEmulatorInternal();
@@ -398,15 +395,25 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	actNew(true);
 	 
 	connect(this, &MainWindow::windowActivate, this, [this](){
-		auto dlgWelcome = new WelcomeDialog(this);
-		dlgWelcome->open();
+		auto welcomeComp = new Welcome(this);
+		welcomeComp->open();
 		disconnect(this,  &MainWindow::windowActivate, nullptr, nullptr);
 	});
 	
 	emit currentFileNameChanged();
 }
 
-ScriptComponent *MainWindow::scriptComponent() const
+const QString &MainWindow::CurrentFileName() const
+{
+	return m_CurrentFileName;
+}
+
+DeviceManager *MainWindow::deviceManager() const
+{
+	return m_DeviceManager;
+}
+
+Script *MainWindow::script() const
 {
 	return m_scriptComp;
 }
@@ -440,6 +447,11 @@ MainWindow::~MainWindow()
 	QDir::setCurrent(QDir::tempPath());
 	delete m_TemporaryDir;
 	m_TemporaryDir = NULL;
+}
+
+Inspector *MainWindow::inspector() const
+{
+	return m_Inspector;
 }
 
 #ifdef FT800EMU_PYTHON
@@ -790,7 +802,7 @@ void MainWindow::runScript(const QString &script)
 				// screen resolution argument
 				if (FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815)
 				{
-					QString resol = QString("%1x%2").arg(m_HSize->text()).arg(m_VSize->text());
+					QString resol = QString("%1x%2").arg(g_HSize).arg(g_VSize);
 					pyValue = PyUnicode_FromString(resol.toUtf8().data());
 					PyTuple_SetItem(pyArgs, 3, pyValue);
 				}
@@ -1011,8 +1023,8 @@ void MainWindow::createActions()
 	m_WelcomeAct = new QAction(this);
 	m_WelcomeAct->setShortcut(QKeySequence(Qt::CTRL | Qt::ALT | Qt::Key_W));
 	connect(m_WelcomeAct, &QAction::triggered, this, [this](bool checked){
-		auto dlgWelcome = new WelcomeDialog(this);
-		dlgWelcome->open();
+		auto welcomeComp = new Welcome(this);
+		welcomeComp->open();
 	});
 	
 	m_CloseProjectAct = new QAction(this);
@@ -1283,7 +1295,7 @@ void MainWindow::createDockWindows()
 				m_ProjectDisplay->addItem(s_StandardResolutions[i]);
 			m_ProjectDisplay->addItem("");
 			hBoxLayout->addWidget(m_ProjectDisplay);
-			connect(m_ProjectDisplay, SIGNAL(currentIndexChanged(int)), this, SLOT(projectDisplayChanged(int)));
+			connect(m_ProjectDisplay, &QComboBox::currentIndexChanged, this, &MainWindow::projectDisplayChanged);
 
 			groupLayout->addLayout(hBoxLayout);
 
@@ -1590,7 +1602,7 @@ void MainWindow::createDockWindows()
 		m_scriptEditorDock->setAllowedAreas(Qt::BottomDockWidgetArea);
 		m_scriptEditorDock->setObjectName("ScriptEditor");
 		m_scriptEditorDock->setWindowTitle(tr("Script (Python)"));
-		m_scriptComp = new ScriptComponent(this);
+		m_scriptComp = new Script(this);
 		m_scriptComp->cmdEditor()->setPropertiesEditor(m_PropertiesEditor);
 		emit readyToSetup(m_scriptComp);
 		m_scriptEditorDock->setWidget(m_scriptComp);
@@ -1692,212 +1704,33 @@ void MainWindow::createDockWindows()
 		m_RegistersDock = new QDockWidget(this);
 		m_RegistersDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 		m_RegistersDock->setObjectName("Registers");
+		
 		QScrollArea *scrollArea = new QScrollArea(this);
 		scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 		scrollArea->setWidgetResizable(true);
 		scrollArea->setMinimumWidth(240);
-		QWidget *widget = new QWidget(this);
-		QVBoxLayout *layout = new QVBoxLayout();
-
-		// Size
-		{
-			QGroupBox *sizeGroup = new QGroupBox(widget);
-			sizeGroup->setTitle(tr("Display Size"));
-			QVBoxLayout *sizeLayout = new QVBoxLayout();
-
-			m_HSize = new QSpinBox(widget);
-			m_HSize->setMinimum(1);
-			m_HSize->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE));
-			connect(m_HSize, SIGNAL(valueChanged(int)), this, SLOT(hsizeChanged(int)));
-			QHBoxLayout *hsizeLayout = new QHBoxLayout();
-			QLabel *hsizeLabel = new QLabel(widget);
-			hsizeLabel->setText(tr("Horizontal"));
-			hsizeLayout->addWidget(hsizeLabel);
-			hsizeLayout->addWidget(m_HSize);
-			sizeLayout->addLayout(hsizeLayout);
-
-			m_VSize = new QSpinBox(widget);
-			m_VSize->setMinimum(1);
-			m_VSize->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE));
-			connect(m_VSize, SIGNAL(valueChanged(int)), this, SLOT(vsizeChanged(int)));
-			QHBoxLayout *vsizeLayout = new QHBoxLayout();
-			QLabel *vsizeLabel = new QLabel(widget);
-			vsizeLabel->setText(tr("Vertical"));
-			vsizeLayout->addWidget(vsizeLabel);
-			vsizeLayout->addWidget(m_VSize);
-			sizeLayout->addLayout(vsizeLayout);
-
-			sizeGroup->setLayout(sizeLayout);
-			layout->addWidget(sizeGroup);
-		}
-
-		// Rotate
-		{
-			QGroupBox *group = new QGroupBox(widget);
-			group->setTitle(tr("Rotate"));
-			QVBoxLayout *groupLayout = new QVBoxLayout;
-
-			m_Rotate = new QSpinBox(widget);
-			m_Rotate->setMinimum(REG_ROTATE_MIN);
-			m_Rotate->setMaximum(REG_ROTATE_MAX);
-			connect(m_Rotate, SIGNAL(valueChanged(int)), this, SLOT(rotateChanged(int)));
-			auto hboxLayout = new QHBoxLayout;
-			auto label = new QLabel(widget);
-			label->setText(tr("REG_ROTATE"));
-			hboxLayout->addWidget(label);
-			hboxLayout->addWidget(m_Rotate);
-			groupLayout->addLayout(hboxLayout);
-
-			group->setLayout(groupLayout);
-			layout->addWidget(group);
-		}
-		
-		// Macro
-		{
-			QGroupBox *macroGroup = new QGroupBox(widget);
-			macroGroup->setTitle(tr("Macro"));
-			QVBoxLayout *macroLayout = new QVBoxLayout();
-			macroLayout->setContentsMargins(0, 0, 0, 0);
-			
-			m_Macro = new DlEditor(this);
-			m_Macro->setPropertiesEditor(m_PropertiesEditor);
-			m_Macro->setUndoStack(m_UndoStack);
-			m_Macro->setModeMacro();
-			macroLayout->addWidget(m_Macro);
-			
-			macroGroup->setLayout(macroLayout);
-			macroGroup->setMaximumHeight(80);
-			layout->addWidget(macroGroup);
-		}
-		
-		// Control
-		{
-			QGroupBox *ctrlGroup = new QGroupBox(widget);
-			ctrlGroup->setTitle(tr("Control"));
-			QVBoxLayout *ctrlLayout = new QVBoxLayout;
-			QLabel *lbReqPlayCtrl = new QLabel;
-			lbReqPlayCtrl->setText(tr("REG_PLAY_CONTROL"));
-			lbReqPlayCtrl->setMinimumWidth(30);
-			QLabel *lbCurrPlayCtrl = new QLabel;
-
-			QVBoxLayout *vBoxStrPlayTrl = new QVBoxLayout;
-			vBoxStrPlayTrl->setSpacing(0);
-			vBoxStrPlayTrl->setAlignment(Qt::AlignVCenter);
-			vBoxStrPlayTrl->addWidget(lbReqPlayCtrl);
-			vBoxStrPlayTrl->addWidget(lbCurrPlayCtrl);
-			
-			auto intToHexStr = [](int value){
-				return "0x" + QString("%1").arg(value, 2, 16, QChar('0')).toUpper();
-			};
-			QHBoxLayout *hBoxExit = new QHBoxLayout;
-			hBoxExit->setSpacing(2);
-			QLabel *lbExit = new QLabel(tr("Exit:"));
-			QPushButton *btnExit = new QPushButton(intToHexStr(REG_PLAY_CONTROL_EXIT));
-			hBoxExit->setAlignment(Qt::AlignRight);
-			hBoxExit->addWidget(lbExit);
-			hBoxExit->addWidget(btnExit);
-
-			QHBoxLayout *hBoxPause = new QHBoxLayout;
-			hBoxPause->setSpacing(2);
-			QLabel *lbPause = new QLabel(tr("Pause:"));
-			QPushButton *btnPause = new QPushButton(intToHexStr(REG_PLAY_CONTROL_PAUSE));
-			hBoxPause->setAlignment(Qt::AlignRight);
-			hBoxPause->addWidget(lbPause);
-			hBoxPause->addWidget(btnPause);
-
-			QHBoxLayout *hBoxPlay = new QHBoxLayout;
-			hBoxPlay->setSpacing(2);
-			QLabel *lbPlay = new QLabel(tr("Play:"));
-			QPushButton *btnPlay = new QPushButton(intToHexStr(REG_PLAY_CONTROL_PLAY));
-			hBoxPlay->setAlignment(Qt::AlignRight);
-			hBoxPlay->addWidget(lbPlay);
-			hBoxPlay->addWidget(btnPlay);
-
-			QVBoxLayout *vBoxReqPlayCtrl = new QVBoxLayout;
-			vBoxReqPlayCtrl->addLayout(hBoxExit);
-			vBoxReqPlayCtrl->addLayout(hBoxPause);
-			vBoxReqPlayCtrl->addLayout(hBoxPlay);
-			
-			QHBoxLayout *hBoxReqPlayCtrl = new QHBoxLayout;
-			hBoxReqPlayCtrl->addLayout(vBoxStrPlayTrl);
-			hBoxReqPlayCtrl->addLayout(vBoxReqPlayCtrl);
-
-			ctrlLayout->addLayout(hBoxReqPlayCtrl);
-			ctrlGroup->setLayout(ctrlLayout);
-			layout->addWidget(ctrlGroup);
-			
-			connect(btnExit, &QPushButton::clicked, this, []() {
-				g_PlayCtrl = REG_PLAY_CONTROL_EXIT;
-			});
-			connect(btnPause, &QPushButton::clicked, this, []() {
-				g_PlayCtrl = REG_PLAY_CONTROL_PAUSE;
-			});
-			connect(btnPlay, &QPushButton::clicked, this, []() {
-				g_PlayCtrl = REG_PLAY_CONTROL_PLAY;
-			});
-			connect(m_Inspector->ramReg(), &RamReg::regPlayControlChanged, this, [lbCurrPlayCtrl, intToHexStr](int value) {
-				lbCurrPlayCtrl->setText(QString("<b>(%1)</b>").arg(intToHexStr(value)));
-			});
-			connect(this, &MainWindow::deviceChanged, this, [ctrlGroup]() {
-				ctrlGroup->setVisible(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT815);
-			});
-		}
-		
-		// HSF
-		{
-			auto hsfGroup = new QGroupBox(widget);
-			hsfGroup->setTitle(tr("HSF"));
-			hsfGroup->setToolTip(tr("Set by CMD_HSF"));
-			
-			auto hsfLabel = new QLabel(widget);
-			hsfLabel->setText(tr("Width of HSF:"));
-			m_hsf = new QSpinBox(widget);
-			m_hsf->setMinimum(0);
-			m_hsf->setValue(REG_HSF_HSIZE_DEFAULT);
-			
-			auto hsfLayout = new QHBoxLayout;
-			hsfLayout->addWidget(hsfLabel);
-			hsfLayout->addWidget(m_hsf);
-			
-			hsfGroup->setLayout(hsfLayout);
-			layout->addWidget(hsfGroup);
-			
-			connect(m_HSize, &QSpinBox::valueChanged, this, [this](int i){
-				m_hsf->setMaximum(i);
-			});
-			connect(m_hsf, &QSpinBox::valueChanged, this, [this](int i) {
-				// Inject CMD_HSF in the current list
-				DlParsed parsedCmdHSF;
-				parsedCmdHSF.ValidId = true;
-				parsedCmdHSF.IdLeft = 0xFFFFFF00;
-				parsedCmdHSF.IdRight = CMD_HSF & 0xFF;
-				parsedCmdHSF.ExpectedStringParameter = false;
-				parsedCmdHSF.VarArgCount = 0;
-				parsedCmdHSF.Parameter[0].I = i;
-				parsedCmdHSF.ExpectedParameterCount = 1;
-				
-				int index = m_CmdEditor->codeEditor()->blockCount();
-				m_CmdEditor->setDLSharedItem(
-				    DlParser::compile(FTEDITOR_CURRENT_DEVICE, parsedCmdHSF), index);
-				m_CmdEditor->setDLParsedItem(parsedCmdHSF, index);
-				m_CmdEditor->setDisplayListModified(true);
-			});
-			connect(this, &MainWindow::deviceChanged, this, [hsfGroup, this]() {
-				if (bool visible = FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817;
-				    visible != hsfGroup->isVisible())
-				{
-					hsfGroup->setVisible(visible);
-					if (visible) emit m_hsf->setValue(0);
-				}
-			});
-		}
-
-		layout->addStretch();
-		widget->setLayout(layout);
-		scrollArea->setWidget(widget);
+		m_registers = new Registers(this);
+		scrollArea->setWidget(m_registers);
 		m_RegistersDock->setWidget(scrollArea);
+		
 		addDockWidget(Qt::LeftDockWidgetArea, m_RegistersDock);
 		m_WidgetsMenu->addAction(m_RegistersDock->toggleViewAction());
+		
+		g_Macro = m_registers->macro();
+		connect(m_registers, &Registers::hSizeChanged, this,
+		    [this](int newValue) {
+			    g_HSize = newValue;
+			    updateProjectDisplay(newValue, g_VSize);
+		    });
+		connect(m_registers, &Registers::vSizeChanged, this,
+		    [this](int newValue) {
+			    g_VSize = newValue;
+			    updateProjectDisplay(g_HSize, newValue);
+		    });
+		connect(m_registers, &Registers::rotateChanged, this,
+		    [](int newValue) { g_Rotate = newValue; });
+		connect(m_registers, &Registers::playCtrlChanged, this,
+		    [](int newValue) { g_PlayCtrl = newValue; });
 	}
 
 	// Content
@@ -2214,160 +2047,6 @@ void MainWindow::focusProperties()
 
 static bool s_UndoRedoWorking = false;
 
-class HSizeCommand : public QUndoCommand
-{
-public:
-	HSizeCommand(int hsize, QSpinBox *spinbox)
-	    : QUndoCommand()
-	    , m_NewHSize(hsize)
-	    , m_OldHSize(g_HSize)
-	    , m_SpinBox(spinbox)
-	{
-	}
-	virtual ~HSizeCommand() {}
-	virtual void undo()
-	{
-		g_HSize = m_OldHSize;
-		s_UndoRedoWorking = true;
-		m_SpinBox->setValue(g_HSize);
-		s_UndoRedoWorking = false;
-	}
-	virtual void redo()
-	{
-		g_HSize = m_NewHSize;
-		s_UndoRedoWorking = true;
-		m_SpinBox->setValue(g_HSize);
-		s_UndoRedoWorking = false;
-	}
-	virtual int id() const
-	{
-		printf("id get\n");
-		return 41517686;
-	}
-	virtual bool mergeWith(const QUndoCommand *command)
-	{
-		m_NewHSize = static_cast<const HSizeCommand *>(command)->m_NewHSize;
-		return true;
-	}
-
-private:
-	int m_NewHSize;
-	int m_OldHSize;
-	QSpinBox *m_SpinBox;
-};
-
-class VSizeCommand : public QUndoCommand
-{
-public:
-	VSizeCommand(int hsize, QSpinBox *spinbox)
-	    : QUndoCommand()
-	    , m_NewVSize(hsize)
-	    , m_OldVSize(g_VSize)
-	    , m_SpinBox(spinbox)
-	{
-	}
-	virtual ~VSizeCommand() {}
-	virtual void undo()
-	{
-		g_VSize = m_OldVSize;
-		s_UndoRedoWorking = true;
-		m_SpinBox->setValue(g_VSize);
-		s_UndoRedoWorking = false;
-	}
-	virtual void redo()
-	{
-		g_VSize = m_NewVSize;
-		s_UndoRedoWorking = true;
-		m_SpinBox->setValue(g_VSize);
-		s_UndoRedoWorking = false;
-	}
-	virtual int id() const { return 78984351; }
-	virtual bool mergeWith(const QUndoCommand *command)
-	{
-		m_NewVSize = static_cast<const VSizeCommand *>(command)->m_NewVSize;
-		return true;
-	}
-
-private:
-	int m_NewVSize;
-	int m_OldVSize;
-	QSpinBox *m_SpinBox;
-};
-
-void MainWindow::userChangeResolution(int hsize, int vsize)
-{
-	m_UndoStack->beginMacro("Change resolution");
-	m_HSize->setValue(hsize);
-	m_VSize->setValue(vsize);
-	m_UndoStack->endMacro();
-}
-
-void MainWindow::hsizeChanged(int hsize)
-{
-	updateProjectDisplay(hsize, m_VSize->value());
-
-	if (s_UndoRedoWorking)
-		return;
-
-	m_UndoStack->push(new HSizeCommand(hsize, m_HSize));
-}
-
-void MainWindow::vsizeChanged(int vsize)
-{
-	updateProjectDisplay(m_HSize->value(), vsize);
-
-	if (s_UndoRedoWorking)
-		return;
-
-	m_UndoStack->push(new VSizeCommand(vsize, m_VSize));
-}
-
-class RotateCommand : public QUndoCommand
-{
-public:
-	RotateCommand(int rotate, QSpinBox *spinbox)
-	    : QUndoCommand()
-	    , m_NewRotate(rotate)
-	    , m_OldRotate(g_Rotate)
-	    , m_SpinBox(spinbox)
-	{
-	}
-	virtual ~RotateCommand() {}
-	virtual void undo()
-	{
-		g_Rotate = m_OldRotate;
-		s_UndoRedoWorking = true;
-		m_SpinBox->setValue(g_Rotate);
-		s_UndoRedoWorking = false;
-	}
-	virtual void redo()
-	{
-		g_Rotate = m_NewRotate;
-		s_UndoRedoWorking = true;
-		m_SpinBox->setValue(g_Rotate);
-		s_UndoRedoWorking = false;
-	}
-	virtual int id() const { return 78994352; }
-	virtual bool mergeWith(const QUndoCommand *command)
-	{
-		m_NewRotate = static_cast<const RotateCommand *>(command)->m_NewRotate;
-		return true;
-	}
-
-private:
-	int m_NewRotate;
-	int m_OldRotate;
-	QSpinBox *m_SpinBox;
-};
-
-void MainWindow::rotateChanged(int rotate)
-{
-	if (s_UndoRedoWorking)
-		return;
-
-	m_UndoStack->push(new RotateCommand(rotate, m_Rotate));
-}
-
 void MainWindow::updateProjectDisplay(int hsize, int vsize)
 {
 	m_ProjectDisplay->setItemText(s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE], tr("Custom") + " (" + QString::number(hsize) + "x" + QString::number(vsize) + ")");
@@ -2468,22 +2147,18 @@ void MainWindow::traceEnabledChanged(bool enabled)
 
 void MainWindow::clearEditor()
 {
+	emit clearEvent();
 	m_ProjectDevice->setCurrentIndex(FTEDITOR_DEFAULT_DEVICE);
-	m_HSize->setValue(screenWidthDefault(FTEDITOR_CURRENT_DEVICE));
-	m_VSize->setValue(screenHeightDefault(FTEDITOR_CURRENT_DEVICE));
 	m_StepEnabled->setChecked(false);
 	m_StepCount->setValue(1);
 	m_StepCmdEnabled->setChecked(false);
 	m_StepCmdCount->setValue(1);
-	m_Rotate->setValue(REG_ROTATE_DEFAULT);
-	m_hsf->setValue(REG_HSF_HSIZE_DEFAULT);
 	setTraceEnabled(false);
 	setTraceX(0);
 	setTraceY(0);
 	m_DlEditor->clear();
 	m_CmdEditor->clear();
 	m_scriptComp->clear();
-	m_Macro->clear();
 	m_ContentManager->clear(true);
 	//m_BitmapSetup->clear();
 	m_ProjectDock->setVisible(true);
@@ -2496,7 +2171,7 @@ void MainWindow::clearUndoStack()
 	m_UndoStack->clear();
 	m_DlEditor->clearUndoStack();
 	m_CmdEditor->clearUndoStack();
-	m_Macro->clearUndoStack();
+	m_registers->macro()->clearUndoStack();
 }
 
 void MainWindow::updateWindowTitle()
@@ -2825,7 +2500,6 @@ void MainWindow::actNew(bool addClear)
 
 	printf("** New **\n");
 	
-	emit eventNew();
 	// reset editors to their default state
 	clearEditor();
 
@@ -2852,18 +2526,6 @@ void MainWindow::actNew(bool addClear)
 	else
 	{
 		editLine = 0;
-	}
-	
-	//Reset Macro
-	{
-		DlParsed pa;
-		pa.ValidId = true;
-		pa.IdLeft = 0;
-		pa.IdRight = FTEDITOR_DL_NOP;
-		pa.ExpectedStringParameter = false;
-		pa.VarArgCount = 0;
-		m_Macro->replaceLine(0, pa);
-		m_Macro->replaceLine(1, pa);
 	}
 	
 	// clear undo stacks
@@ -2894,19 +2556,6 @@ void MainWindow::actNew(bool addClear)
 	// WORKAROUND: Issue #100
 	actResetEmulator();
 	m_MinFlashType = -1;
-}
-
-void documentFromJsonArray(QPlainTextEdit *textEditor, const QJsonArray &arr)
-{
-	bool firstLine = true;
-	for (int i = 0; i < arr.size(); ++i)
-	{
-		if (firstLine)
-			firstLine = false;
-		else
-			textEditor->textCursor().insertText("\n");
-		textEditor->textCursor().insertText(arr[i].toString());
-	}
 }
 
 static void bitmapSetupfromJson(MainWindow *mainWindow, DlEditor *dlEditor, QJsonArray &bitmaps)
@@ -2970,62 +2619,6 @@ static void bitmapSetupfromJson(MainWindow *mainWindow, DlEditor *dlEditor, QJso
 			pa.ExpectedParameterCount = 5;
 			dlEditor->insertLine(hline, pa);
 			++hline;
-		}
-	}
-}
-
-void postProcessEditor(DlEditor *editor)
-{
-	DlParsed pa;
-	for (int i = 0; i < editor->getLineCount(); ++i)
-	{
-		const DlParsed &parsed = editor->getLine(i);
-		if (parsed.ValidId)
-		{
-			switch (parsed.IdLeft)
-			{
-			case FTEDITOR_CO_COMMAND:
-				switch (parsed.IdRight | FTEDITOR_CO_COMMAND)
-				{
-				case CMD_BGCOLOR:
-				case CMD_FGCOLOR:
-				case CMD_GRADCOLOR:
-				{
-					DlParser::parse(FTEDITOR_CURRENT_DEVICE, pa, editor->getLineText(i), editor->isCoprocessor(), true);
-					if (pa.ExpectedParameterCount == 3) // Old RGB, upgrade
-					{
-						uint32_t rgb = pa.Parameter[0].U << 16
-						    | pa.Parameter[1].U << 8
-						    | pa.Parameter[2].U;
-						pa.Parameter[0].U = rgb;
-						pa.ExpectedParameterCount = 1;
-						editor->replaceLine(i, pa);
-					}
-				}
-				break;
-				case CMD_GRADIENT:
-				{
-					DlParser::parse(FTEDITOR_CURRENT_DEVICE, pa, editor->getLineText(i), editor->isCoprocessor(), true);
-					if (pa.ExpectedParameterCount == 10) // Old RGB, upgrade
-					{
-						uint32_t rgb0 = pa.Parameter[2].U << 16
-						    | pa.Parameter[3].U << 8
-						    | pa.Parameter[4].U;
-						pa.Parameter[2].U = rgb0;
-						pa.Parameter[3].U = pa.Parameter[5].U;
-						pa.Parameter[4].U = pa.Parameter[6].U;
-						uint32_t rgb1 = pa.Parameter[7].U << 16
-						    | pa.Parameter[8].U << 8
-						    | pa.Parameter[9].U;
-						pa.Parameter[5].U = rgb1;
-						pa.ExpectedParameterCount = 6;
-						editor->replaceLine(i, pa);
-					}
-				}
-				break;
-				}
-				break;
-			}
 		}
 	}
 }
@@ -3108,13 +2701,8 @@ void MainWindow::openFile(const QString &fileName)
 		{
 			m_ProjectDevice->setCurrentIndex(FTEDITOR_FT801);
 		}
-		QJsonObject registers = root["registers"].toObject();
-		m_HSize->setValue(registers["hSize"].toVariant().toInt());
-		m_VSize->setValue(registers["vSize"].toVariant().toInt());
-		m_Rotate->setValue(registers.contains("rotate") ? registers["rotate"].toVariant().toInt() : REG_ROTATE_DEFAULT);
-		m_hsf->setValue(registers.contains("hsf") ? registers["hsf"].toVariant().toInt() : REG_HSF_HSIZE_DEFAULT);
+		m_registers->fromJson(root);
 		
-		documentFromJsonArray(m_Macro->codeEditor(), registers["macro"].toArray());
 		QJsonArray content = root["content"].toArray();
 		m_ContentManager->suppressOverlapCheck();
 
@@ -3133,8 +2721,8 @@ void MainWindow::openFile(const QString &fileName)
 			}
 		}
 
-		documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
-		documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
+		CommonUtil::documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
+		CommonUtil::documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
 
 		if (root.contains("bitmaps") || root.contains("handles"))
 		{
@@ -3144,9 +2732,9 @@ void MainWindow::openFile(const QString &fileName)
 			// m_BitmapSetup->fromJson(bitmaps);
 		}
 		m_ContentManager->resumeOverlapCheck();
-		postProcessEditor(m_Macro);
-		postProcessEditor(m_DlEditor);
-		postProcessEditor(m_CmdEditor);
+		DLUtil::postProcessEditor(m_registers->macro());
+		DLUtil::postProcessEditor(m_DlEditor);
+		DLUtil::postProcessEditor(m_CmdEditor);
 		statusBar()->showMessage(tr("Opened EVE Screen Editor project"));
 		loadOk = true;
 	}
@@ -3298,41 +2886,15 @@ void MainWindow::dropEvent(QDropEvent *event)
 	QMainWindow::dropEvent(event);
 }
 
-QJsonArray documentToJsonArray(const QTextDocument *textDocument, bool coprocessor, bool exportScript)
-{
-	QJsonArray result;
-	for (int i = 0; i < textDocument->blockCount(); ++i)
-	{
-		QString line = textDocument->findBlockByNumber(i).text();
-		if (exportScript)
-		{
-			DlParsed parsed;
-			DlParser::parse(FTEDITOR_CURRENT_DEVICE, parsed, line, coprocessor);
-			if (!parsed.ValidId)
-				line = "";
-			else
-				line = DlParser::toString(FTEDITOR_CURRENT_DEVICE, parsed);
-		}
-		result.push_back(line);
-	}
-	return result;
-}
-
 QByteArray MainWindow::toJson(bool exportScript)
 {
 	QJsonObject root;
 	QJsonObject project;
 	project["device"] = (int)deviceToEnum(FTEDITOR_CURRENT_DEVICE);
 	root["project"] = project;
-	QJsonObject registers;
-	registers["hSize"] = g_HSize;
-	registers["vSize"] = g_VSize;
-	registers["rotate"] = m_Rotate->value();
-	registers["hsf"] = m_hsf->value();
-	registers["macro"] = documentToJsonArray(m_Macro->codeEditor()->document(), false, exportScript);
-	root["registers"] = registers;
-	root["displayList"] = documentToJsonArray(m_DlEditor->codeEditor()->document(), false, exportScript);
-	root["coprocessor"] = documentToJsonArray(m_CmdEditor->codeEditor()->document(), true, exportScript);
+	root["registers"] = m_registers->toJson(exportScript);
+	root["displayList"] = CommonUtil::documentToJsonArray(m_DlEditor->codeEditor()->document(), false, exportScript);
+	root["coprocessor"] = CommonUtil::documentToJsonArray(m_CmdEditor->codeEditor()->document(), true, exportScript);
 	QJsonArray content;
 	std::vector<ContentInfo *> contentInfos;
 	m_ContentManager->getContentInfos(contentInfos);
@@ -3558,13 +3120,13 @@ void MainWindow::actImport()
 	}
 	else
 	{
-		m_HSize->setValue(header[1]);
-		m_VSize->setValue(header[2]);
-		m_Macro->lockDisplayList();
-		m_Macro->getDisplayList()[0] = header[3];
-		m_Macro->getDisplayList()[1] = header[4];
-		m_Macro->reloadDisplayList(false);
-		m_Macro->unlockDisplayList();
+		m_registers->setHSize(header[1]);
+		m_registers->setVSize(header[2]);
+		m_registers->macro()->lockDisplayList();
+		m_registers->macro()->getDisplayList()[0] = header[3];
+		m_registers->macro()->getDisplayList()[1] = header[4];
+		m_registers->macro()->reloadDisplayList(false);
+		m_registers->macro()->unlockDisplayList();
 
 		ContentInfo *ramG = m_ContentManager->add(fileName);
 		m_ContentManager->changeConverter(ramG, ContentInfo::Raw);
@@ -3707,10 +3269,10 @@ void MainWindow::actExport()
 	header[0] = 100;
 	header[1] = g_HSize;
 	header[2] = g_VSize;
-	m_Macro->lockDisplayList();
-	header[3] = m_Macro->getDisplayList()[0];
-	header[4] = m_Macro->getDisplayList()[1];
-	m_Macro->unlockDisplayList();
+	m_registers->macro()->lockDisplayList();
+	header[3] = m_registers->macro()->getDisplayList()[0];
+	header[4] = m_registers->macro()->getDisplayList()[1];
+	m_registers->macro()->unlockDisplayList();
 	header[5] = 0;
 
 	// get ram content
@@ -3800,7 +3362,7 @@ void MainWindow::actResetEmulator()
 	m_ContentManager->reuploadAll();
 	m_DlEditor->poke();
 	m_CmdEditor->poke();
-	m_Macro->poke();
+	m_registers->macro()->poke();
 
 	// Start the emulator
 	startEmulatorInternal();
@@ -3811,7 +3373,7 @@ void MainWindow::bindCurrentDevice()
 	m_Inspector->bindCurrentDevice();
 	m_DlEditor->bindCurrentDevice();
 	m_CmdEditor->bindCurrentDevice();
-	m_Macro->bindCurrentDevice();
+	m_registers->macro()->bindCurrentDevice();
 	m_Toolbox->bindCurrentDevice();
 	m_ContentManager->bindCurrentDevice();
 	m_InteractiveProperties->bindCurrentDevice();
@@ -3872,7 +3434,7 @@ void MainWindow::changeEmulatorInternal(int deviceIntf, int flashIntf)
 	m_ContentManager->reuploadAll();
 	m_DlEditor->poke();
 	m_CmdEditor->poke();
-	m_Macro->poke();
+	m_registers->macro()->poke();
 
 	// Start the emulator
 	startEmulatorInternal();
@@ -3888,7 +3450,7 @@ void MainWindow::changeEmulatorInternal(int deviceIntf, int flashIntf)
 		for (int i = 0; i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE]; ++i)
 			m_ProjectDisplay->addItem(s_StandardResolutions[i]);
 		m_ProjectDisplay->addItem("");
-		updateProjectDisplay(m_HSize->value(), m_VSize->value());
+		updateProjectDisplay(g_HSize, g_VSize);
 		s_UndoRedoWorking = false;
 	}
 
@@ -3912,9 +3474,9 @@ void MainWindow::changeEmulatorInternal(int deviceIntf, int flashIntf)
 		m_StepCmdCount->setMaximum(displayListSize(FTEDITOR_CURRENT_DEVICE) * 64);
 		m_TraceX->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
 		m_TraceY->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE) - 1);
-		m_HSize->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE));
-		m_VSize->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE));
-		m_Rotate->setMaximum(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 ? 7 : 1);
+		m_registers->hSize()->setMaximum(screenWidthMaximum(FTEDITOR_CURRENT_DEVICE));
+		m_registers->vSize()->setMaximum(screenHeightMaximum(FTEDITOR_CURRENT_DEVICE));
+		m_registers->rotate()->setMaximum(FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 ? 7 : 1);
 		emit deviceChanged();		
 	}
 
@@ -4063,12 +3625,7 @@ void MainWindow::projectDisplayChanged(int i)
 		return;
 
 	if (i < s_StandardResolutionNb[FTEDITOR_CURRENT_DEVICE])
-	{
-		m_UndoStack->beginMacro(tr("Change display"));
-		m_HSize->setValue(s_StandardWidths[i]);
-		m_VSize->setValue(s_StandardHeights[i]);
-		m_UndoStack->endMacro();
-	}
+		emit displaySizeChanged(s_StandardWidths[i], s_StandardHeights[i]);
 }
 
 void MainWindow::actSaveScreenshot()
@@ -4286,7 +3843,7 @@ QString MainWindow::getProjectContent() const
 
 QString MainWindow::getDisplaySize()
 {
-	return QString("%1x%2").arg(m_HSize->text()).arg(m_VSize->text());
+	return QString("%1x%2").arg(g_HSize).arg(g_VSize);
 }
 
 void FTEDITOR::MainWindow::appendTextToOutputDock(const QString &text)

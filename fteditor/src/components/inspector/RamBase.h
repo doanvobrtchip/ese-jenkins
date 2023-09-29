@@ -8,6 +8,8 @@
 
 #include <QDockWidget>
 
+#include "ComponentBase.h"
+
 class QLabel;
 class QPushButton;
 class QHBoxLayout;
@@ -15,7 +17,7 @@ class QHBoxLayout;
 namespace FTEDITOR {
 class Inspector;
 
-class RamBase : public QDockWidget {
+class RamBase : public QDockWidget, public ComponentBase {
   Q_OBJECT
 
  public:

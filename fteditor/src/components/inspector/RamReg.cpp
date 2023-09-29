@@ -18,8 +18,8 @@
 #include <QTreeWidgetItem>
 #include <QVBoxLayout>
 
+#include "Inspector.h"
 #include "constant_mapping.h"
-#include "inspector.h"
 #include "utils/CommonUtil.h"
 #include "utils/ConvertUtil.h"
 
@@ -71,9 +71,12 @@ RamReg::RamReg(Inspector *parent) : RamBase(parent) {
   connect(m_registers, &QTreeWidget::customContextMenuRequested, this,
           &RamReg::onPrepareContextMenu);
   connect(m_insp, &Inspector::updateView, this, &RamReg::updateView);
-  connect(m_insp, &Inspector::initDisplayReg, this, &RamReg::initDisplayReg);
+  connect(m_insp, &Inspector::initDisplayReg, this,
+          &RamReg::initDisplayReg);
   connect(m_insp, &Inspector::releaseDisplayReg, this,
           &RamReg::releaseDisplayReg);
+
+  ComponentBase::finishedSetup(this, m_insp->mainWindow());
 }
 
 bool RamReg::wantRegister(int regEnum) {
@@ -199,7 +202,7 @@ void RamReg::initDisplayReg() {
   m_registerItems.reserve(FTEDITOR_REG_NB);
   for (int regEnum = 0; regEnum < FTEDITOR_REG_NB; ++regEnum) {
     if (wantRegister(regEnum)) {
-	  uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, regEnum);
+      uint32_t addr = reg(FTEDITOR_CURRENT_DEVICE, regEnum);
       QTreeWidgetItem *item = new QTreeWidgetItem(m_registers);
       item->setText(0, ConvertUtil::asRaw(addr));
       item->setText(1, regToString(FTEDITOR_CURRENT_DEVICE, regEnum));

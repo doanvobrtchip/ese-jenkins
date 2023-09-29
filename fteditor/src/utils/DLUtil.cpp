@@ -9,7 +9,8 @@
 
 namespace FTEDITOR {
 
-bool DLUtil::addPalettedSrc(DlEditor *lineEditor, DlParsed &pa, int address, int &line) {
+bool DLUtil::addPalettedSrc(DlEditor *lineEditor, DlParsed &pa, int address,
+                            int &line) {
   pa.IdRight = FTEDITOR_DL_PALETTE_SOURCE;
   pa.Parameter[0].I = address;
   pa.ExpectedParameterCount = 1;
@@ -19,8 +20,8 @@ bool DLUtil::addPalettedSrc(DlEditor *lineEditor, DlParsed &pa, int address, int
 }
 
 bool DLUtil::addPaletted8Cmds(DlEditor *lineEditor, DlParsed &pa, int address,
-                                   uint32_t &selection, int &line, int32_t x,
-                                   int32_t y) {
+                              uint32_t &selection, int &line, int32_t x,
+                              int32_t y) {
   DlParsed pav;
   pav.ValidId = true;
   pav.IdLeft = FTEDITOR_DL_VERTEX2F;  // FIXME: Drag-drop outside
@@ -112,8 +113,9 @@ bool DLUtil::addPaletted8Cmds(DlEditor *lineEditor, DlParsed &pa, int address,
   return true;
 }
 
-bool DLUtil::addBitmapHandler(DlEditor *lineEditor, DlParsed &pa, ContentInfo *contentInfo,
-                               uint32_t &bitmapHandle, int &line, int &hline) {
+bool DLUtil::addBitmapHandler(DlEditor *lineEditor, DlParsed &pa,
+                              ContentInfo *contentInfo, uint32_t &bitmapHandle,
+                              int &line, int &hline) {
   pa.IdRight = FTEDITOR_DL_BITMAP_HANDLE;
   pa.Parameter[0].U = bitmapHandle;
   pa.ExpectedParameterCount = 1;
@@ -122,7 +124,8 @@ bool DLUtil::addBitmapHandler(DlEditor *lineEditor, DlParsed &pa, ContentInfo *c
   ++line;
 
   bool useSetBitmap = FTEDITOR_CURRENT_DEVICE >= FTEDITOR_FT810 &&
-                       lineEditor->isCoprocessor() && contentInfo->bitmapAddress() >= 0;
+                      lineEditor->isCoprocessor() &&
+                      contentInfo->bitmapAddress() >= 0;
 
   if (useSetBitmap) {
     pa.IdLeft = 0xFFFFFF00;
@@ -198,9 +201,8 @@ bool DLUtil::addBitmapHandler(DlEditor *lineEditor, DlParsed &pa, ContentInfo *c
   return true;
 }
 
-bool DLUtil::addSetFont2Cmd(DlEditor *lineEditor, DlParsed &pa, uint32_t &font, int address, int firstChar,
-                                  int &line,
-                                 int &hline) {
+bool DLUtil::addSetFont2Cmd(DlEditor *lineEditor, DlParsed &pa, uint32_t &font,
+                            int address, int firstChar, int &line, int &hline) {
   pa.IdLeft = 0xFFFFFF00;
   pa.IdRight = CMD_SETFONT2 & 0xFF;
   pa.Parameter[0].U = font;
@@ -215,7 +217,7 @@ bool DLUtil::addSetFont2Cmd(DlEditor *lineEditor, DlParsed &pa, uint32_t &font, 
 }
 
 bool DLUtil::addSetFontCmd(DlEditor *lineEditor, DlParsed &pa, int address,
-                                uint32_t &bitmapHandle, int &line, int &hline) {
+                           uint32_t &bitmapHandle, int &line, int &hline) {
   pa.IdLeft = 0xFFFFFF00;
   pa.IdRight = CMD_SETFONT & 0xFF;
   pa.Parameter[0].U = bitmapHandle;
@@ -228,8 +230,9 @@ bool DLUtil::addSetFontCmd(DlEditor *lineEditor, DlParsed &pa, int address,
   return true;
 }
 
-bool DLUtil::addBitmapCmds(DlEditor *lineEditor, DlParsed &pa, ContentInfo *contentInfo,
-                                uint32_t &selection, int &line, int32_t x, int32_t y) {
+bool DLUtil::addBitmapCmds(DlEditor *lineEditor, DlParsed &pa,
+                           ContentInfo *contentInfo, uint32_t &selection,
+                           int &line, int32_t x, int32_t y) {
   DlParsed pav;
   pav.ValidId = true;
   pav.IdLeft = FTEDITOR_DL_VERTEX2F;  // FIXME: Drag-drop outside
@@ -342,8 +345,9 @@ bool DLUtil::addBitmapCmds(DlEditor *lineEditor, DlParsed &pa, ContentInfo *cont
   return true;
 };
 
-bool DLUtil::addTextCmd(DlEditor *lineEditor, DlParsed &pa, uint32_t &bitmapHandle, QString text,
-                             int &line, int32_t x, int32_t y) {
+bool DLUtil::addTextCmd(DlEditor *lineEditor, DlParsed &pa,
+                        uint32_t &bitmapHandle, QString text, int &line,
+                        int32_t x, int32_t y) {
   pa.IdLeft = 0xFFFFFF00;
   pa.IdRight = CMD_TEXT & 0xFF;
   pa.Parameter[0].I = x;
@@ -358,6 +362,53 @@ bool DLUtil::addTextCmd(DlEditor *lineEditor, DlParsed &pa, uint32_t &bitmapHand
   return true;
 }
 
+void DLUtil::postProcessEditor(DlEditor *editor) {
+  DlParsed pa;
+  for (int i = 0; i < editor->getLineCount(); ++i) {
+    const DlParsed &parsed = editor->getLine(i);
+    if (parsed.ValidId) {
+      switch (parsed.IdLeft) {
+        case FTEDITOR_CO_COMMAND:
+          switch (parsed.IdRight | FTEDITOR_CO_COMMAND) {
+            case CMD_BGCOLOR:
+            case CMD_FGCOLOR:
+            case CMD_GRADCOLOR: {
+              DlParser::parse(FTEDITOR_CURRENT_DEVICE, pa,
+                              editor->getLineText(i), editor->isCoprocessor(),
+                              true);
+              if (pa.ExpectedParameterCount == 3)  // Old RGB, upgrade
+              {
+                uint32_t rgb = pa.Parameter[0].U << 16 |
+                               pa.Parameter[1].U << 8 | pa.Parameter[2].U;
+                pa.Parameter[0].U = rgb;
+                pa.ExpectedParameterCount = 1;
+                editor->replaceLine(i, pa);
+              }
+            } break;
+            case CMD_GRADIENT: {
+              DlParser::parse(FTEDITOR_CURRENT_DEVICE, pa,
+                              editor->getLineText(i), editor->isCoprocessor(),
+                              true);
+              if (pa.ExpectedParameterCount == 10)  // Old RGB, upgrade
+              {
+                uint32_t rgb0 = pa.Parameter[2].U << 16 |
+                                pa.Parameter[3].U << 8 | pa.Parameter[4].U;
+                pa.Parameter[2].U = rgb0;
+                pa.Parameter[3].U = pa.Parameter[5].U;
+                pa.Parameter[4].U = pa.Parameter[6].U;
+                uint32_t rgb1 = pa.Parameter[7].U << 16 |
+                                pa.Parameter[8].U << 8 | pa.Parameter[9].U;
+                pa.Parameter[5].U = rgb1;
+                pa.ExpectedParameterCount = 6;
+                editor->replaceLine(i, pa);
+              }
+            } break;
+          }
+          break;
+      }
+    }
+  }
 }
+}  // namespace FTEDITOR
 
 /* end of file */

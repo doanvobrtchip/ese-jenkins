@@ -1,9 +1,9 @@
 /*!
- * @file WelcomeDialog.cpp
+ * @file Welcome.cpp
  * @date 4/25/2023
  * @author Liem Do <liem.do@brtchip.com>
  */
-#include "WelcomeDialog.h"
+#include "Welcome.h"
 
 #include <utils/LoggerUtil.h>
 
@@ -20,12 +20,12 @@
 #include "main_window.h"
 
 namespace FTEDITOR {
-WelcomeDialog::WelcomeDialog(MainWindow *mainWindow) : QDialog(mainWindow) {
+Welcome::Welcome(MainWindow *mainWindow)
+    : QDialog(mainWindow), m_mainWindow(mainWindow) {
   setWindowTitle(tr("Welcome"));
   setFont(QFont("Segoe UI", 10));
   setAttribute(Qt::WA_DeleteOnClose);
 
-  m_mainWindow = mainWindow;
   auto vBoxLyt = new QVBoxLayout;
 
   QPixmap pixmapLogo(":/icons/logo.png");
@@ -73,5 +73,7 @@ WelcomeDialog::WelcomeDialog(MainWindow *mainWindow) : QDialog(mainWindow) {
             m_mainWindow->openProject(item->data(Qt::UserRole).toString());
             close();
           });
+
+  ComponentBase::finishedSetup(this, m_mainWindow);
 }
 }  // namespace FTEDITOR
