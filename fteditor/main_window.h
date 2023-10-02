@@ -174,6 +174,7 @@ public:
 	Script *script() const;
 	Inspector *inspector() const;
 	DeviceManager *deviceManager() const;
+	Registers *registers() const;
 	
 private slots:
 	// void applyEmulatorConfig();
