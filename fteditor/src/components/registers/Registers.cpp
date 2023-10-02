@@ -21,6 +21,7 @@
 #include "constant_mapping.h"
 #include "customize/UndoSpinBox.h"
 #include "define/RegDefine.h"
+#include "define/ValueDefine.h"
 #include "device_manager.h"
 #include "dl_editor.h"
 #include "inspector/Inspector.h"
@@ -112,6 +113,10 @@ Registers::Registers(MainWindow *parent)
     macroGroup->setLayout(macroLayout);
     macroGroup->setMaximumHeight(80);
     layout->addWidget(macroGroup);
+	
+	connect(m_macro->codeEditor(), &CodeEditor::textChanged, this, [this](){
+		emit contentChanged();
+	}); 
   }
 
   // Control
@@ -248,6 +253,7 @@ void Registers::setPlayCtrl(int newPlayCtrl) {
 }
 
 void Registers::onHSizeChanged(int newValue) {
+  emit contentChanged();
   emit hSizeChanged(newValue);
   if (m_undoRedoWorking) return;
   m_undoStack->push(
@@ -256,6 +262,7 @@ void Registers::onHSizeChanged(int newValue) {
 }
 
 void Registers::onVSizeChanged(int newValue) {
+  emit contentChanged();
   emit vSizeChanged(newValue);
   if (m_undoRedoWorking) return;
   m_undoStack->push(
@@ -264,6 +271,7 @@ void Registers::onVSizeChanged(int newValue) {
 }
 
 void Registers::onRotateChanged(int newValue) {
+  emit contentChanged();
   emit rotateChanged(newValue);
   if (m_undoRedoWorking) return;
   m_undoStack->push(
@@ -272,6 +280,7 @@ void Registers::onRotateChanged(int newValue) {
 }
 
 void Registers::onHSFChanged(int newValue) {
+  emit contentChanged();
   if (m_undoRedoWorking) return;
   m_undoStack->push(
       new UndoSpinBox(78994353, m_hsf, m_latestHSF, &m_undoRedoWorking));
@@ -358,25 +367,26 @@ DlEditor *Registers::macro() const { return m_macro; }
 
 QJsonObject Registers::toJson(bool exportScript) {
   QJsonObject reg;
-  reg["hSize"] = m_hSize->value();
-  reg["vSize"] = m_vSize->value();
-  reg["rotate"] = m_rotate->value();
-  reg["hsf"] = m_hsf->value();
-  reg["macro"] = CommonUtil::documentToJsonArray(
+  reg[REG_HSIZE_KEY] = m_hSize->value();
+  reg[REG_VSIZE_KEY] = m_vSize->value();
+  reg[REG_ROTATE_KEY] = m_rotate->value();
+  reg[REG_HSF_KEY] = m_hsf->value();
+  reg[REG_MACRO_KEY] = CommonUtil::documentToJsonArray(
       m_macro->codeEditor()->document(), false, exportScript);
   return reg;
 }
 
 void Registers::fromJson(QJsonObject obj) {
-  auto reg = obj["registers"].toObject();
-  m_hSize->setValue(reg["hSize"].toVariant().toInt());
-  m_vSize->setValue(reg["vSize"].toVariant().toInt());
-  m_rotate->setValue(reg.contains("rotate") ? reg["rotate"].toVariant().toInt()
+  auto reg = obj[REG_KEY].toObject();
+  m_hSize->setValue(reg[REG_HSIZE_KEY].toVariant().toInt());
+  m_vSize->setValue(reg[REG_VSIZE_KEY].toVariant().toInt());
+  m_rotate->setValue(reg.contains(REG_ROTATE_KEY) ? reg[REG_ROTATE_KEY].toVariant().toInt()
                                             : REG_ROTATE_DEFAULT);
-  m_hsf->setValue(reg.contains("hsf") ? reg["hsf"].toVariant().toInt()
+  m_hsf->setValue(reg.contains(REG_HSF_KEY) ? reg[REG_HSF_KEY].toVariant().toInt()
                                       : REG_HSF_HSIZE_DEFAULT);
+  m_macro->codeEditor()->clear();
   CommonUtil::documentFromJsonArray(m_macro->codeEditor(),
-                                    reg["macro"].toArray());
+                                    reg[REG_MACRO_KEY].toArray());
 }
 
 }  // namespace FTEDITOR

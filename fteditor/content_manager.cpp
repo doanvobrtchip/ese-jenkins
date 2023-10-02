@@ -37,6 +37,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QMimeData>
 #include <QRegularExpression>
 #include <QVBoxLayout>
+#include <QJsonArray>
 #include <QtConcurrent/QtConcurrent>
 // Emulator includes
 #include "bt8xxemu_diag.h"
@@ -46,6 +47,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "code_editor.h"
 #include "constant_common.h"
 #include "constant_mapping.h"
+#include "define/ValueDefine.h"
 #include "dl_editor.h"
 #include "dl_parser.h"
 #include "inspector/Inspector.h"
@@ -107,59 +109,59 @@ ContentInfo::ContentInfo(const QString &filePath)
 QJsonObject ContentInfo::toJson(bool meta) const
 {
 	QJsonObject j;
-	j["sourcePath"] = SourcePath;
+	j[CONTENT_SOURCE_PATH_KEY] = SourcePath;
 	if (!meta)
 	{
-		j["destName"] = DestName;
-		j["displayName"] = DisplayName;
-		j["memoryLoaded"] = MemoryLoaded;
-		j["memoryAddress"] = MemoryAddress;
+		j[CONTENT_DEST_NAME_KEY] = DestName;
+		j[CONTENT_DISPLAY_NAME_KEY] = DisplayName;
+		j[CONTENT_MEMORY_LOADED_KEY] = MemoryLoaded;
+		j[CONTENT_MEMORY_ADDRESS_KEY] = MemoryAddress;
 		switch (DataStorage)
 		{
 		case File:
-			j["dataStorage"] = QString("File");
+			j[CONTENT_DATA_STORAGE_KEY] = QString("File");
 			break;
 		case Embedded:
-			j["dataStorage"] = QString("Embedded");
+			j[CONTENT_DATA_STORAGE_KEY] = QString("Embedded");
 			break;
 		case Flash:
-			j["dataStorage"] = QString("Flash");
+			j[CONTENT_DATA_STORAGE_KEY] = QString("Flash");
 			break;
 		}
 		if (Converter != FlashMap)
 		{
-			j["dataCompressed"] = DataCompressed;
+			j[CONTENT_DATA_COMPRESSED_KEY] = DataCompressed;
 		}
 		if (DataStorage == Flash)
 		{
-			j["flashAddress"] = FlashAddress;
+			j[CONTENT_FLASH_ADDRESS_KEY] = FlashAddress;
 		}
 	}
 	switch (Converter)
 	{
 	case Raw:
-		j["converter"] = QString("Raw");
-		j["rawStart"] = RawStart;
-		j["rawLength"] = RawLength;
+		j[CONTENT_CONVERTER_KEY] = QString("Raw");
+		j[CONTENT_RAW_START_KEY] = RawStart;
+		j[CONTENT_RAW_LENGTH_KEY] = RawLength;
 		break;
 	case Image:
-		j["converter"] = QString("Image");
-		j["imageFormat"] = ImageFormat;
+		j[CONTENT_CONVERTER_KEY] = QString("Image");
+		j[CONTENT_IMAGE_FORMAT_KEY] = ImageFormat;
 		break;
 	case ImageCoprocessor:
-		j["converter"] = QString("ImageCoprocessor");
-		j["imageMono"] = ImageMono;
+		j[CONTENT_CONVERTER_KEY] = QString("ImageCoprocessor");
+		j[CONTENT_IMAGE_MONO_KEY] = ImageMono;
 		break;
 	case Font:
-		j["converter"] = QString("Font");
-		j["imageFormat"] = ImageFormat;
-		j["fontSize"] = FontSize;
-		j["fontCharSet"] = FontCharSet;
-		j["fontOffset"] = FontOffset;
+		j[CONTENT_CONVERTER_KEY] = QString("Font");
+		j[CONTENT_IMAGE_FORMAT_KEY] = ImageFormat;
+		j[CONTENT_FONT_SIZE_KEY] = FontSize;
+		j[CONTENT_FONT_CHAR_SET_KEY] = FontCharSet;
+		j[CONTENT_FONT_OFFSET_KEY] = FontOffset;
 		break;
 	case FlashMap:
-		j["converter"] = QString("FlashMap");
-		j["mappedName"] = MappedName;
+		j[CONTENT_CONVERTER_KEY] = QString("FlashMap");
+		j[CONTENT_MAPPED_NAME_KEY] = MappedName;
 		break;
 	}
 	return j;
@@ -167,35 +169,35 @@ QJsonObject ContentInfo::toJson(bool meta) const
 
 void ContentInfo::fromJson(QJsonObject &j, bool meta)
 {
-	SourcePath = j["sourcePath"].toString();
+	SourcePath = j[CONTENT_SOURCE_PATH_KEY].toString();
 	if (!meta)
 	{
-		DestName = j["destName"].toString();
-		QString displayName = j["displayName"].toString();
+		DestName = j[CONTENT_DEST_NAME_KEY].toString();
+		QString displayName = j[CONTENT_DISPLAY_NAME_KEY].toString();
 		DisplayName = displayName.isEmpty() ? QFileInfo(SourcePath).fileName() : displayName;
-		MemoryLoaded = ((QJsonValue)j["memoryLoaded"]).toVariant().toBool();
-		MemoryAddress = ((QJsonValue)j["memoryAddress"]).toVariant().toInt();
-		if (j.contains("dataEmbedded"))
+		MemoryLoaded = ((QJsonValue)j[CONTENT_MEMORY_LOADED_KEY]).toVariant().toBool();
+		MemoryAddress = ((QJsonValue)j[CONTENT_MEMORY_ADDRESS_KEY]).toVariant().toInt();
+		if (j.contains(CONTENT_DATA_EMBEDDED_KEY))
 		{
-			DataStorage = ((QJsonValue)j["dataEmbedded"]).toVariant().toBool()
+			DataStorage = ((QJsonValue)j[CONTENT_DATA_EMBEDDED_KEY]).toVariant().toBool()
 				? Embedded : File;
 		}
-		if (j.contains("flashLoaded"))
+		if (j.contains(CONTENT_FLASH_LOADED_KEY))
 		{
 			// Development temporary
-			DataStorage = ((QJsonValue)j["flashLoaded"]).toVariant().toBool()
+			DataStorage = ((QJsonValue)j[CONTENT_FLASH_LOADED_KEY]).toVariant().toBool()
 				? Flash : DataStorage;
 		}
-		if (j.contains("dataStorage"))
+		if (j.contains(CONTENT_DATA_STORAGE_KEY))
 		{
-			QString dataStorage = j["dataStorage"].toString();
+			QString dataStorage = j[CONTENT_DATA_STORAGE_KEY].toString();
 			if (dataStorage == "File") DataStorage = File;
 			else if (dataStorage == "Embedded") DataStorage = Embedded;
 			else if (dataStorage == "Flash") DataStorage = Flash;
 		}
-		if (j.contains("dataCompressed"))
+		if (j.contains(CONTENT_DATA_COMPRESSED_KEY))
 		{
-			DataCompressed = ((QJsonValue)j["dataCompressed"]).toVariant().toBool();
+			DataCompressed = ((QJsonValue)j[CONTENT_DATA_COMPRESSED_KEY]).toVariant().toBool();
 		}
 		else
 		{
@@ -203,43 +205,43 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 		}
 		if (DataStorage == Flash)
 		{
-			FlashAddress = ((QJsonValue)j["flashAddress"]).toVariant().toInt();
+			FlashAddress = ((QJsonValue)j[CONTENT_FLASH_ADDRESS_KEY]).toVariant().toInt();
 		}
 		else
 		{
 			FlashAddress = FTEDITOR_FLASH_FIRMWARE_SIZE;
 		}
 	}
-	QString converter = j["converter"].toString();
+	QString converter = j[CONTENT_CONVERTER_KEY].toString();
 	if (converter == "Raw")
 	{
 		Converter = Raw;
-		RawStart = ((QJsonValue)j["rawStart"]).toVariant().toInt();
-		RawLength = ((QJsonValue)j["rawLength"]).toVariant().toInt();
+		RawStart = ((QJsonValue)j[CONTENT_RAW_START_KEY]).toVariant().toInt();
+		RawLength = ((QJsonValue)j[CONTENT_RAW_LENGTH_KEY]).toVariant().toInt();
 	}
 	else if (converter == "Image")
 	{
 		Converter = Image;
-		ImageFormat = ((QJsonValue)j["imageFormat"]).toVariant().toInt();
+		ImageFormat = ((QJsonValue)j[CONTENT_IMAGE_FORMAT_KEY]).toVariant().toInt();
 	}
 	else if (converter == "ImageCoprocessor")
 	{
 		Converter = ImageCoprocessor;
-		ImageMono = ((QJsonValue)j["imageMono"]).toVariant().toBool();
+		ImageMono = ((QJsonValue)j[CONTENT_IMAGE_MONO_KEY]).toVariant().toBool();
 	}
 	else if (converter == "Font")
 	{
 		Converter = Font;
-		ImageFormat = ((QJsonValue)j["imageFormat"]).toVariant().toInt();
-		FontSize = ((QJsonValue)j["fontSize"]).toVariant().toInt();
-		FontCharSet = j["fontCharSet"].toString();
-		if (j.contains("fontOffset")) FontOffset = ((QJsonValue)j["fontOffset"]).toVariant().toInt();
+		ImageFormat = ((QJsonValue)j[CONTENT_IMAGE_FORMAT_KEY]).toVariant().toInt();
+		FontSize = ((QJsonValue)j[CONTENT_FONT_SIZE_KEY]).toVariant().toInt();
+		FontCharSet = j[CONTENT_FONT_CHAR_SET_KEY].toString();
+		if (j.contains(CONTENT_FONT_OFFSET_KEY)) FontOffset = ((QJsonValue)j[CONTENT_FONT_OFFSET_KEY]).toVariant().toInt();
 		else FontOffset = 0;
 	}
 	else if (converter == "FlashMap")
 	{
 		Converter = FlashMap;
-		MappedName = j["mappedName"].toString();
+		MappedName = j[CONTENT_MAPPED_NAME_KEY].toString();
 	}
 	else
 	{
@@ -1685,6 +1687,19 @@ int ContentManager::getContentSize(ContentInfo *contentInfo)
 	return contentSize;
 }
 
+QJsonArray ContentManager::toJson()
+{
+	QJsonArray content;
+	std::vector<ContentInfo *> contentInfos;
+	getContentInfos(contentInfos);
+	for (std::vector<ContentInfo *>::iterator it(contentInfos.begin()), end(contentInfos.end()); it != end; ++it)
+	{
+		ContentInfo *info = (*it);
+		content.push_back(info->toJson(false));
+	}
+	return content;
+}
+
 int ContentManager::getFlashSize(ContentInfo *contentInfo)
 {
 	// TODO: Maybe cache getFlashSize
@@ -2174,7 +2189,7 @@ void ContentManager::rebuildGUIInternal(ContentInfo *contentInfo)
 void ContentManager::reprocessInternal(ContentInfo *contentInfo)
 {
 	printf("ContentManager::reprocessInternal()\n");
-
+	emit contentChanged();
 	// Reprocess this content
 	if (contentInfo->Converter != ContentInfo::Invalid)
 	{

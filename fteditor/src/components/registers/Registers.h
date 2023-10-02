@@ -27,7 +27,7 @@ class Registers : public QWidget, public ComponentBase {
   QSpinBox *vSize() const;
   QSpinBox *rotate() const;
   DlEditor *macro() const;
-  QJsonObject toJson(bool exportScript);
+  QJsonObject toJson(bool exportScript = false);
   void fromJson(QJsonObject obj);
   
   int latestHSF() const;
@@ -69,6 +69,7 @@ class Registers : public QWidget, public ComponentBase {
   void vSizeChanged(int newValue);
   void rotateChanged(int newValue);
   void playCtrlChanged(int newValue);
+  void contentChanged();
 };
 }  // namespace FTEDITOR
 #endif  // REGISTERS_H
