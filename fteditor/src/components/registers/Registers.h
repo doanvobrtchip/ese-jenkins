@@ -29,8 +29,10 @@ class Registers : public QWidget, public ComponentBase {
   DlEditor *macro() const;
   QJsonObject toJson(bool exportScript);
   void fromJson(QJsonObject obj);
-
- public slots:
+  
+  int latestHSF() const;
+  
+  public slots:
   void setupConnections(QObject *obj) override;
   void setHSize(int newValue);
   void setVSize(int newValue);

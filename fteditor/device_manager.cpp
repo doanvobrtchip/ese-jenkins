@@ -43,6 +43,7 @@ Copyright (C) 2016-2023  Bridgetek Pte Lte
 #include "dl_editor.h"
 #include "constant_mapping.h"
 #include "device_info_custom.h"
+#include "registers/Registers.h"
 
 #include "device_display_settings_dialog.h"
 #include "device_manage_dialog.h"
@@ -466,8 +467,6 @@ void DeviceManager::connectDevice()
 
 	EVE_HalContext *phost = new EVE_HalContext{ 0 };
 
-	
-
 	bool ok = EVE_Hal_open(phost, &params);
 	if (!ok)
 	{
@@ -508,7 +507,12 @@ void DeviceManager::connectDevice()
 
 	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)(phost->ChipId & 0xFFFF));
 	EVE_ConfigParameters configParams;
-	
+
+#ifdef EVE_SUPPORT_HSF
+	auto req = m_MainWindow->registers();
+	configParams.HsfWidth = req ? req->latestHSF() : 0;
+#endif
+	 
 	QString projectDisplaySize = m_MainWindow->getDisplaySize();
 
 	if (m_IsCustomDevice)

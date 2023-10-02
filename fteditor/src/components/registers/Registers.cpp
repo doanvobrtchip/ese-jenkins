@@ -36,7 +36,11 @@ Registers::Registers(MainWindow *parent)
       m_undoStack(m_mainWindow->undoStack()),
       m_playCtrl(),
       m_lbCurrPlayCtrl(NULL),
-      m_undoRedoWorking(false) {
+      m_undoRedoWorking(false),
+      m_latestHSize(screenWidthDefault(FTEDITOR_CURRENT_DEVICE)),
+      m_latestVSize(screenHeightDefault(FTEDITOR_CURRENT_DEVICE)),
+      m_latestRotate(REG_ROTATE_DEFAULT),
+      m_latestHSF(REG_HSF_HSIZE_DEFAULT) {
   QVBoxLayout *layout = new QVBoxLayout(this);
   // Display Size
   {
@@ -199,8 +203,10 @@ Registers::Registers(MainWindow *parent)
     hsfGroup->setLayout(hsfLayout);
     layout->addWidget(hsfGroup);
 
-    connect(m_hSize, &QSpinBox::valueChanged, this,
-            [this](int i) { m_hsf->setMaximum(i); });
+    connect(m_hSize, &QSpinBox::valueChanged, this, [this](int i) {
+      if (i < m_hsf->value()) m_hsf->setValue(0);
+      m_hsf->setMaximum(i);
+    });
     connect(m_hsf, &QSpinBox::valueChanged, this, &Registers::onHSFChanged);
     connect(m_mainWindow, &MainWindow::deviceChanged, this, [hsfGroup, this]() {
       bool visible = FTEDITOR_CURRENT_DEVICE >= FTEDITOR_BT817;
@@ -295,6 +301,11 @@ void Registers::onDisplaySizeChanged(int hSize, int vSize) {
   setHSize(hSize);
   setVSize(vSize);
   m_undoStack->endMacro();
+}
+
+int Registers::latestHSF() const
+{
+	return m_latestHSF;
 }
 
 QSpinBox *Registers::rotate() const { return m_rotate; }

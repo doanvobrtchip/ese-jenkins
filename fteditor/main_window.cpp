@@ -403,6 +403,11 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	emit currentFileNameChanged();
 }
 
+Registers *MainWindow::registers() const
+{
+	return m_registers;
+}
+
 const QString &MainWindow::CurrentFileName() const
 {
 	return m_CurrentFileName;
