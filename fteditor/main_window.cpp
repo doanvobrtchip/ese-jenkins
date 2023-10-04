@@ -83,6 +83,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "constant_mapping_flash.h"
 #include "content_manager.h"
 #include "customize/SaveOptionDialog.h"
+#include "define/ValueDefine.h"
 #include "device_manager.h"
 #include "dl_editor.h"
 #include "emulator_navigator.h"
@@ -95,6 +96,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "toolbox.h"
 #include "utils/CommonUtil.h"
 #include "utils/DLUtil.h"
+#include "utils/LoggerUtil.h"
 #include "utils/ReadWriteUtil.h"
 #include "welcome/Welcome.h"
 
@@ -1017,9 +1019,12 @@ void MainWindow::createActions()
 	m_SaveAct = new QAction(this);
 	m_SaveAct->setShortcuts(QKeySequence::Save);
 	connect(m_SaveAct, SIGNAL(triggered()), this, SLOT(actSave()));
-	connect(this, &MainWindow::currentFileNameChanged, m_SaveAct, [this]() {
-		m_SaveAct->setText(m_CurrentFileName.isEmpty() ? tr("Unsaved")
-		                                               : tr("Saved"));
+	connect(this, &MainWindow::unsaved, this, [this]() {
+		m_SaveAct->setEnabled(true);
+	});
+	connect(this, &MainWindow::saved, this, [this]() {
+		if (m_SavedData == toJson())
+			m_SaveAct->setEnabled(false);
 	});
 
 	m_SaveAsAct = new QAction(this);
@@ -1107,6 +1112,7 @@ void MainWindow::translateActions()
 	m_OpenAct->setText(tr("Open"));
 	m_OpenAct->setStatusTip(tr("Open an existing project"));
 	m_OpenAct->setIcon(QIcon(":/icons/folder-horizontal-open.png"));
+	m_SaveAct->setText(tr("Save"));
 	m_SaveAct->setStatusTip(tr("Save the current project"));
 	m_SaveAct->setIcon(QIcon(":/icons/disk.png"));
 	m_SaveAsAct->setText(tr("Save As"));
@@ -1301,6 +1307,26 @@ void MainWindow::createDockWindows()
 			m_ProjectDisplay->addItem("");
 			hBoxLayout->addWidget(m_ProjectDisplay);
 			connect(m_ProjectDisplay, &QComboBox::currentIndexChanged, this, &MainWindow::projectDisplayChanged);
+			connect(this, &MainWindow::deviceChanged, this, [this]() {
+				if (m_CurrentFileName.isEmpty()) return;
+				QJsonParseError parsedError;
+				auto doc = QJsonDocument::fromJson(m_SavedData, &parsedError);
+				if (parsedError.error != QJsonParseError::NoError)
+					return;
+				if (auto root = doc.object(); root.contains(PRJ_KEY))
+				{
+					if (auto prjObj = root[PRJ_KEY].toObject();
+					    prjObj.contains(PRJ_DEVICE_KEY))
+					{
+						if (auto device = prjObj[PRJ_DEVICE_KEY].toInt();
+						    device == (int)deviceToEnum(FTEDITOR_CURRENT_DEVICE))
+						{
+							emit saved();
+						}
+						else emit unsaved();
+					}
+				}
+			});
 
 			groupLayout->addLayout(hBoxLayout);
 
@@ -1576,6 +1602,20 @@ void MainWindow::createDockWindows()
 				m_DlEditor->codeEditor()->setFocus();
 			}
 		});
+		connect(m_DlEditor->codeEditor(), &CodeEditor::textChanged, this, [this]() {
+			if (m_CurrentFileName.isEmpty()) return;
+			QJsonParseError parsedError;
+			auto doc = QJsonDocument::fromJson(m_SavedData, &parsedError);
+			if (parsedError.error != QJsonParseError::NoError)
+				return;
+			if (auto root = doc.object(); root.contains(DISPLAY_LIST_KEY))
+			{
+				if (auto dlListArr = root[DISPLAY_LIST_KEY].toArray();
+				    dlListArr == CommonUtil::documentToJsonArray(m_DlEditor->codeEditor()->document(), false, false))
+					emit saved();
+				else emit unsaved();
+			}
+		});
 		m_WidgetsMenu->addAction(m_DlEditorDock->toggleViewAction());
 
 		m_DlEditorDock->setVisible(false);
@@ -1596,6 +1636,20 @@ void MainWindow::createDockWindows()
 			if (visible)
 			{
 				m_CmdEditor->codeEditor()->setFocus();
+			}
+		});
+		connect(m_CmdEditor->codeEditor(), &CodeEditor::textChanged, this, [this]() {
+			if (m_CurrentFileName.isEmpty()) return;
+			QJsonParseError parsedError;
+			auto doc = QJsonDocument::fromJson(m_SavedData, &parsedError);
+			if (parsedError.error != QJsonParseError::NoError)
+				return;
+			if (auto root = doc.object(); root.contains(COPROCESSOR_KEY))
+			{
+				if (auto cmdArr = root[COPROCESSOR_KEY].toArray();
+				    cmdArr == CommonUtil::documentToJsonArray(m_CmdEditor->codeEditor()->document(), true, false))
+					emit saved();
+				else emit unsaved();
 			}
 		});
 		m_WidgetsMenu->addAction(m_CmdEditorDock->toggleViewAction());
@@ -1736,6 +1790,19 @@ void MainWindow::createDockWindows()
 		    [](int newValue) { g_Rotate = newValue; });
 		connect(m_registers, &Registers::playCtrlChanged, this,
 		    [](int newValue) { g_PlayCtrl = newValue; });
+		connect(m_registers, &Registers::contentChanged, this, [this]() {
+			if (m_CurrentFileName.isEmpty()) return;
+			QJsonParseError parsedError;
+			auto doc = QJsonDocument::fromJson(m_SavedData, &parsedError);
+			if (parsedError.error != QJsonParseError::NoError)
+				return;
+			if (auto root = doc.object(); root.contains(REG_KEY))
+			{
+				if (auto regObj = root[REG_KEY].toObject(); regObj == m_registers->toJson())
+					emit saved();
+				else emit unsaved();
+			}
+		});
 	}
 
 	// Content
@@ -1756,6 +1823,19 @@ void MainWindow::createDockWindows()
 		m_WidgetsMenu->addAction(m_ContentManagerDock->toggleViewAction());
 
 		connect(m_ProjectFlashImport, SIGNAL(clicked()), m_ContentManager, SLOT(importFlashMapped()));
+		connect(m_ContentManager, &ContentManager::contentChanged, this, [this]() {
+			if (m_CurrentFileName.isEmpty()) return;
+			QJsonParseError parsedError;
+			auto doc = QJsonDocument::fromJson(m_SavedData, &parsedError);
+			if (parsedError.error != QJsonParseError::NoError)
+				return;
+			if (auto root = doc.object(); root.contains(CONTENT_KEY))
+			{
+				if (auto contentArr = root[CONTENT_KEY].toArray(); contentArr == m_ContentManager->toJson())
+					emit saved();
+				else emit unsaved();
+			}
+		});	
 	}
 
 	// Toolbox
@@ -2208,8 +2288,8 @@ void MainWindow::undoCleanChanged(bool clean)
 bool MainWindow::maybeSave()
 {
 	bool res = true;
-
-	if (!m_UndoStack->isClean())
+	
+	if (m_SaveAct->isEnabled() && !m_UndoStack->isClean())
 	{
 		QMessageBox::StandardButton ret;
 		ret = QMessageBox::warning(this, tr("EVE Screen Editor"),
@@ -2494,14 +2574,14 @@ void MainWindow::actCloseProject()
 
 void MainWindow::actNew()
 {
-	toggleUI(true);
-	actNew(true);
+	if (actNew(true))
+		toggleUI(true);
 }
 
-void MainWindow::actNew(bool addClear)
+bool MainWindow::actNew(bool addClear)
 {
 	if (!maybeSave())
-		return;
+		return false;
 
 	printf("** New **\n");
 	
@@ -2561,6 +2641,7 @@ void MainWindow::actNew(bool addClear)
 	// WORKAROUND: Issue #100
 	actResetEmulator();
 	m_MinFlashType = -1;
+	return true;
 }
 
 static void bitmapSetupfromJson(MainWindow *mainWindow, DlEditor *dlEditor, QJsonArray &bitmaps)
@@ -2690,17 +2771,17 @@ void MainWindow::openFile(const QString &fileName)
 	bool loadOk = false;
 	QFile file(fileName);
 	file.open(QIODevice::ReadOnly);
-	QByteArray data = file.readAll();
+	m_SavedData = file.readAll();
 	file.close();
 	QJsonParseError parseError;
-	QJsonDocument doc = QJsonDocument::fromJson(data, &parseError);
+	QJsonDocument doc = QJsonDocument::fromJson(m_SavedData, &parseError);
 	if (parseError.error == QJsonParseError::NoError)
 	{
 		QJsonObject root = doc.object();
-		if (root.contains("project"))
+		if (root.contains(PRJ_KEY))
 		{
-			QJsonObject project = root["project"].toObject();
-			m_ProjectDevice->setCurrentIndex(deviceToIntf((BT8XXEMU_EmulatorMode)((QJsonValue)project["device"]).toVariant().toInt()));
+			QJsonObject project = root[PRJ_KEY].toObject();
+			m_ProjectDevice->setCurrentIndex(deviceToIntf((BT8XXEMU_EmulatorMode)((QJsonValue)project[PRJ_DEVICE_KEY]).toVariant().toInt()));
 		}
 		else
 		{
@@ -2708,7 +2789,7 @@ void MainWindow::openFile(const QString &fileName)
 		}
 		m_registers->fromJson(root);
 		
-		QJsonArray content = root["content"].toArray();
+		QJsonArray content = root[CONTENT_KEY].toArray();
 		m_ContentManager->suppressOverlapCheck();
 
 		bool checkFlashPath = false;
@@ -2726,8 +2807,8 @@ void MainWindow::openFile(const QString &fileName)
 			}
 		}
 
-		CommonUtil::documentFromJsonArray(m_DlEditor->codeEditor(), root["displayList"].toArray());
-		CommonUtil::documentFromJsonArray(m_CmdEditor->codeEditor(), root["coprocessor"].toArray());
+		CommonUtil::documentFromJsonArray(m_DlEditor->codeEditor(), root[DISPLAY_LIST_KEY].toArray());
+		CommonUtil::documentFromJsonArray(m_CmdEditor->codeEditor(), root[COPROCESSOR_KEY].toArray());
 
 		if (root.contains("bitmaps") || root.contains("handles"))
 		{
@@ -2895,20 +2976,12 @@ QByteArray MainWindow::toJson(bool exportScript)
 {
 	QJsonObject root;
 	QJsonObject project;
-	project["device"] = (int)deviceToEnum(FTEDITOR_CURRENT_DEVICE);
-	root["project"] = project;
-	root["registers"] = m_registers->toJson(exportScript);
-	root["displayList"] = CommonUtil::documentToJsonArray(m_DlEditor->codeEditor()->document(), false, exportScript);
-	root["coprocessor"] = CommonUtil::documentToJsonArray(m_CmdEditor->codeEditor()->document(), true, exportScript);
-	QJsonArray content;
-	std::vector<ContentInfo *> contentInfos;
-	m_ContentManager->getContentInfos(contentInfos);
-	for (std::vector<ContentInfo *>::iterator it(contentInfos.begin()), end(contentInfos.end()); it != end; ++it)
-	{
-		ContentInfo *info = (*it);
-		content.push_back(info->toJson(false));
-	}
-	root["content"] = content;
+	project[PRJ_DEVICE_KEY] = (int)deviceToEnum(FTEDITOR_CURRENT_DEVICE);
+	root[PRJ_KEY] = project;
+	root[REG_KEY] = m_registers->toJson(exportScript);
+	root[DISPLAY_LIST_KEY] = CommonUtil::documentToJsonArray(m_DlEditor->codeEditor()->document(), false, exportScript);
+	root[COPROCESSOR_KEY] = CommonUtil::documentToJsonArray(m_CmdEditor->codeEditor()->document(), true, exportScript);
+	root[CONTENT_KEY] = m_ContentManager->toJson();
 	//root["handles"] = m_BitmapSetup->toJson(exportScript);
 	/*if (exportScript)
 	{
@@ -2936,9 +3009,10 @@ void MainWindow::actSave()
 	file.open(QIODevice::WriteOnly);
 	QDataStream out(&file);
 
-	QByteArray data = toJson();
+	m_SavedData = toJson();
+	emit saved();
 
-	out.writeRawData(data, data.size());
+	out.writeRawData(m_SavedData, m_SavedData.size());
 
 	m_UndoStack->setClean();
 
@@ -3417,10 +3491,14 @@ void MainWindow::changeEmulatorInternal(int deviceIntf, int flashIntf)
 {
 	bool changeDevice = deviceIntf != FTEDITOR_CURRENT_DEVICE;
 	bool changeFlash = flashIntf != FTEDITOR_CURRENT_FLASH && flashSupport(deviceIntf);
-
+	
+	if (changeDevice) {
+		emit deviceChanged();
+	}
+	
 	if (!changeDevice && !changeFlash)
 		return;
-
+	
 	// Remove any references to the current emulator device version
 	m_Inspector->unbindCurrentDevice();
 

@@ -46,6 +46,7 @@ class QGroupBox;
 class QLabel;
 class QSpinBox;
 class QCheckBox;
+class QJsonArray;
 
 namespace FTEDITOR {
 struct ContentInfo;
@@ -302,6 +303,7 @@ public:
 
 	int getFreeMemoryAddress(); // Return -1 if no more space
 	int getContentSize(ContentInfo *contentInfo); // Return -1 if not exist
+	QJsonArray toJson();
 
 private:
 	class Add;
@@ -442,6 +444,7 @@ signals:
 	void ramGlobalUsageChanged(int value);
 	void busyNow(QObject *obj);
 	void freeNow(QObject *obj);
+	void contentChanged();
 
 }; /* class ContentManager */
 

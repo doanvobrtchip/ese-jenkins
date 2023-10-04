@@ -145,7 +145,7 @@ public:
 
 	void editorTabChangedGo(bool load);
 
-	void actNew(bool addClear);
+	bool actNew(bool addClear);
 
 	void openFile(const QString &fileName);
 
@@ -349,7 +349,7 @@ private:
 	QDockWidget *m_RegistersDock;
 	Registers *m_registers;
 
-  QDockWidget *m_RulerDock;
+	QDockWidget *m_RulerDock;
 
 #if FT800_DEVICE_MANAGER
 	QDockWidget *m_DeviceManagerDock;
@@ -434,6 +434,7 @@ private:
 
 	QLabel *infoLabel;
 	QList<QObject *> busyList;
+	QByteArray m_SavedData;
 	
 signals:
 	void currentFileNameChanged();
@@ -444,6 +445,9 @@ signals:
 	void deviceChanged();
 	void windowActivate();
 	void clearEvent();
+	void unsaved();
+	void saved();
+	
 }; /* class MainWindow */
 
 } /* namespace FTEDITOR */
