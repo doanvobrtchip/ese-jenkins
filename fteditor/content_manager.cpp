@@ -1168,10 +1168,10 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 void ContentManager::removeInternal(ContentInfo *contentInfo)
 {
 	printf("ContentManager::removeInternal(contentInfo)\n");
-
 	// Remove from the content list
 	delete contentInfo->View;
 	contentInfo->View = NULL;
+	emit contentChanged();
 
 	// Mark upload as dirty
 	contentInfo->UploadMemoryDirty = true;

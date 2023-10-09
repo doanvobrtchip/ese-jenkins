@@ -3872,7 +3872,7 @@ void MainWindow::about()
 	    "Support and updates:<br>"
 	    "<a href='http://www.ftdichip.com/Support/Utilities.htm'>http://www.ftdichip.com/Support/Utilities.htm</a><br>"
 	    "<br>"
-	    "<a href='http://brtchip.com/utilities/#evescreeneditor'>http://brtchip.com/utilities/#evescreeneditor</a>").arg(emulatorVersion));
+	    "<a href='https://brtchip.com/ese-2/'>https://brtchip.com/ese-2/</a>").arg(emulatorVersion));
 	msgBox.exec();
 }
 
