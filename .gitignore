@@ -13,6 +13,9 @@ sonar-*
 sonar_cache/
 bwod/
 
+# Sensitive files
+bridgetek_pte_ltd.p12
+
 # Test and application directories
 screenshots
 release
