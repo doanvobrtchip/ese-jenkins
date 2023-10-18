@@ -176,8 +176,6 @@ public:
 	DeviceManager *deviceManager() const;
 	Registers *registers() const;
 	
-	Registers *registers() const;
-	
 private slots:
 	// void applyEmulatorConfig();
 
