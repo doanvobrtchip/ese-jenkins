@@ -453,7 +453,7 @@ void DlParser::initVC4()
 		s_CmdIdMap["CMD_STOP"] = CMD_STOP & 0xFF;
 		s_CmdParamCount[CMD_STOP & 0xFF] = 0;
 		s_CmdIdMap["CMD_MEMCRC"] = CMD_MEMCRC & 0xFF;
-		s_CmdParamCount[CMD_MEMCRC & 0xFF] = 2;
+		s_CmdParamCount[CMD_MEMCRC & 0xFF] = 3;
 		s_CmdIdMap["CMD_REGREAD"] = CMD_REGREAD & 0xFF; // don't support reading values
 		s_CmdParamCount[CMD_REGREAD & 0xFF] = 2;
 		s_CmdIdMap["CMD_MEMWRITE"] = CMD_MEMWRITE & 0xFF; // STREAMING DATA
@@ -624,20 +624,20 @@ void DlParser::initVC4()
 #if defined(FTEDITOR_PARSER_VC4)
 		// clang-format off
 		FTEDITOR_MAP_CMD(CMD_LINETIME,        1); // Outputs to RAM_G. NOTE: CMD_LINETIME and CMD_VIDEOSTARTF command identifiers are out-of-sequence
-		FTEDITOR_MAP_CMD(CMD_CALIBRATESUB,    4); // Plus 1 5th output parameter
+		FTEDITOR_MAP_CMD(CMD_CALIBRATESUB,    5);
 		FTEDITOR_MAP_CMD(CMD_TESTCARD,        0);
 		FTEDITOR_MAP_CMD(CMD_HSF,             1);
 		FTEDITOR_MAP_CMD(CMD_APILEVEL,        1);
 		s_CmdParamOptions[CMD_APILEVEL & 0xFF].Default[0] = 1;
-		FTEDITOR_MAP_CMD(CMD_GETIMAGE,        0); // Plus 5 output parameters
+		FTEDITOR_MAP_CMD(CMD_GETIMAGE,        5);
 		FTEDITOR_MAP_CMD(CMD_WAIT,            1);
 		FTEDITOR_MAP_CMD(CMD_RETURN,          0);
 		FTEDITOR_MAP_CMD(CMD_CALLLIST,        1);
 		FTEDITOR_MAP_CMD(CMD_NEWLIST,         1);
 		FTEDITOR_MAP_CMD(CMD_ENDLIST,         0);
-		FTEDITOR_MAP_CMD(CMD_PCLKFREQ,        2); // Plus 1 3rd output parameter
+		FTEDITOR_MAP_CMD(CMD_PCLKFREQ,        3);
 		FTEDITOR_MAP_CMD(CMD_FONTCACHE,       3);
-		FTEDITOR_MAP_CMD(CMD_FONTCACHEQUERY,  0); // Plus 2 output parameters
+		FTEDITOR_MAP_CMD(CMD_FONTCACHEQUERY,  2);
 		FTEDITOR_MAP_CMD(CMD_ANIMFRAMERAM,    4);
 		FTEDITOR_MAP_CMD(CMD_ANIMSTARTRAM,    3);
 		FTEDITOR_MAP_CMD(CMD_RUNANIM,         2);
@@ -1000,13 +1000,10 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 			switch (0xFFFFFF00 | parsed.IdRight)
 			{
 				case CMD_GETPROPS:
-#if defined(FTEDITOR_PARSER_VC4)
-				case CMD_FLASHPROGRAM:
-#endif
 				{
-				    compiled.push_back(parsed.Parameter[0].U);
-				    compiled.push_back(parsed.Parameter[1].U);
-				    compiled.push_back(parsed.Parameter[2].U);
+				    compiled.push_back(0); // 1st parameter: Output parameter
+				    compiled.push_back(0); // 2nd parameter: Output parameter
+				    compiled.push_back(0); // 3rd parameter: Output parameter
 				    break;
 				}
 				case CMD_BGCOLOR:
@@ -1229,7 +1226,6 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_INFLATE:
 				case CMD_ROTATE:
 				case CMD_INTERRUPT:
-				case CMD_CALIBRATE:
 #if defined(FTEDITOR_PARSER_VC2) || defined(FTEDITOR_PARSER_VC3) || defined(FTEDITOR_PARSER_VC4)
 				case CMD_SETROTATE:
 				case CMD_PLAYVIDEO:
@@ -1253,6 +1249,10 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				{
 					compiled.push_back(parsed.Parameter[0].U);
 					break;
+				}
+				case CMD_CALIBRATE:
+				{
+					compiled.push_back(0); // 1st parameter: Output parameter
 				}
 				case CMD_MEMWRITE:
 				case CMD_APPEND:
@@ -1457,7 +1457,7 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				case CMD_REGREAD:
 				{
 					compiled.push_back(parsed.Parameter[0].U);
-					compiled.push_back(parsed.Parameter[1].U);
+					compiled.push_back(0); // 2nd parameter: Output parameter
 					break;
 				}
 				case CMD_FLASHREAD:
@@ -1467,6 +1467,12 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 					compiled.push_back(parsed.Parameter[0].U);
 					compiled.push_back(parsed.Parameter[1].U);
 					compiled.push_back(parsed.Parameter[2].U);
+				}
+				case CMD_MEMCRC:
+				{
+					compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[1].U);
+					compiled.push_back(0); // 3rd parameter: Output parameter
 					break;
 				}
 				case CMD_ANIMXY:
@@ -1515,24 +1521,17 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				}
 				case CMD_GETIMAGE:
 				{
-					compiled.push_back(0); // Plus 5 output parameters
-					compiled.push_back(0);
-					compiled.push_back(0);
-					compiled.push_back(0);
-					compiled.push_back(0);
-					break;
-				}
-				case CMD_PCLKFREQ:
-				{
-					compiled.push_back(parsed.Parameter[0].U);
-					compiled.push_back(parsed.Parameter[1].U);
-					compiled.push_back(0);// Plus 1 3rd output parameter
+					compiled.push_back(0); // 1st parameter: Output parameter
+					compiled.push_back(0); // 2nd parameter: Output parameter
+					compiled.push_back(0); // 3rd parameter: Output parameter
+					compiled.push_back(0); // 4th parameter: Output parameter
+					compiled.push_back(0); // 5th parameter: Output parameter
 					break;
 				}
 				case CMD_FONTCACHEQUERY:
 				{
-					compiled.push_back(0); // Plus 2 output parameters
-					compiled.push_back(0);
+					compiled.push_back(0); // 1st parameter: Output parameter
+					compiled.push_back(0); // 2nd parameter: Output parameter
 					break;
 				}
 				case CMD_ANIMFRAMERAM:
@@ -1545,11 +1544,19 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 					break;
 				}
 				case CMD_FONTCACHE:
+				case CMD_FLASHPROGRAM:
 				case CMD_ANIMSTARTRAM:
 				{
 					compiled.push_back(parsed.Parameter[0].U);
 					compiled.push_back(parsed.Parameter[1].U);
 					compiled.push_back(parsed.Parameter[2].U);
+					break;
+				}
+				case CMD_PCLKFREQ:
+				{
+					compiled.push_back(parsed.Parameter[0].U);
+					compiled.push_back(parsed.Parameter[1].U);
+					compiled.push_back(0); // 3rd parameter: Output parameter
 					break;
 				}
 #endif

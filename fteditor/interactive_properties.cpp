@@ -1150,8 +1150,9 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_CALIBRATE."));
 			if (editor)
 			{
-				// no properties
-				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+				setTitle("CMD_CALIBRATE");
+				addSpinBox(0, 0, INT_MAX, "Output result:", "Output result", true);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
 			break;
@@ -1187,7 +1188,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			{
 				setTitle("CMD_REGREAD");
 				addSpinBox(0, 0, 0x7FFFFFFF, "Register Address: ", "Set address");
-				addSpinBox(1, 0, INT_MAX, "Register Value:", "Ouput result", true);
+				addSpinBox(1, 0, INT_MAX, "Register Value:", "Output result", true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -1201,6 +1202,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				setTitle("CMD_MEMCRC");
 				addSpinBox(0, 0, 0x7FFFFFFF, "Address: ", "Set address");
 				addSpinBox(1, 0, 0x7FFFFFFF, "Num: ", "Set num");
+				addSpinBox(3, 0, INT_MAX, "Output result:", "Output result", true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -2138,6 +2140,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				setTitle("CMD_CALIBRATESUB");
 				addXY(0, 1, 0, 1280);
 				addWH(2, 3, 0, 1280);
+				addSpinBox(4, 0, INT_MAX, "Output result:", "Output result", true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
@@ -2172,7 +2175,10 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_FONTCACHEQUERY."));
 			if (editor)
 			{
-				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+				setTitle("CMD_FONTCACHEQUERY");
+				addSpinBox(0, 0, INT_MAX, "Output total:", "Output total", true);
+				addSpinBox(1, 0, INT_MAX, "Output used:", "Output used", true);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
 			break;
@@ -2182,7 +2188,12 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 			m_MainWindow->propertiesEditor()->setInfo(tr("DESCRIPTION_CMD_GETIMAGE."));
 			if (editor)
 			{
-				m_MainWindow->propertiesEditor()->setEditWidget(NULL, false, editor);
+				addSpinBox(0, 0, INT_MAX, "Output source:", "Output source", true);
+				addSpinBox(1, 0, INT_MAX, "Output format:", "Output format", true);
+				addSpinBox(2, 0, INT_MAX, "Output width:", "Output width", true);
+				addSpinBox(3, 0, INT_MAX, "Output height:", "Output height", true);
+				addSpinBox(4, 0, INT_MAX, "Output palette:", "Output palette", true);
+				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;
 			break;
@@ -2195,6 +2206,7 @@ void InteractiveProperties::setProperties(int idLeft, int idRight, DlEditor *edi
 				setTitle("CMD_PCLKFREQ");
 				addSpinBoxUInt32(0, 0, 0xFFFFFFFF, tr("Target Frequency"), tr("Set Target frequency"));
 				addSpinBox(1, -1, 1, tr("Rounding"), tr("Set Rounding"));
+				addSpinBox(2, 0, INT_MAX, "Output factual:", "Output factual", true);
 				m_MainWindow->propertiesEditor()->setEditWidget(this, false, editor);
 			}
 			ok = true;

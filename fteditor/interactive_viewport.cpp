@@ -2763,8 +2763,9 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 					case CMD_MEMCRC:
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
+						pa.Parameter[2].U = 0;
 						pa.ExpectedStringParameter = false;
-						pa.ExpectedParameterCount = 2;
+						pa.ExpectedParameterCount = 3;
 						break;
 					case CMD_MEMWRITE:
 						pa.Parameter[0].U = 0;
@@ -2856,12 +2857,14 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedStringParameter = false;
 						pa.ExpectedParameterCount = 1;
 						break;
+					
 					case CMD_CALIBRATESUB:
 						pa.Parameter[0].U = 0;
 						pa.Parameter[1].U = 0;
 						pa.Parameter[2].U = 0;
 						pa.Parameter[3].U = 0;
-						pa.ExpectedParameterCount = 4;
+						pa.Parameter[4].U = 0;
+						pa.ExpectedParameterCount = 5;
 						break;
 					case CMD_TESTCARD:
 						pa.ExpectedParameterCount = 0;
@@ -2873,10 +2876,17 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedParameterCount = 3;
 						break;
 					case CMD_FONTCACHEQUERY:
-						pa.ExpectedParameterCount = 0;
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.ExpectedParameterCount = 2;
 						break;
 					case CMD_GETIMAGE:
-						pa.ExpectedParameterCount = 0;
+						pa.Parameter[0].U = 0;
+						pa.Parameter[1].U = 0;
+						pa.Parameter[2].U = 0;
+						pa.Parameter[3].U = 0;
+						pa.Parameter[4].U = 0;
+						pa.ExpectedParameterCount = 5;
 						break;
 					}
 
