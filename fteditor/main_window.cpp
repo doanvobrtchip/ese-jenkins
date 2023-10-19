@@ -96,7 +96,6 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include "toolbox.h"
 #include "utils/CommonUtil.h"
 #include "utils/DLUtil.h"
-#include "utils/LoggerUtil.h"
 #include "utils/ReadWriteUtil.h"
 #include "welcome/Welcome.h"
 

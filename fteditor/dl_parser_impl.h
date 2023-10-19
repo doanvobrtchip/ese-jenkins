@@ -1337,7 +1337,7 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 				    compiled.push_back(parsed.Parameter[1].U);
 				    compiled.push_back(0);// Plus 1 3rd output parameter
 				    break;
-			    }    
+			    }
 				case CMD_TRACK:
 				{
 					uint32_t xy = parsed.Parameter[1].U << 16
@@ -1467,13 +1467,6 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 					compiled.push_back(parsed.Parameter[0].U);
 					compiled.push_back(parsed.Parameter[1].U);
 					compiled.push_back(parsed.Parameter[2].U);
-				}
-				case CMD_MEMCRC:
-				{
-					compiled.push_back(parsed.Parameter[0].U);
-					compiled.push_back(parsed.Parameter[1].U);
-					compiled.push_back(0); // 3rd parameter: Output parameter
-					break;
 				}
 				case CMD_ANIMXY:
 				{

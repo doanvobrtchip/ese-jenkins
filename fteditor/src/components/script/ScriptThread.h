@@ -31,6 +31,7 @@ class ScriptThread : public QThread {
  private:
   const QString m_tempFileName = "temp.py";
   const QString m_outputFileName = "output";
+
   FTEDITOR::Script *m_scriptComp;
   QTimer *m_timer;
   void deleteRelatedFiles();
