@@ -427,13 +427,18 @@ Toolbox::Toolbox(MainWindow *parent)
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_APILEVEL));
 		m_CoprocessorBT817Plus.push_back(item);
-
+		
+		item = new QTreeWidgetItem(m_Utilities);
+		item->setText(0, tr("Calibrate"));
+		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
+		item->setData(2, Qt::UserRole, QVariant((uint)CMD_CALIBRATE));		
+		
 		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Calibrate Sub"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));
 		item->setData(2, Qt::UserRole, QVariant((uint)CMD_CALIBRATESUB));
 		m_CoprocessorBT817Plus.push_back(item);
-
+		
 		item = new QTreeWidgetItem(m_Utilities);
 		item->setText(0, tr("Test Card"));
 		item->setData(1, Qt::UserRole, QVariant((uint)FTEDITOR_SELECTION_FUNCTION));

@@ -2857,7 +2857,10 @@ void InteractiveViewport::dropEvent(QDropEvent *e)
 						pa.ExpectedStringParameter = false;
 						pa.ExpectedParameterCount = 1;
 						break;
-					
+					case CMD_CALIBRATE:
+						pa.Parameter[0].U = 0;
+						pa.ExpectedParameterCount = 1;
+						break;
 					case CMD_CALIBRATESUB:
 						pa.Parameter[2].U = 100;
 						pa.Parameter[3].U = 100;
