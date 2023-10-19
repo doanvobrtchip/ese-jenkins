@@ -1107,6 +1107,7 @@ bool ContentManager::loadFlashMap(QString flashMapPath)
 				contentInfo->DestName = it->second.Name;
 				contentInfo->Converter = ContentInfo::FlashMap;
 				contentInfo->MappedName = it->second.Name;
+				contentInfo->DisplayName = it->second.Name;
 				contentInfo->DataCompressed = false;
 				contentInfo->FlashAddress = it->second.Index;
 				contentInfo->DataStorage = ContentInfo::Flash;
