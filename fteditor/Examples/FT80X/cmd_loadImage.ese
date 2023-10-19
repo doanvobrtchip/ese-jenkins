@@ -23,7 +23,8 @@
     "registers": {
         "hSize": 480,
         "macro": [
-            ""
+            "NOP()",
+            "NOP()"
         ],
         "vSize": 272
     }
