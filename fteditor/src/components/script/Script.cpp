@@ -112,8 +112,7 @@ void Script::initialiseFont() {
                       QsciLexerPython::HighlightedIdentifier);
 }
 
-QString Script::exampleFilePath() {
-  QString defaultFilePath =
+QString Script::exampleFilePath() {  QString defaultFilePath =
       m_mainWindow->applicationDataDir() + "/Examples/scripts/animation.py";
   if (m_mainWindow->CurrentFileName().isEmpty()) return defaultFilePath;
   QFileInfo fi(m_mainWindow->CurrentFileName());

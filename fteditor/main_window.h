@@ -176,6 +176,8 @@ public:
 	DeviceManager *deviceManager() const;
 	Registers *registers() const;
 	
+	const QString &CurrentFileName() const;
+	
 private slots:
 	// void applyEmulatorConfig();
 

@@ -48,11 +48,7 @@ void ScriptThread::handleTimeout() {
 void ScriptThread::stopRunning() {
   m_timer->stop();
   if (isRunning()) {
-    QFile file(tempFilePath());
-    file.remove();
-    QFile fileOutput(outputPath());
-    fileOutput.remove();
-	
+    deleteRelatedFiles();
     emit stateChanged(NotRunning);
     exit();
   }
@@ -106,5 +102,13 @@ void ScriptThread::run() {
     return;
   }
   emit stateChanged(NotRunning);
+  deleteRelatedFiles();
   exit();
+}
+
+void ScriptThread::deleteRelatedFiles() {
+  QFile file(tempFilePath());
+  file.remove();
+  QFile fileOutput(outputPath());
+  fileOutput.remove();
 }
