@@ -108,7 +108,7 @@ class UndoStackDisabler;
 // Content information. Read-only. Writable through ContentManager only.
 struct ContentInfo
 {
-	ContentInfo(const QString &filePath);
+	ContentInfo(const QString &filePath, QString rootPath = QString());
 
 	QTreeWidgetItem *View;
 
@@ -138,6 +138,7 @@ struct ContentInfo
 	QString SourcePath; // Relative source path
 	QString DestName; // Local destination name
 	QString DisplayName; // Display name
+	QString RootPath;
 	ConverterType Converter;
 
 	bool MemoryLoaded; //Present; // Whether this is loaded in ram
@@ -209,12 +210,12 @@ public:
 	void bindCurrentDevice();
 
 	// Add the file to the content (this creates the undo/redo)
-	ContentInfo *add(const QString &filePath);
+	ContentInfo *add(const QString &filePath, QString rootPath = QString());
 	// Add the content (this creates the undo/redo)
 	void add(ContentInfo *contentInfo);
 
 	void addInternal(QStringList fileNameList);
-
+	
 	// Remove the content
 	void remove(ContentInfo *remove, bool whenCloseProject = false);
 	// Load or reload a flash map. Only one flash map will be included at a time
@@ -332,7 +333,9 @@ private:
 	int getFlashSize(ContentInfo *contentInfo); // Return -1 if not exist
 	
 	// int getFreeFlashAddress(int size); // Return -1 if no more space
-
+	
+	void addRelatedFiles(ContentInfo *contentInfo);
+	void removeRelatedFiles(ContentInfo *contentInfo);
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo);
 	void reprocessInternal(ContentInfo *contentInfo);
