@@ -1,3 +1,19 @@
+Version 4.8.0
+Alpha
+Feature updates:
+•   Supporting the Exporting feature for BT817's commands.
+•   Add cmd_nop in ESE.
+•   [Script (Python)] Add one example to play video using cmd_videoFrame.
+•   The status column of content manager should be consistent.
+•   List the right asset name in content manager when loading the flash image into ESE project.
+•   Add discription for setfont_charlotte example project.
+•   Add a new example project for textVGA.
+•   Enhance parameters for some Coprocessor commands.
+•   Enhance description for CMD_MEMWRITE.
+•   Prompt users if the file does not exist or cannot open.
+•   Add new example project -- Rotate Built-in Font.
+
+=======================
 Version 4.7.0
 RC2
 Feature updates:

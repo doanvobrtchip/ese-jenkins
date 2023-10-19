@@ -5,7 +5,8 @@
 #define DependenciesAppDir = (RootDir) + "\fteditor\dependencies"
 
 #define MyAppName "EVE Screen Editor"
-#define MyAppVersion "v4.7.0"
+
+#define MyAppVersion "v4.8.0_Alpha"
 #define MyAppPublisher "BridgeTek Pte Ltd"
 #define MyAppURL "http://brtchip.com/utilities/#evescreeneditor"
 #define MyAppExeName "fteditor.exe"
