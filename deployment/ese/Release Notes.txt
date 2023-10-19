@@ -1,5 +1,5 @@
 Version 4.8.0
-Alpha
+Beta
 Feature updates:
 •   Supporting the Exporting feature for BT817's commands.
 •   Add cmd_nop in ESE.
@@ -12,6 +12,9 @@ Feature updates:
 •   Enhance description for CMD_MEMWRITE.
 •   Prompt users if the file does not exist or cannot open.
 •   Add new example project -- Rotate Built-in Font.
+•   Show the search result in one seperate tab.
+•   The content manager changes the name of the input item.
+•   Generating the incorrect commands when drag & drop the animation asset from content manager to viewport.
 
 =======================
 Version 4.7.0
