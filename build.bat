@@ -23,9 +23,10 @@ SET signToolPath="%PROGRAMFILES(X86)%\Windows Kits\10\App Certification Kit\sign
 %signToolPath% sign /f %CER_DIR% /p Brtsw2023 /t http://timestamp.digicert.com "%cd%\build\bin\Release\mx25lemu.dll"
 %signToolPath% sign /f %CER_DIR% /p Brtsw2023 /t http://timestamp.digicert.com "%cd%\build\bin\Release\bt8xxemu.dll"
 %signToolPath% sign /f %CER_DIR% /p Brtsw2023 /t http://timestamp.digicert.com "%cd%\build\bin\Release\eve_hal.dll"
-\build\bin\Release
+
 ::Package
 iscc deployment/ese/setup_v2.iss
+
 ::Create installer and zip 
 FOR %%I IN (%cd%\deployment\ese\Output\*.exe) DO (
     ::Sign certificate
