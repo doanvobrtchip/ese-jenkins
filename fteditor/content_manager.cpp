@@ -963,7 +963,7 @@ public:
 		printf("Remove::redo()\n");
 
 		// Remove from the content manager
-		m_ContentManager->removeInternal(m_ContentInfo);
+		m_ContentManager->removeInternal(m_ContentInfo, m_WhenCloseProject);
 
 		m_Owner = true;
 		/*
@@ -1168,11 +1168,12 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	m_HelpfulLabel->setVisible(false);
 }
 
-void ContentManager::removeInternal(ContentInfo *contentInfo)
+void ContentManager::removeInternal(ContentInfo *contentInfo, bool whenCloseProject)
 {
 	printf("ContentManager::removeInternal(contentInfo)\n");
 	
-	removeRelatedFiles(contentInfo);
+	if (!whenCloseProject)
+		removeRelatedFiles(contentInfo);
 	// Remove from the content list
 	delete contentInfo->View;
 	contentInfo->View = NULL;
@@ -1341,7 +1342,9 @@ void ContentManager::addInternal(QStringList fileNameList)
 		}
 	}
 	fileNameList.append(addedFiles);
-
+	//Helpful in case of ensuring that xfont is added after glyph
+	fileNameList.sort();
+	
 	QString newName;
 	int i = 0;
 	foreach (QString fileName, fileNameList)
@@ -1354,7 +1357,7 @@ void ContentManager::addInternal(QStringList fileNameList)
 		while (QFileInfo::exists(newName))
 		{
 			++i;
-			newName = QString("%1/%2_%3.%4").arg(dir.absolutePath()).arg(fi.completeBaseName()).arg(i).arg(suffix);
+			newName = QString("%1/%2_%3.%4").arg(dir.absolutePath(), fi.completeBaseName(), QString::number(i), suffix);
 		}
 
 		QFile::copy(fileName, newName);
@@ -1462,129 +1465,77 @@ void ContentManager::removeRelatedFiles(ContentInfo *contentInfo)
 
 void ContentManager::addRelatedFiles(ContentInfo *contentInfo)
 {
-	if (contentInfo->RootPath.isEmpty() || QFile::exists(contentInfo->SourcePath)) return;
+	if (contentInfo->RootPath.isEmpty() || QFile::exists(contentInfo->SourcePath))
+		return;
 	// create resource folder to save content files
 	QDir dir(QDir::currentPath() + '/' + ResourceDir);
 	if (!dir.exists())
 	{
 		dir.mkpath(".");
 	}
-	
+
 	// Add related files
 	QString fileName = contentInfo->RootPath;
-	QStringList addedFiles;
-	addedFiles.append(fileName);
-	QString suffix = QFileInfo(fileName).suffix();
+	QFileInfo fi(fileName);
+	QString suffix = fi.suffix();
+	QString newName = contentInfo->SourcePath;
+	QFile::copy(fileName, newName);
+
+	if (ContentInfo::MapInfoFileType.contains(suffix))
+	{
+		QStringList infoFileTypes = ContentInfo::MapInfoFileType.value(suffix, {});
+		bool existedFile = false;
+		for (const auto &infoFileType : infoFileTypes)
+		{
+			if (existedFile) break;
+			QString originalInfoFile = fileName.left(fileName.lastIndexOf('.') + 1)
+			                               .append(infoFileType);
+			// PALETTED format
+			if (fi.completeBaseName().contains("_index"))
+			{
+				originalInfoFile.remove(
+				    fileName.lastIndexOf("_index"), 6);
+			}
+
+			if (QFileInfo::exists(originalInfoFile))
+			{
+				existedFile = true;
+				QString savedInfoFile = newName.left(newName.lastIndexOf('.') + 1)
+				                            .append(infoFileType);
+				if (fi.completeBaseName().contains("_index"))
+					savedInfoFile.remove(
+					    newName.lastIndexOf("_index"), 6);
+				if (QFile::exists(savedInfoFile))
+					QFile::remove(savedInfoFile);
+				QFile::copy(originalInfoFile, savedInfoFile);
+			}
+		}
+	}
+
+	// Save converted chars file to show example text
 	if (suffix == "xfont")
 	{
-		auto relatedFile = fileName.left(fileName.lastIndexOf('.') + 1).append("glyph");
-		if (QFileInfo::exists(relatedFile))
+		QString originalCharsFile = fileName.left(fileName.lastIndexOf('.'))
+		                                .append("_converted_chars.txt");
+		if (QFileInfo::exists(originalCharsFile))
 		{
-			addedFiles.append(relatedFile);
+			QString savedCharsFile = newName.left(newName.lastIndexOf('.'))
+			                             .append("_converted_chars.txt");
+			if (QFile::exists(savedCharsFile)) QFile::remove(savedCharsFile);
+			QFile::copy(originalCharsFile, savedCharsFile);
 		}
 	}
-	else if (suffix == "glyph")
+
+	if (suffix == "raw")
 	{
-		auto relatedFile = fileName.left(fileName.lastIndexOf('.') + 1).append("xfont");
-		if (QFileInfo::exists(relatedFile))
+		QString originalCharsFile = fileName.left(fileName.lastIndexOf('.'))
+		                                .append("_converted_char_index.txt");
+		if (QFileInfo::exists(originalCharsFile))
 		{
-			addedFiles.append(relatedFile);
-		}
-	}
-	else if (suffix == "raw")
-	{
-		auto completeBaseName = QFileInfo(fileName).completeBaseName();
-		if (completeBaseName.contains("index"))
-		{
-			auto basicName = completeBaseName.left(completeBaseName.lastIndexOf("index"));
-			auto searchedName = basicName + "lut.raw";
-			auto fileDir = QDir(QFileInfo(fileName).absolutePath());
-			if (fileDir.exists(searchedName))
-			{
-				addedFiles.append(fileDir.filePath(searchedName));
-			}
-			else if (fileDir.cd(basicName + "LUT"))
-			{
-				if (fileDir.exists(searchedName))
-				{
-					addedFiles.append(fileDir.filePath(searchedName));
-				}
-			}
-		}
-		else if (completeBaseName.contains("lut"))
-		{
-			auto searchedName = completeBaseName.left(completeBaseName.lastIndexOf("lut")) + "index.raw";
-			auto fileDir = QDir(QFileInfo(fileName).absolutePath());
-			if (fileDir.exists(searchedName))
-			{
-				addedFiles.append(fileDir.filePath(searchedName));
-			}
-			else if (fileDir.cdUp())
-			{
-				if (fileDir.exists(searchedName))
-				{
-					addedFiles.append(fileDir.filePath(searchedName));
-				}
-			}
-		}
-	}
-	
-	for (QString fileName : addedFiles)
-	{
-		QFileInfo fi(fileName);
-		QString newName = dir.absolutePath() + '/' + fi.fileName();
-		QString suffix = fi.suffix();
-		QFile::copy(fileName, newName);
-	
-		if (ContentInfo::MapInfoFileType.contains(suffix))
-		{
-			QStringList infoFileTypes  = ContentInfo::MapInfoFileType.value(suffix, {});
-			bool existedFile = false;
-			for (const auto &infoFileType : infoFileTypes) {
-				if (existedFile) break;
-				QString originalInfoFile = fileName.left(fileName.lastIndexOf('.') + 1).append(infoFileType);
-				// PALETTED format
-				if (fi.completeBaseName().contains("_index"))
-				{
-					originalInfoFile.remove(fileName.lastIndexOf("_index"), 6);
-				}
-	
-				if (QFileInfo::exists(originalInfoFile))
-				{
-					existedFile = true;
-					QString savedInfoFile = newName.left(newName.lastIndexOf('.') + 1).append(infoFileType);
-					if (fi.completeBaseName().contains("_index"))
-						savedInfoFile.remove(newName.lastIndexOf("_index"), 6);
-					if (QFile::exists(savedInfoFile))
-						QFile::remove(savedInfoFile);
-					QFile::copy(originalInfoFile, savedInfoFile);	
-				}
-			}
-		}
-	
-		 // Save converted chars file to show example text
-		if (suffix == "xfont")
-		{
-			QString originalCharsFile = fileName.left(fileName.lastIndexOf('.')).append("_converted_chars.txt");
-			if (QFileInfo::exists(originalCharsFile))
-			{
-				QString savedCharsFile = newName.left(newName.lastIndexOf('.')).append("_converted_chars.txt");
-				if (QFile::exists(savedCharsFile))
-					QFile::remove(savedCharsFile);
-				QFile::copy(originalCharsFile, savedCharsFile);
-			}
-		}
-	
-		if (suffix == "raw")
-		{
-			QString originalCharsFile = fileName.left(fileName.lastIndexOf('.')).append("_converted_char_index.txt");
-			if (QFileInfo::exists(originalCharsFile))
-			{
-				QString savedCharsFile = newName.left(newName.lastIndexOf('.')).append("_converted_char_index.txt");
-				if (QFile::exists(savedCharsFile))
-					QFile::remove(savedCharsFile);
-				QFile::copy(originalCharsFile, savedCharsFile);
-			}
+			QString savedCharsFile = newName.left(newName.lastIndexOf('.'))
+			                             .append("_converted_char_index.txt");
+			if (QFile::exists(savedCharsFile)) QFile::remove(savedCharsFile);
+			QFile::copy(originalCharsFile, savedCharsFile);
 		}
 	}
 }
