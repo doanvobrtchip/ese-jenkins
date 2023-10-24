@@ -337,7 +337,7 @@ private:
 	void addRelatedFiles(ContentInfo *contentInfo);
 	void removeRelatedFiles(ContentInfo *contentInfo);
 	void addInternal(ContentInfo *contentInfo);
-	void removeInternal(ContentInfo *contentInfo);
+	void removeInternal(ContentInfo *contentInfo, bool whenCloseProject = false);
 	void reprocessInternal(ContentInfo *contentInfo);
 	void reuploadInternal(ContentInfo *contentInfo, bool memory, bool flash);
 	void recalculateOverlapMemoryInternal();

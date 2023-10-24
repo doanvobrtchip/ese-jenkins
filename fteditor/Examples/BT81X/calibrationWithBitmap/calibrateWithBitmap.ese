@@ -1,0 +1,42 @@
+{
+    "content": [
+        {
+            "converter": "Image",
+            "dataCompressed": true,
+            "dataStorage": "Embedded",
+            "destName": "images/hand-44x44",
+            "displayName": "hand-44x44.png",
+            "imageFormat": 7,
+            "memoryAddress": 0,
+            "memoryLoaded": true,
+            "sourcePath": "resources/hand-44x44.png"
+        }
+    ],
+    "coprocessor": [
+        "CLEAR(1, 1, 1)",
+        "",
+        "VERTEX_FORMAT(2)",
+        "BITMAP_HANDLE(0)",
+        "CMD_SETBITMAP(0, RGB565, 44, 44)",
+        "BEGIN(BITMAPS)",
+        "MACRO(0)",
+        "END()",
+        "CMD_CALIBRATE(0)"
+    ],
+    "displayList": [
+        ""
+    ],
+    "project": {
+        "device": 2071
+    },
+    "registers": {
+        "hSize": 800,
+        "hsf": 0,
+        "macro": [
+            "NOP()",
+            "NOP()"
+        ],
+        "rotate": 0,
+        "vSize": 480
+    }
+}

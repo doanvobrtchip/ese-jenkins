@@ -110,7 +110,7 @@ void ExampleDialog::setupTabs() {
 
 void ExampleDialog::onSearch(const QString &text) {
   QStringList result;
-  for (int i = 0; i < m_tabWidget->count(); ++i) {
+  for (int i = 0; i < m_tabWidget->count() - 1; ++i) {
     result.append(
         static_cast<ThumbnailView *>(m_tabWidget->widget(i))->search(text));
   }
