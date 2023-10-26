@@ -7,7 +7,7 @@
 #define VALUEDEFINE_H
 
 #define PROJECT_EXTENSION "ese"
-
+#define TEMP_TEXT ".tmp"
 // Define json
 // Project key
 #define PRJ_KEY "project"

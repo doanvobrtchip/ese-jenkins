@@ -28,6 +28,7 @@
 #include <QString>
 #include <QByteArray>
 #include <QSettings>
+#include <QMessageBox>
 
 // Emulator includes
 
@@ -176,6 +177,8 @@ public:
 	DeviceManager *deviceManager() const;
 	Registers *registers() const;
 	
+	const QByteArray &SavedData() const;
+	
 private slots:
 	// void applyEmulatorConfig();
 
@@ -249,8 +252,8 @@ private:
 	void incbLanguageCode();
 
 	void updateProjectDisplay(int hsize, int vsize);
-
-	bool maybeSave();
+	
+	QMessageBox::StandardButton maybeSave();
 
 	void saveCoproCmdToTextFile(QString fileName, bool isBigEndian);
 	void saveDisplayListToTextFile(QString fileName, bool isBigEndian);
