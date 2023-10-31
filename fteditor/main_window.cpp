@@ -4,7 +4,6 @@ Copyright (C) 2016-2023  Bridgetek Pte Lte
 Author: Jan Boon <jan.boon@kaetemi.be>
 */
 
-#include "define/RegDefine.h"
 #pragma warning(disable : 26812)
 #pragma warning(disable : 26495)
 #pragma warning(disable : 26444)
@@ -402,6 +401,11 @@ MainWindow::MainWindow(const QMap<QString, QSize> &customSizeHints, QWidget *par
 	});
 	
 	emit currentFileNameChanged();
+}
+
+const QByteArray &MainWindow::SavedData() const
+{
+	return m_SavedData;
 }
 
 Registers *MainWindow::registers() const
@@ -2287,34 +2291,25 @@ void MainWindow::undoCleanChanged(bool clean)
 	updateWindowTitle();
 }
 
-bool MainWindow::maybeSave()
+QMessageBox::StandardButton MainWindow::maybeSave()
 {
-	bool res = true;
-	
+	auto ret = QMessageBox::Discard;
 	if (m_SaveAct->isEnabled() && !m_UndoStack->isClean())
 	{
-		QMessageBox::StandardButton ret;
 		ret = QMessageBox::warning(this, tr("EVE Screen Editor"),
 		    tr("The project has been modified.\n"
 		       "Do you want to save your changes?"),
 		    QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
 		if (ret == QMessageBox::Save)
-		{
 			actSave();
-		}
-		else if (ret == QMessageBox::Cancel)
-		{
-			res = false;
-		}
 	}
 
-	if (res && m_AddRecentProjectFlag)
+	if (ret != QMessageBox::Cancel && m_AddRecentProjectFlag)
 	{
 		m_AddRecentProjectFlag = false;
 		addRecentProject(m_CurrentFileName);
 	}
-
-	return res;
+	return ret;
 }
 
 void MainWindow::loadRecentProject()
@@ -2528,19 +2523,23 @@ void MainWindow::toggleUI(bool hasProject)
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
-	if (maybeSave())
+	auto confirmResult = maybeSave();
+	if (confirmResult == QMessageBox::Save)
 		event->accept();
-	else
-		event->ignore();
-
+	else if (confirmResult == QMessageBox::Discard)
+	{
+		clearEditor();
+		event->accept();
+	}
+	else event->ignore();
 	saveRecentProject();
 }
 
 void MainWindow::actCloseProject()
 {
 #define FTEDITOR_INITIAL_HELP tr("Start typing in the <b>Coprocessor</b> editor, or drag and drop items from the <b>Toolbox</b> onto the display viewport.")
-
-	if (!maybeSave())
+	
+	if (maybeSave() == QMessageBox::Cancel)
 		return;
 
 	// reset editors to their default state
@@ -2582,7 +2581,7 @@ void MainWindow::actNew()
 
 bool MainWindow::actNew(bool addClear)
 {
-	if (!maybeSave())
+	if (maybeSave() == QMessageBox::Cancel)
 		return false;
 
 	printf("** New **\n");
@@ -2726,7 +2725,7 @@ QString MainWindow::getFileDialogPath()
 
 bool MainWindow::actOpen(QString projectPath)
 {
-	if (!maybeSave())
+	if (maybeSave() == QMessageBox::Cancel)
 		return false;
 	
 	if (projectPath.isEmpty())
@@ -2756,7 +2755,10 @@ void MainWindow::openFile(const QString &fileName)
 		delete m_TemporaryDir;
 		m_TemporaryDir = NULL;
 	}
-
+	
+	// Reset editors to their default state
+	clearEditor();
+	
 	// Set current project path
 	QDir dir(fileName);
 	dir.cdUp();
@@ -2764,10 +2766,6 @@ void MainWindow::openFile(const QString &fileName)
 	QDir::setCurrent(dstPath);
 	m_LastProjectDir = QDir::currentPath();
 	writeLastProjectDir(m_LastProjectDir);
-
-	// Reset editors to their default state
-	clearEditor();
-
 
 	// Load the data
 	bool loadOk = false;
@@ -3157,7 +3155,7 @@ bool MainWindow::actSaveAs()
 
 void MainWindow::actImport()
 {
-	if (!maybeSave())
+	if (maybeSave() == QMessageBox::Cancel)
 		return;
 
 	toggleUI(true);
@@ -3693,7 +3691,7 @@ void MainWindow::openProject(QString projectPath)
 		return;
 	}
 	
-	if (!maybeSave())
+	if (maybeSave() == QMessageBox::Cancel)
 		return;
 	
 	openFile(projectPath);

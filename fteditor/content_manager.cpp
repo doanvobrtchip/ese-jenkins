@@ -80,7 +80,6 @@ ContentInfo::ContentInfo(const QString &filePath, QString rootPath)
 	SourcePath = filePath;
 	DestName = QFileInfo(filePath).completeBaseName();
 	DisplayName = QFileInfo(filePath).fileName();
-	RootPath = rootPath;
 	View = NULL;
 	Converter = ContentInfo::Invalid;
 	MemoryLoaded = false;
@@ -722,40 +721,15 @@ public:
 	virtual void undo()
 	{
 		printf("Add::undo()\n");
-
 		// Remove from the content manager
 		m_ContentManager->removeInternal(m_ContentInfo);
-
-		// Check if there is another content used the same source path
-		QTreeWidgetItem * item = 0;
-		ContentInfo * info = 0;
-		bool keepThisResource = false;
-		for (int i = 0; i < m_ContentManager->contentList()->topLevelItemCount(); ++i)
-		{
-			item = m_ContentManager->contentList()->topLevelItem(i);
-			info = (ContentInfo *)(void *)item->data(0, Qt::UserRole).value<quintptr>();
-			if (m_ContentInfo != info && m_ContentInfo->SourcePath == info->SourcePath)
-			{
-				keepThisResource = true;
-			}
-		}
-
-		if (!keepThisResource)
-		{
-			QFile::rename(m_ContentInfo->SourcePath, m_ContentInfo->SourcePath + ".rem");
-		}
-
 		m_Owner = true;
 	}
 
 	virtual void redo()
 	{
 		printf("Add::redo()\n");
-
 		m_Owner = false;
-
-		QFile::rename(m_ContentInfo->SourcePath + ".rem", m_ContentInfo->SourcePath);
-
 		// Add to the content manager
 		m_ContentManager->addInternal(m_ContentInfo);
 	}
@@ -948,12 +922,7 @@ public:
 	virtual void undo()
 	{
 		printf("Remove::undo()\n");
-
 		m_Owner = false;
-
-		// Unmark source file
-		QFile::rename(m_ContentInfo->SourcePath + ".rem", m_ContentInfo->SourcePath);
-
 		// Add to the content manager
 		m_ContentManager->addInternal(m_ContentInfo);
 	}
@@ -961,33 +930,9 @@ public:
 	virtual void redo()
 	{
 		printf("Remove::redo()\n");
-
 		// Remove from the content manager
 		m_ContentManager->removeInternal(m_ContentInfo, m_WhenCloseProject);
-
 		m_Owner = true;
-		/*
-		if (!m_WhenCloseProject)
-		{
-			// Check if there is another content used the same source path
-			QTreeWidgetItem * item = 0;
-			ContentInfo * info = 0;
-			bool keepThisResource = false;
-			for (int i = 0; i < m_ContentManager->contentList()->topLevelItemCount(); ++i)
-			{
-				item = m_ContentManager->contentList()->topLevelItem(i);
-				info = (ContentInfo *)(void *)item->data(0, Qt::UserRole).value<quintptr>();
-				if (m_ContentInfo != info && m_ContentInfo->SourcePath == info->SourcePath)
-				{
-					keepThisResource = true;
-				}
-			}
-
-			if (!keepThisResource)
-			{
-				QFile::rename(m_ContentInfo->SourcePath, m_ContentInfo->SourcePath + ".rem");
-			}
-		}*/
 	}
 
 private:
@@ -1149,7 +1094,7 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 	}
 
 	// Ensure no duplicate names are used
-	contentInfo->DisplayName = createName(contentInfo->DisplayName);
+	contentInfo->DestName = createName(contentInfo->DestName);
 
 	// Add to the content list
 	QTreeWidgetItem *view = new QTreeWidgetItem(m_ContentList);
@@ -1171,9 +1116,7 @@ void ContentManager::addInternal(ContentInfo *contentInfo)
 void ContentManager::removeInternal(ContentInfo *contentInfo, bool whenCloseProject)
 {
 	printf("ContentManager::removeInternal(contentInfo)\n");
-	
-	if (!whenCloseProject)
-		removeRelatedFiles(contentInfo);
+	storeBackupFiles(contentInfo, whenCloseProject);
 	// Remove from the content list
 	delete contentInfo->View;
 	contentInfo->View = NULL;
@@ -1222,7 +1165,7 @@ bool ContentManager::nameExists(const QString &name)
 	for (QTreeWidgetItemIterator it(m_ContentList); *it; ++it)
 	{
 		ContentInfo *info = (ContentInfo *)(void *)(*it)->data(0, Qt::UserRole).value<quintptr>();
-		if (info->DisplayName == name)
+		if (info->DestName == name)
 		{
 			return true;
 		}
@@ -1232,22 +1175,47 @@ bool ContentManager::nameExists(const QString &name)
 
 QString ContentManager::createName(const QString &name)
 {
-	QString newName = name.simplified();
-	if (newName.isEmpty())
-		newName = "untitled";
-	// Renumber in case of duplicate
-	QString temp;
-	QString currentName = newName;
-	int i = 0;
-	while (nameExists(newName))
+	// Strip invalid characters
+	QString destName;
+	bool lastIsSlash = true;
+	for (QString::const_iterator it(name.begin()), end(name.end()); it != end;
+	     ++it)
 	{
-		++i;
-		temp = currentName;
-		// Replace in font of suffix
-		int pos = name.lastIndexOf('.') != -1 ? name.lastIndexOf('.') : name.length();
-		newName = temp.insert(pos, QString("_%1").arg(i));
+		QChar c = *it;
+		if (c == '.' || c == ' ')
+		{
+			if (!lastIsSlash)
+			{
+				destName += c;
+			}
+		}
+		else if (c.isLetterOrNumber() || c == '_' || c == '-' || c == '(' || c == ')' || c == '[' || c == ']' || c == '+')
+		{
+			destName += c;
+			lastIsSlash = false;
+		}
+		else if (c == '\\' || c == '/')
+		{
+			if (!lastIsSlash)
+			{
+				destName += '/';
+				lastIsSlash = true;
+			}
+		}
 	}
-	return newName;
+	destName = destName.simplified();
+	// Cannot have empty name
+	if (destName.isEmpty()) destName = "untitled";
+	// Renumber in case of duplicate
+	QString resultDestName = destName;
+	int renumber = 1;
+	while (nameExists(resultDestName))
+	{
+		resultDestName = destName + "_" + QString::number(renumber);
+		++renumber;
+	}
+	// printf("%s\n", resultDestName.toLocal8Bit().data());
+	return resultDestName;
 }
 
 void ContentManager::add()
@@ -1342,8 +1310,6 @@ void ContentManager::addInternal(QStringList fileNameList)
 		}
 	}
 	fileNameList.append(addedFiles);
-	//Helpful in case of ensuring that xfont is added after glyph
-	fileNameList.sort();
 	
 	QString newName;
 	int i = 0;
@@ -1443,101 +1409,47 @@ void ContentManager::addInternal(QStringList fileNameList)
 	}
 }
 
-void ContentManager::removeRelatedFiles(ContentInfo *contentInfo)
+void ContentManager::storeBackupFiles(ContentInfo *contentInfo, bool whenCloseProject)
 {
-    QFileInfo f(contentInfo->SourcePath);
-    auto fileName = f.completeBaseName();
-    QDir rsrcDir(ResourceDir);
-    for (auto &i : rsrcDir.entryInfoList()) {
-        if (i.completeBaseName() == fileName) {
-            QFile::remove(i.filePath());
-        }
-    }
-    QString destFolder =
-        contentInfo->DestName.left(contentInfo->DestName.lastIndexOf("/"));
-    QDir destDir(destFolder);
-    for (auto &i : destDir.entryInfoList()) {
-        if (i.completeBaseName() == fileName) {
-            QFile::remove(i.filePath());
-        }
-    }
+	if (whenCloseProject)
+	{
+		QJsonParseError parsedError;
+		auto doc = QJsonDocument::fromJson(m_MainWindow->SavedData(), &parsedError);
+		if (parsedError.error != QJsonParseError::NoError)
+			return;
+		if (auto root = doc.object(); root.contains(CONTENT_KEY))
+		{
+			auto contentArr = root[CONTENT_KEY].toArray();
+			for (auto contentObj : contentArr)
+			{
+				if (auto j = contentObj.toObject();
+				    j[CONTENT_SOURCE_PATH_KEY].toString() == contentInfo->SourcePath)
+					return;
+			}
+		}
+	}
+
+	QFile::remove(contentInfo->SourcePath + TEMP_TEXT);
+	if (!QFile::rename(contentInfo->SourcePath, contentInfo->SourcePath + TEMP_TEXT))
+		return;
+	int seperateIndex = contentInfo->DestName.lastIndexOf("/");
+	QDir destDir(contentInfo->DestName.left(seperateIndex + 1));
+	auto destName = contentInfo->DestName.right(contentInfo->DestName.size() - seperateIndex - 1);
+	for (auto &i : destDir.entryInfoList())
+	{
+		if (i.completeBaseName() == destName)
+			QFile::remove(i.filePath());
+	}
 }
 
 void ContentManager::addRelatedFiles(ContentInfo *contentInfo)
 {
-	if (contentInfo->RootPath.isEmpty() || QFile::exists(contentInfo->SourcePath))
+	if (QFile::exists(contentInfo->SourcePath))
 		return;
-	// create resource folder to save content files
 	QDir dir(QDir::currentPath() + '/' + ResourceDir);
 	if (!dir.exists())
-	{
-		dir.mkpath(".");
-	}
-
-	// Add related files
-	QString fileName = contentInfo->RootPath;
-	QFileInfo fi(fileName);
-	QString suffix = fi.suffix();
-	QString newName = contentInfo->SourcePath;
-	QFile::copy(fileName, newName);
-
-	if (ContentInfo::MapInfoFileType.contains(suffix))
-	{
-		QStringList infoFileTypes = ContentInfo::MapInfoFileType.value(suffix, {});
-		bool existedFile = false;
-		for (const auto &infoFileType : infoFileTypes)
-		{
-			if (existedFile) break;
-			QString originalInfoFile = fileName.left(fileName.lastIndexOf('.') + 1)
-			                               .append(infoFileType);
-			// PALETTED format
-			if (fi.completeBaseName().contains("_index"))
-			{
-				originalInfoFile.remove(
-				    fileName.lastIndexOf("_index"), 6);
-			}
-
-			if (QFileInfo::exists(originalInfoFile))
-			{
-				existedFile = true;
-				QString savedInfoFile = newName.left(newName.lastIndexOf('.') + 1)
-				                            .append(infoFileType);
-				if (fi.completeBaseName().contains("_index"))
-					savedInfoFile.remove(
-					    newName.lastIndexOf("_index"), 6);
-				if (QFile::exists(savedInfoFile))
-					QFile::remove(savedInfoFile);
-				QFile::copy(originalInfoFile, savedInfoFile);
-			}
-		}
-	}
-
-	// Save converted chars file to show example text
-	if (suffix == "xfont")
-	{
-		QString originalCharsFile = fileName.left(fileName.lastIndexOf('.'))
-		                                .append("_converted_chars.txt");
-		if (QFileInfo::exists(originalCharsFile))
-		{
-			QString savedCharsFile = newName.left(newName.lastIndexOf('.'))
-			                             .append("_converted_chars.txt");
-			if (QFile::exists(savedCharsFile)) QFile::remove(savedCharsFile);
-			QFile::copy(originalCharsFile, savedCharsFile);
-		}
-	}
-
-	if (suffix == "raw")
-	{
-		QString originalCharsFile = fileName.left(fileName.lastIndexOf('.'))
-		                                .append("_converted_char_index.txt");
-		if (QFileInfo::exists(originalCharsFile))
-		{
-			QString savedCharsFile = newName.left(newName.lastIndexOf('.'))
-			                             .append("_converted_char_index.txt");
-			if (QFile::exists(savedCharsFile)) QFile::remove(savedCharsFile);
-			QFile::copy(originalCharsFile, savedCharsFile);
-		}
-	}
+		return;
+	QFile::rename(contentInfo->SourcePath + TEMP_TEXT, contentInfo->SourcePath);
 }
 
 void ContentManager::remove()
@@ -1862,6 +1774,36 @@ void ContentManager::clear(bool whenCloseProject)
 	m_MainWindow->undoStack()->endMacro();
 
 	// Clean resource files
+	if (whenCloseProject)
+	{
+		QJsonParseError parsedError;
+		auto doc = QJsonDocument::fromJson(m_MainWindow->SavedData(), &parsedError);
+		if (parsedError.error != QJsonParseError::NoError)
+			return;
+		QDir rsrcDir(ResourceDir);
+		if (auto root = doc.object(); root.contains(CONTENT_KEY))
+		{
+			auto contentArr = root[CONTENT_KEY].toArray();
+			for (auto contentObj : contentArr)
+			{
+				auto j = contentObj.toObject();
+				auto srcPath = j[CONTENT_SOURCE_PATH_KEY].toString();
+				for (auto &i : rsrcDir.entryInfoList())
+				{
+					if (i.filePath() == srcPath)
+						continue;
+				}
+				QFile::rename(srcPath + TEMP_TEXT, srcPath);
+			}
+		}
+		
+		for (auto &i : rsrcDir.entryInfoList())
+		{
+			if (i.fileName().endsWith(TEMP_TEXT))
+				QFile::remove(i.filePath());
+		}
+	}
+
 	/*
 	QString projectContent = m_MainWindow->getProjectContent();
 	if (whenCloseProject)
@@ -4044,7 +3986,7 @@ void ContentManager::changeDisplayName(ContentInfo *contentInfo, const QString &
 	// Create undo/redo
 	if (contentInfo->DisplayName != value)
 	{
-		ChangeDisplayName *changeDisplayName = new ChangeDisplayName(this, contentInfo, createName(value));
+		ChangeDisplayName *changeDisplayName = new ChangeDisplayName(this, contentInfo, value);
 		m_MainWindow->undoStack()->push(changeDisplayName);
 	}
 }

@@ -138,7 +138,6 @@ struct ContentInfo
 	QString SourcePath; // Relative source path
 	QString DestName; // Local destination name
 	QString DisplayName; // Display name
-	QString RootPath;
 	ConverterType Converter;
 
 	bool MemoryLoaded; //Present; // Whether this is loaded in ram
@@ -335,7 +334,7 @@ private:
 	// int getFreeFlashAddress(int size); // Return -1 if no more space
 	
 	void addRelatedFiles(ContentInfo *contentInfo);
-	void removeRelatedFiles(ContentInfo *contentInfo);
+	void storeBackupFiles(ContentInfo *contentInfo, bool whenCloseProject);
 	void addInternal(ContentInfo *contentInfo);
 	void removeInternal(ContentInfo *contentInfo, bool whenCloseProject = false);
 	void reprocessInternal(ContentInfo *contentInfo);
