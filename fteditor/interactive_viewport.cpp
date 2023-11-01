@@ -112,6 +112,7 @@ InteractiveViewport::InteractiveViewport(MainWindow *parent)
     , m_DrawMultipleSelection(false)
     , m_SnapHistoryCur(0)
     , m_IsDrawAlgn(false)
+    , m_selectable(true)
 {
 	for (int i = 0; i < FTED_SNAP_HISTORY; ++i)
 	{
