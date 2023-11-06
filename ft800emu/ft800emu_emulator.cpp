@@ -120,7 +120,7 @@ int Emulator::audioThread()
 	while (m_MasterRunning)
 	{
 		//FTEMU_printf("sound thread\n");
-		if (m_Flags & BT8XXEMU_EmulatorEnableAudio)
+		if ((m_Flags & BT8XXEMU_EmulatorEnableAudio) && m_AudioRender)
 		{
 			m_AudioRender->process();
 		}
