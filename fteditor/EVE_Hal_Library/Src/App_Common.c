@@ -359,7 +359,7 @@ PROGMEM prog_uchar8_t logo[SIZE_LOGO] = {//bridgetek 6703 bytes
 
 void App_Show_Logo(Gpu_Hal_Context_t *phost)
 {
-#if defined(BT815_ENABLE) || defined(BT816_ENABLE)
+#if defined(BT81X_ENABLE) || defined(BT81XA_ENABLE)
 	Gpu_CoCmd_Logo(phost);
 #else
     uint32_t x, y, w, h;

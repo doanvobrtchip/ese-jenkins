@@ -83,7 +83,7 @@ def generateProjectFiles(destDir, projectName, filesToTestFolder, moduleName, sc
             
         elif moduleName == "ME817EV_LIBFT4222":
             replaceStringInFile(MSVCPlatformHeader, "//#define ME817EV_LIBFT4222", "#define ME817EV_LIBFT4222")
-            replaceStringInFile(EmulatorPlatformHeader, "//#define ME817EV_LIBFT4222", "#define VM816C50A_LIBFT4222")
+            replaceStringInFile(EmulatorPlatformHeader, "//#define ME817EV_LIBFT4222", "#define ME817EV_LIBFT4222")
             replaceStringInFile(Ft90xPlatformHeader, "//#define ME817EV_LIBFT4222", "#define ME817EV_LIBFT4222")
             replaceStringInFile(Ft93xPlatformHeader, "//#define ME817EV_LIBFT4222", "#define ME817EV_LIBFT4222")    
             if screenResolution == "1024x600":

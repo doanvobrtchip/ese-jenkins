@@ -1,11 +1,10 @@
 Version 4.8.0
-Beta
+RC1
 Feature updates:
 •   Supporting the Exporting feature for BT817's commands.
 •   Add cmd_nop in ESE.
 •   [Script (Python)] Add one example to play video using cmd_videoFrame.
 •   The status column of content manager should be consistent.
-•   List the right asset name in content manager when loading the flash image into ESE project.
 •   Add discription for setfont_charlotte example project.
 •   Add a new example project for textVGA.
 •   Enhance parameters for some Coprocessor commands.
@@ -13,8 +12,16 @@ Feature updates:
 •   Prompt users if the file does not exist or cannot open.
 •   Add new example project -- Rotate Built-in Font.
 •   Show the search result in one seperate tab.
-•   The content manager changes the name of the input item.
+•   Add the new example project to calibrate with new bitmap.
+
+Resolved issues:
 •   Generating the incorrect commands when drag & drop the animation asset from content manager to viewport.
+•   List the right asset name in content manager when loading the flash image into ESE project.
+•   The content manager changes the name of the input item.
+•   CMD_CALIBRATE is not shown while typing "cali" in the toolbox search bar.
+•   CMD_CALIBRATESUB does not work correctly.
+•   ESE crashes when opening calibrateWithBitmap project.
+•   Content windows | Issues with undo/redo action.
 
 =======================
 Version 4.7.0
@@ -106,171 +113,171 @@ Resolved issues:
 Version 4.4.0
 RC1
 Features updates:
-â€¢   Add the appropriate bitmap setup when dragging and dropping CMD_SKETCH into the emulator viewport
-â€¢   Improve zoom-in precision
-â€¢   Display the RGBA value along with the coordinate position of the cursor in the Emulator screen
-â€¢   Enable drag and drop to open an existing project in ESE
-â€¢   Update LibFT4222-64.dll to remove the dependency
-â€¢   Show a warning message when the memory size required by CMD_SNAPSHOT2 is too large
-â€¢   Give more explanation for the escape character usage in CMD_TEXT
-â€¢   Improve format string example
-â€¢   Auto detect and load the contents
-â€¢   Widget alignment guide line
-â€¢   Generate coprocessor commands once user drop an content item
+•   Add the appropriate bitmap setup when dragging and dropping CMD_SKETCH into the emulator viewport
+•   Improve zoom-in precision
+•   Display the RGBA value along with the coordinate position of the cursor in the Emulator screen
+•   Enable drag and drop to open an existing project in ESE
+•   Update LibFT4222-64.dll to remove the dependency
+•   Show a warning message when the memory size required by CMD_SNAPSHOT2 is too large
+•   Give more explanation for the escape character usage in CMD_TEXT
+•   Improve format string example
+•   Auto detect and load the contents
+•   Widget alignment guide line
+•   Generate coprocessor commands once user drop an content item
 
 Resolved issues:
-â€¢   Removed glitched bitmap line in BT817 and BT818
-â€¢   Fixed an issue that occurs when dragging and dropping an existing item in the Content manager
-â€¢   Failed to build the exported project using MSVC
-â€¢   Crash in a special PC with Qt6
+•   Removed glitched bitmap line in BT817 and BT818
+•   Fixed an issue that occurs when dragging and dropping an existing item in the Content manager
+•   Failed to build the exported project using MSVC
+•   Crash in a special PC with Qt6
 
 =======================
 Version 4.3.0
 RC1
-â€¢   Improve the device editing dialogue, add PCLK Frequency and hide inappropriate registers based on Eve chip
-â€¢   Report "unsupported JPEG" as coprocessor faults when a progressive JPEG image is loaded
-â€¢   Explain Raspberry Pi Pico support
-â€¢   Improve the default file path of project open dialogue
-â€¢   Update extension name of example ESE project from .ft8xxproj to .ese
-â€¢   Change the location of example assets
-â€¢   Add a new mediaFifo example to use cmd_inflate2
-â€¢   Improve format_string example project
-â€¢   Correct parameter of cmd_videoframe and change the video asset in video_playback example
+•   Improve the device editing dialogue, add PCLK Frequency and hide inappropriate registers based on Eve chip
+•   Report "unsupported JPEG" as coprocessor faults when a progressive JPEG image is loaded
+•   Explain Raspberry Pi Pico support
+•   Improve the default file path of project open dialogue
+•   Update extension name of example ESE project from .ft8xxproj to .ese
+•   Change the location of example assets
+•   Add a new mediaFifo example to use cmd_inflate2
+•   Improve format_string example project
+•   Correct parameter of cmd_videoframe and change the video asset in video_playback example
 
 =======================
 Version 4.2.0
 RC2
-â€¢   Install ASTC encoder based on the user's CPU done
-â€¢   Improve video playback example
+•   Install ASTC encoder based on the user's CPU done
+•   Improve video playback example
 
 RC1
-â€¢   Export Python script for Raspberry Pi Pico 
-â€¢   Add a new example to demonstrate the usage of BITMAP_TRANSFORM_A~F
-â€¢   Improve the device editing dialogue
-â€¢   Update the configuration for module ME817EV with 10-inch LCD
-â€¢   Fixed fail to inflate the data in content manager
+•   Export Python script for Raspberry Pi Pico 
+•   Add a new example to demonstrate the usage of BITMAP_TRANSFORM_A~F
+•   Improve the device editing dialogue
+•   Update the configuration for module ME817EV with 10-inch LCD
+•   Fixed fail to inflate the data in content manager
 
 =======================
 Version 4.1.0
 RC2
 Resolved issues
-â€¢   Fixed exporting project with BT815/BT816 and FT80X-GameDuino2
-â€¢   Fixed fail to load image in example project
+•   Fixed exporting project with BT815/BT816 and FT80X-GameDuino2
+•   Fixed fail to load image in example project
 
 RC1
 Feature updates
-â€¢   Add filter textbox in Toolbox window
-â€¢   Upgrade to astcenc 2.1 for fater ASTC encoding
-â€¢   Improve the placement of primitive commands
-â€¢   Support loading content from local file for cmd_inflate, cmd_inflate2
-â€¢   Add description for cmd_calllist/cmd_endlist/cmd_newlist
-â€¢   Implement cmd_memwrite and cmd_regread
-â€¢   Add new example to demonstrate the usage of command list
+•   Add filter textbox in Toolbox window
+•   Upgrade to astcenc 2.1 for fater ASTC encoding
+•   Improve the placement of primitive commands
+•   Support loading content from local file for cmd_inflate, cmd_inflate2
+•   Add description for cmd_calllist/cmd_endlist/cmd_newlist
+•   Implement cmd_memwrite and cmd_regread
+•   Add new example to demonstrate the usage of command list
 
 Resolved issues
-â€¢   Fixed the device sync fail after writing to flash chip
+•   Fixed the device sync fail after writing to flash chip
 
 =======================
 Version 4.0.0
 Feature updates
-â€¢   Support new EVE chip BT817/8
-â€¢   Add new registry values in device configuration window
-â€¢   Add BT817/8 specific commands to Toolbox
-â€¢   Add new gauge example
-â€¢   Add ME817EV board in Device Manager
-â€¢   Add new resolutions when BT817/8 is selected
-â€¢   Add cookbook examples for new chip BT817/8
-â€¢   Add new Python script for exporting BT817/8 project 
-â€¢   Provide more user friendly value options for REG_OUTBITS
-â€¢   Set shortcut Ctrl+R for Reset Emulator menu
-â€¢   Make improvements on the register window
-â€¢   Update the latest flash blob
-â€¢   Update Python to 3.8.0, FreeType to 2.10.2
-â€¢   Get output results for CMD_GETPROPS and CMD_GETPTR
-    
+•   Support new EVE chip BT817/8
+•   Add new registry values in device configuration window
+•   Add BT817/8 specific commands to Toolbox
+•   Add new gauge example
+•   Add ME817EV board in Device Manager
+•   Add new resolutions when BT817/8 is selected
+•   Add cookbook examples for new chip BT817/8
+•   Add new Python script for exporting BT817/8 project 
+•   Provide more user friendly value options for REG_OUTBITS
+•   Set shortcut Ctrl+R for Reset Emulator menu
+•   Make improvements on the register window
+•   Update the latest flash blob
+•   Update Python to 3.8.0, FreeType to 2.10.2
+•   Get output results for CMD_GETPROPS and CMD_GETPTR
+
 Resolved issues
-â€¢   Fixed ESE projects opening issue
-â€¢   Fixed Paletted PNG image is not loaded correctly with 'Image Coprocessor' format
+•   Fixed ESE projects opening issue
+•   Fixed Paletted PNG image is not loaded correctly with 'Image Coprocessor' format
 
 Known issues
-â€¢   Rendering ASTC bitmap with WRAPX=REPEAT has different behavior
-â€¢   Emulator touch behaviour for CMD_SETROTATE/REG_ROTATE does not work correctly
-â€¢   Drawing invalid animation frame will cause ESE hang
-â€¢   When using device sync up, flash contents need written before updating display list or corpocessor
-â€¢   Primitives cannot be dropped into viewport area beyond [(0,0), (511,511)], because of the limitation of VERTEX2II.
+•   Rendering ASTC bitmap with WRAPX=REPEAT has different behavior
+•   Emulator touch behaviour for CMD_SETROTATE/REG_ROTATE does not work correctly
+•   Drawing invalid animation frame will cause ESE hang
+•   When using device sync up, flash contents need written before updating display list or corpocessor
+•   Primitives cannot be dropped into viewport area beyond [(0,0), (511,511)], because of the limitation of VERTEX2II.
 
 =======================
 Version 3.4.0
 Features:
-â€¢   Add system clock configuration in the device manager
-â€¢   Integrate latest Eve Emulator to accelerate ASTC decoding
-â€¢   Caching functionality for ASTC module
-â€¢   Migrate ESE to 64 bit Windows release
+•   Add system clock configuration in the device manager
+•   Integrate latest Eve Emulator to accelerate ASTC decoding
+•   Caching functionality for ASTC module
+•   Migrate ESE to 64 bit Windows release
 
 Bug Fix:
-*   The assets under resource folder of ESE project are deleted after another project is opened
+•   The assets under resource folder of ESE project are deleted after another project is opened
 
 =======================
 Version 3.3.0
 Features: 
-â€¢   Constrain either horizontal or vertical positioning when dragging an object
-â€¢   Support Riverdi EVE 3 modules in device sync feature
-â€¢   Disable "Refresh, Device Manage, Device Display" buttons after device is connected
-â€¢   Add REG_OUTBITS to device configuration dialogue
-â€¢   Show the pixel value at status bar when mouse hover over the viewport window
-â€¢   Add Blend_Func example project
-â€¢   Add the circular progress bar widget example
-â€¢   Add two bitmap rotating example projects
-â€¢   Add ASTC memory layout example project
+•   Constrain either horizontal or vertical positioning when dragging an object
+•   Support Riverdi EVE 3 modules in device sync feature
+•   Disable "Refresh, Device Manage, Device Display" buttons after device is connected
+•   Add REG_OUTBITS to device configuration dialogue
+•   Show the pixel value at status bar when mouse hover over the viewport window
+•   Add Blend_Func example project
+•   Add the circular progress bar widget example
+•   Add two bitmap rotating example projects
+•   Add ASTC memory layout example project
 
 Bug Fix:
-*   Copying the text is failed in property window
-*   ESE crash and exit when copying some data into coprocessor editor window
-*   Cloning device produces the wrong name in device manager
-*   '\x0A' is not handled in Font Conversion with Legacy format option
+•   Copying the text is failed in property window
+•   ESE crash and exit when copying some data into coprocessor editor window
+•   Cloning device produces the wrong name in device manager
+•   '\x0A' is not handled in Font Conversion with Legacy format option
 
 Known issues:
-*   Playing the invalid animation frame data in flash may cause ESE hang
+•   Playing the invalid animation frame data in flash may cause ESE hang
 
 Limitation:
-*   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported 
+•   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported 
 
 =======================
 Version 3.2.0
 Features: 
-â€¢   Add a new example project to illustrate ASTC layout
-â€¢   Add a setfont example
-â€¢   Add setfont2 for extended format on bt81x
-â€¢   The add button in content browser shall open the last recent folder
-â€¢   Update the vc1dump export to 110 version
-â€¢   Enhance device sync feature to support more platforms
-â€¢   Update the "device sync upâ€œ feature with RAM_G and coprocessor content
-â€¢   Save display list in raw binary format done
-â€¢   Save the coproccessor commands in "Coprocessor" tab window done
-â€¢   Set bold font for radio button in case of build-in device
+•   Add a new example project to illustrate ASTC layout
+•   Add a setfont example
+•   Add setfont2 for extended format on bt81x
+•   The add button in content browser shall open the last recent folder
+•   Update the vc1dump export to 110 version
+•   Enhance device sync feature to support more platforms
+•   Update the "device sync upâ€œ feature with RAM_G and coprocessor content
+•   Save display list in raw binary format done
+•   Save the coproccessor commands in "Coprocessor" tab window done
+•   Set bold font for radio button in case of build-in device
 
 Bug Fix:
-*   Wrong implementation for the paletted8 format in emulator
-*   Reloading the screen shot file but get the wrong effect
-*   "OPT_FLAT" is missing from cmd_button properties window
-*   Exporting is wrong if character ")" exists in CMD_TEXT
+•   Wrong implementation for the paletted8 format in emulator
+•   Reloading the screen shot file but get the wrong effect
+•   "OPT_FLAT" is missing from cmd_button properties window
+•   Exporting is wrong if character ")" exists in CMD_TEXT
 
 Known issues:
-*   Playing the invalid animation frame data in flash may cause ESE hang
+•   Playing the invalid animation frame data in flash may cause ESE hang
 
 Limitation:
-*   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported
+•   Device sync up feature: CMD_PLAYVIDEO without OPT_MEDIAFIFO is not supported
 
 =======================
 Version 3.1.6
 Features: 
-â€¢   Add support of BT815, including ASTC, flash, Unicode and more features.   
-â€¢   Support FT4222 board in device manager
-â€¢   Change the user guide from .chm format to .pdf format
-â€¢   Support BT81X modules in export feature for MSVC platform:
+•   Add support of BT815, including ASTC, flash, Unicode and more features.   
+•   Support FT4222 board in device manager
+•   Change the user guide from .chm format to .pdf format
+•   Support BT81X modules in export feature for MSVC platform:
       - VM816C50A  
       - VM816CU50A
-â€¢   Support more FT81X modules in export feature for MSVC and FT90X platform: 
+•   Support more FT81X modules in export feature for MSVC and FT90X platform: 
       - ME810AU-WH70R    
       - ME811AU-WH70C
       - ME812AU-WH50R
@@ -281,28 +288,28 @@ Features:
       - ME812A-WH50R       
       - ME813A-WH50C       
 
-â€¢   Open the last location of loaded file in content manager
-â€¢   Force to save project in an empty folder
-â€¢   Add example "Bar graph usage"
-â€¢   Add example for CMD_TRACK
-â€¢   Add example Paletted8
-â€¢   Rebuild the project with Qt5.7.0 and MSVC 2017
-â€¢   Add the missing firmware folder in the installation package.
-â€¢   Add zooming function of emulator viewport
-â€¢   Upgrade C++ source and Python script to work with Python v3.6.5
-â€¢   Clone resource so that project can be moved to another location safely
-â€¢   Add more comprehensive bitmap rotate example
-â€¢   Add bar graph invert example
+•   Open the last location of loaded file in content manager
+•   Force to save project in an empty folder
+•   Add example "Bar graph usage"
+•   Add example for CMD_TRACK
+•   Add example Paletted8
+•   Rebuild the project with Qt5.7.0 and MSVC 2017
+•   Add the missing firmware folder in the installation package.
+•   Add zooming function of emulator viewport
+•   Upgrade C++ source and Python script to work with Python v3.6.5
+•   Clone resource so that project can be moved to another location safely
+•   Add more comprehensive bitmap rotate example
+•   Add bar graph invert example
 
 Bug Fix:
-*   Link library free-type into executable file
-*   Update REG_CMD_DL correctly
-*   Fix the crash issue when export menu is clicked for FT813 device.
-*   Fix the improper emulator library of export project 
-*   L1/L2/L4/L8 formats are not converted correctly
-*   Wrong bitmap_transform_A/B/D/E value when parameter p is 1
-*   Update the bitmap_source in ESE for negative address case
+•   Link library free-type into executable file
+•   Update REG_CMD_DL correctly
+•   Fix the crash issue when export menu is clicked for FT813 device.
+•   Fix the improper emulator library of export project 
+•   L1/L2/L4/L8 formats are not converted correctly
+•   Wrong bitmap_transform_A/B/D/E value when parameter p is 1
+•   Update the bitmap_source in ESE for negative address case
 
 Known issues: 
-*   The Coprocessor commands without Display list output are unable to synced to hardware in device manager
-*   Playing the invalid animation frame data in flash may cause ESE hang
+•   The Coprocessor commands without Display list output are unable to synced to hardware in device manager
+•   Playing the invalid animation frame data in flash may cause ESE hang

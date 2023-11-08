@@ -361,7 +361,7 @@ uint8_t Gpu_Hal_WaitCmdfifo_empty_status(Gpu_Hal_Context_t *host);
 void Gpu_Hal_WrCmdBuf_nowait(Gpu_Hal_Context_t *host,uint8_t *buffer,uint32_t count);
 uint16_t Gpu_Cmdfifo_Freespace(Gpu_Hal_Context_t *host);
 
-#ifdef FT_81X_ENABLE || BT_81X_ENABLE || BT_81XA_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 int16_t Gpu_Hal_SetSPI(Gpu_Hal_Context_t *host,GPU_SPI_NUMCHANNELS_T numchnls,GPU_SPI_NUMDUMMYBYTES numdummy);
 
 void Gpu_81X_SelectSysCLK(Gpu_Hal_Context_t *host, GPU_81X_PLL_FREQ_T freq);

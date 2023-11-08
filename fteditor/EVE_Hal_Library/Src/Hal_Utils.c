@@ -163,7 +163,7 @@ float_t da(float_t i, int16_t degree) /* 1 uint = 0.5 degree. 1 circle = 720 deg
 
 uint32_t GET_ASTC_FORMAT(uint16_t w, uint16_t h)
 {
-#if defined(BT815_ENABLE) || defined(BT816_ENABLE)
+#if defined(BT81X_ENABLE) || defined(BT81XA_ENABLE)
 	if ((w == 4) && (h == 4))  return COMPRESSED_RGBA_ASTC_4x4_KHR;
 	else if ((w == 5) && (h == 4))  return COMPRESSED_RGBA_ASTC_5x4_KHR;
 	else if ((w == 5) && (h == 5))  return COMPRESSED_RGBA_ASTC_5x5_KHR;

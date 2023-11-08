@@ -86,7 +86,7 @@ void polar(Gpu_Hal_Context_t *phost, int32_t r, float_t th, int32_t ox, int32_t 
 
 uint32_t GET_ASTC_FORMAT(uint16_t w, uint16_t h);
 void astc_tile2(uint8_t *iData, uint16_t bw, uint16_t bh, uint32_t size, uint8_t *oData);
-#ifdef FT_81X_ENABLE || BT_81X_ENABLE || BT_81XA_ENABLE
+#if defined(FT_81X_ENABLE) || defined(BT_81X_ENABLE) || defined(BT_81XA_ENABLE)
 void Set_GpuClock(Gpu_Hal_Context_t *phost);
 uint32_t Get_GpuClock(Gpu_Hal_Context_t *phost);
 #endif

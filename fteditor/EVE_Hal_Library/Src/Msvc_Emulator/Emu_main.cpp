@@ -141,9 +141,9 @@ BT8XXEMU_EmulatorMode GpuEmu_Mode(){
 		return BT8XXEMU_EmulatorFT812;
 #elif defined(FT813_ENABLE)
 		return BT8XXEMU_EmulatorFT813;
-#elif defined(BT815_ENABLE)
+#elif defined(BT81X_ENABLE)
 		return BT8XXEMU_EmulatorBT815;
-#elif defined(BT816_ENABLE)
+#elif defined(BT81XA_ENABLE)
 		return BT8XXEMU_EmulatorBT815;
 #endif
 		return BT8XXEMU_EmulatorFT800;
