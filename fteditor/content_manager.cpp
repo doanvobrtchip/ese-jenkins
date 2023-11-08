@@ -174,7 +174,12 @@ void ContentInfo::fromJson(QJsonObject &j, bool meta)
 	{
 		DestName = j[CONTENT_DEST_NAME_KEY].toString();
 		QString displayName = j[CONTENT_DISPLAY_NAME_KEY].toString();
-		DisplayName = displayName.isEmpty() ? QFileInfo(SourcePath).fileName() : displayName;
+		if (displayName.isEmpty()) // For old version
+		{
+			DisplayName = j.contains("mappedName") ? j["mappedName"].toString()
+			                                       : QFileInfo(SourcePath).fileName();
+		}
+		else DisplayName = displayName;
 		MemoryLoaded = ((QJsonValue)j[CONTENT_MEMORY_LOADED_KEY]).toVariant().toBool();
 		MemoryAddress = ((QJsonValue)j[CONTENT_MEMORY_ADDRESS_KEY]).toVariant().toInt();
 		if (j.contains(CONTENT_DATA_EMBEDDED_KEY))
