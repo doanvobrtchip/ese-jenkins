@@ -1863,7 +1863,7 @@ At API level 1, the allocation pointer is advanced by the following commands:&lt
     <message>
         <location filename="interactive_properties.cpp" line="2706"/>
         <source>DESCRIPTION_BITMAP_SIZE_H.</source>
-        <translation>&lt;b&gt;BITMAP_SIZE&lt;/b&gt;(&lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: high part of drawn bitmap width, in pixels. The initial value is zero.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: high part of drawn bitmap height, in pixels. The initial value is zero.&lt;br&gt;&lt;br&gt;Specify the screen drawing of bitmaps for the current handle. High bits for large bitmap.</translation>
+        <translation>&lt;b&gt;BITMAP_SIZE_H&lt;/b&gt;(&lt;i&gt;width&lt;/i&gt;, &lt;i&gt;height&lt;/i&gt;)&lt;br&gt;&lt;b&gt;width&lt;/b&gt;: 2 most significant bits of bitmap width. The initial value is zero.&lt;br&gt;&lt;b&gt;height&lt;/b&gt;: 2 most significant bits of bitmap height. The initial value is zero.&lt;br&gt;&lt;br&gt;Specify the 2 most significant bits of bitmaps dimension for the current handle.&lt;br&gt;&lt;br&gt;This command is the extension command of BITMAP_SIZE for bitmap larger than 511 by 511 pixels. </translation>
     </message>
     <message>
         <location filename="interactive_properties.cpp" line="2719"/>

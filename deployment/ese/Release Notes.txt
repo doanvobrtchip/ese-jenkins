@@ -22,6 +22,7 @@ Resolved issues:
 •   CMD_CALIBRATESUB does not work correctly.
 •   ESE crashes when opening calibrateWithBitmap project.
 •   Content windows | Issues with undo/redo action.
+•   [Properties Widget] Inconsistent text in BITMAP_SIZE_H.
 
 =======================
 Version 4.7.0
