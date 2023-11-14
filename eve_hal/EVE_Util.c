@@ -754,7 +754,7 @@ EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigPar
 
 #define EXTRACT_CHIPID(romChipId) EVE_extendedChipId((((romChipId) >> 8) & 0xFF) | (((romChipId) & (0xFF)) << 8))
 
-EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters *bootup)
+EVE_HAL_EXPORT EVE_BOOT_STATUS EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters *bootup, EVE_BOOT_OPTION opt)
 {
 	/* IMPORTANT: Do not use EVE_CoCmd functions here, as they can be overridden by hooks */
 
@@ -763,13 +763,19 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 	uint32_t chipId;
 	uint8_t id;
 
+	int totalTries = -1;
 	do
 	{
 		int tries = 0;
-
+		if (opt != EVE_BOOT_OPTION_CONTINUE && totalTries != -1) {
+			if (totalTries >= 100)
+				return EVE_BOOT_STATUS_PENDING;
+			++totalTries;
+		}
+		
 		/* EVE will be in SPI Single channel after POR */
 		if (!EVE_Hal_powerCycle(phost, true))
-			return false;
+			return EVE_BOOT_STATUS_FAILED;
 
 		if (bootup->ExternalOsc)
 		{
@@ -801,11 +807,11 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 		    || EXTRACT_CHIPID(chipId) > EVE_BT818)
 		{
 			eve_printf_debug("EVE ROM_CHIPID after wake up %lx\n", chipId);
-
+			if (totalTries == -1) totalTries = 0;
 			++tries;
 			EVE_sleep(20);
 			if (phost->CbCmdWait && !phost->CbCmdWait(phost))
-				return false;
+				return EVE_BOOT_STATUS_FAILED;
 
 			chipId = EVE_Hal_rd32(phost, ROM_CHIPID);
 
@@ -824,7 +830,6 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 #endif
 		}
 	} while (!chipId);
-
 	/* Validate chip ID to ensure the correct HAL is used */
 	/* ROM_CHIPID is valid across all EVE devices */
 	if (expectedChipId && EXTRACT_CHIPID(chipId) != expectedChipId)
@@ -883,7 +888,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 
 		EVE_sleep(20);
 		if (phost->CbCmdWait && !phost->CbCmdWait(phost))
-			return false;
+			return EVE_BOOT_STATUS_FAILED;
 	}
 	eve_printf_debug("EVE register ID after wake up %x\n", (unsigned int)id);
 	eve_assert(chipId == EVE_Hal_rd32(phost, ROM_CHIPID));
@@ -1007,7 +1012,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 
 		EVE_sleep(20);
 		if (phost->CbCmdWait && !phost->CbCmdWait(phost))
-			return false;
+			return EVE_BOOT_STATUS_FAILED;
 	}
 	eve_printf_debug("All engines are ready\n");
 
@@ -1020,7 +1025,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters 
 #endif
 #endif
 
-	return true;
+	return EVE_BOOT_STATUS_SUCCESS;
 }
 
 EVE_HAL_EXPORT bool EVE_Util_config(EVE_HalContext *phost, EVE_ConfigParameters *config)
@@ -1442,7 +1447,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfig(EVE_HalContext *phost)
 	EVE_ConfigParameters config;
 
 	EVE_Util_bootupDefaults(phost, &bootup);
-	if (!EVE_Util_bootup(phost, &bootup))
+	if (EVE_Util_bootup(phost, &bootup, EVE_BOOT_OPTION_NORMAL) == EVE_BOOT_STATUS_FAILED)
 	{
 		return false;
 	}
@@ -1784,7 +1789,7 @@ EVE_HAL_EXPORT void EVE_Util_uploadFlashFileInteractive(EVE_HalContext *phost, c
 		/* Get the default bootup parameters for the device */
 		EVE_Util_bootupDefaults(phost, &bootupParams);
 
-		if (EVE_Util_bootup(phost, &bootupParams))
+		if (EVE_Util_bootup(phost, &bootupParams, EVE_BOOT_OPTION_NORMAL) == EVE_BOOT_STATUS_SUCCESS)
 		{
 			/* Get the default bootup parameters for the device */
 			EVE_ConfigParameters configParams;
@@ -2053,7 +2058,7 @@ EVE_HAL_EXPORT bool EVE_Util_bootupConfigInteractive(EVE_HalContext *phost, EVE_
 	EVE_ConfigParameters config;
 
 	EVE_Util_bootupDefaults(phost, &bootup);
-	if (!EVE_Util_bootup(phost, &bootup))
+	if (EVE_Util_bootup(phost, &bootup, EVE_BOOT_OPTION_NORMAL) == EVE_BOOT_STATUS_FAILED)
 	{
 		return false;
 	}

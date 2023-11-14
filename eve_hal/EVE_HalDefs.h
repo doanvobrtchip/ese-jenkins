@@ -47,6 +47,21 @@
 ** ENUMS **
 **********/
 
+typedef enum EVE_BOOT_OPTION
+{
+	EVE_BOOT_OPTION_NORMAL = 0,
+	EVE_BOOT_OPTION_ABORT,
+	EVE_BOOT_OPTION_CONTINUE,
+} EVE_BOOT_OPTION;
+
+typedef enum EVE_BOOT_STATUS
+{
+	EVE_BOOT_STATUS_FAILED = 0,
+	EVE_BOOT_STATUS_SUCCESS,
+	EVE_BOOT_STATUS_PENDING,
+} EVE_BOOT_STATUS;
+
+
 typedef enum EVE_MODE_T
 {
 	EVE_MODE_UNKNOWN = 0,
@@ -511,6 +526,7 @@ static inline bool EVE_Hal_supportLargeFont(EVE_HalContext *phost)
 /// Include the EVE generation in the chip ID value to simplify feature set comparisons (BT880 support)
 static inline EVE_CHIPID_T EVE_extendedChipId(int chipId)
 {
+	if ((chipId & 0xF) == 0xA) chipId = (chipId >> 4) & 0xFFF;
 	switch (chipId & 0xFFFF)
 	{
 	case EVE_FT800 & 0xFFFF:
