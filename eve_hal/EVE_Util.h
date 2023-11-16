@@ -129,7 +129,7 @@ typedef enum EVE_DISPLAY_T
 EVE_HAL_EXPORT void EVE_Util_bootupDefaults(EVE_HalContext *phost, EVE_BootupParameters *bootup);
 
 /* Boot up the device. Obtains the chip Id. Sets up clock and SPI speed. */
-EVE_HAL_EXPORT bool EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters *bootup);
+EVE_HAL_EXPORT EVE_BOOT_STATUS EVE_Util_bootup(EVE_HalContext *phost, EVE_BootupParameters *bootup, EVE_BOOT_OPTION opt);
 
 /* Get the default configuration parameters for the specified display. */
 EVE_HAL_EXPORT void EVE_Util_configDefaults(EVE_HalContext *phost, EVE_ConfigParameters *config, EVE_DISPLAY_T display);

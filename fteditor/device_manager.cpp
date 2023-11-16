@@ -497,14 +497,36 @@ void DeviceManager::connectDevice()
 	}
 
 	progressLabel->setText("Boot up...");
-	if (!EVE_Util_bootup(phost, &bootupParams))	{
+	auto bootStatus = EVE_Util_bootup(phost, &bootupParams, EVE_BOOT_OPTION_NORMAL);
+	if (bootStatus == EVE_BOOT_STATUS_PENDING)
+	{
+		auto chipID = EVE_Hal_rd32(phost, ROM_CHIPID);
+		auto extendedChipID = EVE_extendedChipId((((chipID) >> 8) & 0xFF) | (((chipID) & (0xFF)) << 8));
+		int ret = QMessageBox::question(this, "Boot up", 
+			QString("Find a invalid chip ID (0x%1). Do you want to continue?").arg(extendedChipID, 4, 16, QChar('0')),
+		    QMessageBox::Yes | QMessageBox::No);
+		if (ret == QMessageBox::Yes)
+		{
+			bootStatus = EVE_Util_bootup(phost, &bootupParams, EVE_BOOT_OPTION_CONTINUE);
+		}
+		else if (ret == QMessageBox::No)
+		{
+			EVE_Hal_close(phost);
+			devInfo->EveHalContext = NULL;
+			delete phost;
+			return;
+		}
+	}
+
+	if (bootStatus == EVE_BOOT_STATUS_FAILED)
+	{
 		EVE_Hal_close(phost);
 		devInfo->EveHalContext = NULL;
 		delete phost;
 		QMessageBox::critical(this, "Failed", "Failed to boot up EVE", QMessageBox::Ok);
 		return;
 	}
-
+	
 	devInfo->DeviceIntf = deviceToIntf((BT8XXEMU_EmulatorMode)(phost->ChipId & 0xFFFF));
 	EVE_ConfigParameters configParams;
 

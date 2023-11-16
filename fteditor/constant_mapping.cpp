@@ -72,7 +72,7 @@ const char *g_DeviceToString[FTEDITOR_DEVICE_NB] = {
 	"BT883",
 	"BT815",
 	"BT816",
-	"BT817",
+	"BT817/817A",
 	"BT818",
 };
 
