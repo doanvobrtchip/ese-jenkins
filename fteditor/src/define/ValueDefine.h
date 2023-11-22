@@ -6,6 +6,10 @@
 #ifndef VALUEDEFINE_H
 #define VALUEDEFINE_H
 
+#define DEC 10
+#define HEX 16
+#define MAXIMUM_UINT 0xFFFFFFFF
+
 #define PROJECT_EXTENSION "ese"
 #define TEMP_TEXT ".tmp"
 // Define json

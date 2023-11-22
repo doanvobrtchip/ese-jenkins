@@ -110,6 +110,7 @@ extern volatile int g_HSize;
 extern volatile int g_VSize;
 extern volatile int g_Rotate;
 extern volatile int g_PlayCtrl;
+extern volatile uint32_t g_Frequency;
 
 extern volatile bool g_EmulatorRunning;
 
@@ -1796,6 +1797,8 @@ void MainWindow::createDockWindows()
 		    [](int newValue) { g_Rotate = newValue; });
 		connect(m_registers, &Registers::playCtrlChanged, this,
 		    [](int newValue) { g_PlayCtrl = newValue; });
+		connect(m_registers, &Registers::frequencyChanged, this,
+		    [](uint32_t newValue) { g_Frequency = newValue; });
 		connect(m_registers, &Registers::contentChanged, this, [this]() {
 			if (m_CurrentFileName.isEmpty()) return;
 			QJsonParseError parsedError;

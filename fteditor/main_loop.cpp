@@ -66,6 +66,7 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #include <QElapsedTimer>
 #include <QPushButton>
 #include <QTextStream>
+#include <QThread>
 
 // Emulator includes
 #include <bt8xxemu_inttypes.h>
@@ -77,18 +78,11 @@ Author: Jan Boon <jan.boon@kaetemi.be>
 #endif
 
 // Project includes
-#include "code_editor.h"
 #include "constant_common.h"
 #include "constant_mapping.h"
-#include "constant_mapping_flash.h"
 #include "content_manager.h"
-#include "device_manager.h"
 #include "dl_editor.h"
-#include "emulator_navigator.h"
 #include "inspector/Inspector.h"
-#include "interactive_properties.h"
-#include "interactive_viewport.h"
-#include "properties_editor.h"
 #include "toolbox.h"
 #include "utils/LoggerUtil.h"
 
@@ -105,6 +99,7 @@ volatile int g_HSize = 480;
 volatile int g_VSize = 272;
 volatile int g_Rotate = 0;
 volatile int g_PlayCtrl = -1;
+volatile uint32_t g_Frequency = 0x3938700;
 
 volatile bool g_EmulatorRunning = false;
 
@@ -812,13 +807,23 @@ void loop()
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_HSIZE), g_HSize);
 		if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE)) != g_VSize)
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_VSIZE), g_VSize);
-		// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
+	}
+	
+	// switch to next rotation (todo: CMD_SETROTATE for coprocessor)
+	{
 		if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE)) != g_Rotate)
 			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_ROTATE), g_Rotate);
-		if (g_PlayCtrl == 1) {
-			s_WantReloopCmd = true;
-		}
 	}
+	
+	// switch to next frequency
+	{
+		if (rd32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_FREQUENCY)) != g_Frequency)
+			wr32(reg(FTEDITOR_CURRENT_DEVICE, FTEDITOR_REG_FREQUENCY), g_Frequency);
+	}
+	
+	// Set REG_PLAY_CONTROL
+	if (g_PlayCtrl == 1)
+		s_WantReloopCmd = true;
 	
 	// switch to next macro list
 	{

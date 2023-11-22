@@ -17,5 +17,6 @@
 #define REG_PLAY_CONTROL_PLAY       0x01
 
 #define REG_HSF_HSIZE_DEFAULT       0
+#define REG_FREQUENCY_DEFAULT       0x3938700
 
 #endif // REGDEFINE_H

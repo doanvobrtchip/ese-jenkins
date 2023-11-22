@@ -71,8 +71,7 @@ RamReg::RamReg(Inspector *parent) : RamBase(parent) {
   connect(m_registers, &QTreeWidget::customContextMenuRequested, this,
           &RamReg::onPrepareContextMenu);
   connect(m_insp, &Inspector::updateView, this, &RamReg::updateView);
-  connect(m_insp, &Inspector::initDisplayReg, this,
-          &RamReg::initDisplayReg);
+  connect(m_insp, &Inspector::initDisplayReg, this, &RamReg::initDisplayReg);
   connect(m_insp, &Inspector::releaseDisplayReg, this,
           &RamReg::releaseDisplayReg);
 
@@ -85,6 +84,7 @@ bool RamReg::wantRegister(int regEnum) {
     case FTEDITOR_REG_ID:
     case FTEDITOR_REG_FRAMES:
     case FTEDITOR_REG_CLOCK:
+    case FTEDITOR_REG_FREQUENCY:
     case FTEDITOR_REG_HSIZE:
     case FTEDITOR_REG_VSIZE:
     case FTEDITOR_REG_ROTATE:
@@ -184,6 +184,11 @@ void RamReg::updateView(int dlCMDCount) {
               break;
             case FTEDITOR_REG_PLAY_CONTROL:
               emit regPlayControlChanged(regValue & 0xFF);
+              m_registerItems[regEnum]->setText(3,
+                                                ConvertUtil::asInt(regValue));
+              break;
+            case FTEDITOR_REG_FREQUENCY:
+              emit regFrequencyChanged(regValue);
             default:
               m_registerItems[regEnum]->setText(3,
                                                 ConvertUtil::asInt(regValue));
