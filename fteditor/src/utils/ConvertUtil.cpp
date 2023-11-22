@@ -13,6 +13,7 @@
 #include <sstream>
 
 #include "content_manager.h"
+#include "define/ValueDefine.h"
 #include "dl_parser.h"
 
 namespace FTEDITOR {
@@ -64,7 +65,21 @@ QString ConvertUtil::asSignedInt16F(uint32_t value) {
   return res.str().c_str();
 }
 
-QString ConvertUtil::intToHexString(int value) {
-  return "0x" + QString("%1").arg(value, 2, 16, QChar('0')).toUpper();
+QString ConvertUtil::uintToHex(uint32_t value, int fillWith) {
+  return "0x" + QString("%1").arg(value, fillWith, 16, QChar('0')).toUpper();
 }
+
+QString ConvertUtil::uintToHexNoPrefix(uint32_t value, int fillWith) {
+  return QString("%1").arg(value, fillWith, 16, QChar('0')).toUpper();
+}
+
+uint32_t ConvertUtil::stringToDec(const QString &value) {
+  bool ok;
+  uint32_t result = value.toUInt(&ok, DEC);
+  if (ok) return result;
+  result = value.toUInt(&ok, HEX);
+  if (ok) return result;
+  return 0;
+}
+
 }  // namespace FTEDITOR

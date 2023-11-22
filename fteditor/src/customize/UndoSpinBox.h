@@ -11,21 +11,21 @@
 class QSpinBox;
 
 class UndoSpinBox : public QUndoCommand {
- public:
-  UndoSpinBox(int id, QSpinBox *spinbox, int oldValue, bool *working);
-  ~UndoSpinBox() = default;
-
-  virtual void undo();
-  virtual void redo();
-  virtual int id() const;
-  virtual bool mergeWith(const QUndoCommand *command);
-  
-  private:
-  int m_id;
-  QSpinBox *m_spinBox;
-  int m_newValue;
-  int m_oldValue;
-  bool *m_working;
+public:
+	UndoSpinBox(int id, QSpinBox *spinbox, int oldValue, bool *working);
+	~UndoSpinBox() = default;
+	
+	virtual void undo();
+	virtual void redo();
+	virtual int id() const;
+	virtual bool mergeWith(const QUndoCommand *command);
+	
+private:
+	int m_id;
+	QSpinBox *m_spinBox;
+	int m_newValue;
+	int m_oldValue;
+	bool *m_working;
 };
 
 #endif  // UNDOSPINBOX_H

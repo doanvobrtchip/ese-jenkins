@@ -7,6 +7,7 @@
 
 #include <dl_parser.h>
 
+#include <QAbstractSpinBox>
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QJsonArray>
@@ -19,6 +20,8 @@
 #include "code_editor.h"
 #include "constant_common.h"
 #include "constant_mapping.h"
+#include "customize/UintSpinBox.h"
+#include "customize/UndoLineEdit.h"
 #include "customize/UndoSpinBox.h"
 #include "define/RegDefine.h"
 #include "define/ValueDefine.h"
@@ -29,6 +32,7 @@
 #include "main_window.h"
 #include "utils/CommonUtil.h"
 #include "utils/ConvertUtil.h"
+#include "utils/LoggerUtil.h"
 
 namespace FTEDITOR {
 Registers::Registers(MainWindow *parent)
@@ -41,7 +45,8 @@ Registers::Registers(MainWindow *parent)
       m_latestHSize(screenWidthDefault(FTEDITOR_CURRENT_DEVICE)),
       m_latestVSize(screenHeightDefault(FTEDITOR_CURRENT_DEVICE)),
       m_latestRotate(REG_ROTATE_DEFAULT),
-      m_latestHSF(REG_HSF_HSIZE_DEFAULT) {
+      m_latestHSF(REG_HSF_HSIZE_DEFAULT),
+      m_latestFreq(QString::number(REG_FREQUENCY_DEFAULT)) {
   QVBoxLayout *layout = new QVBoxLayout(this);
   // Display Size
   {
@@ -113,10 +118,9 @@ Registers::Registers(MainWindow *parent)
     macroGroup->setLayout(macroLayout);
     macroGroup->setMaximumHeight(80);
     layout->addWidget(macroGroup);
-	
-	connect(m_macro->codeEditor(), &CodeEditor::textChanged, this, [this](){
-		emit contentChanged();
-	}); 
+
+    connect(m_macro->codeEditor(), &CodeEditor::textChanged, this,
+            [this]() { emit contentChanged(); });
   }
 
   // Control
@@ -127,9 +131,9 @@ Registers::Registers(MainWindow *parent)
     QLabel *lbReqPlayCtrl = new QLabel;
     lbReqPlayCtrl->setText(tr("REG_PLAY_CONTROL"));
     lbReqPlayCtrl->setMinimumWidth(30);
-    m_lbCurrPlayCtrl = new QLabel(
-        QString("<b>(%1)</b>")
-            .arg(ConvertUtil::intToHexString(REG_PLAY_CONTROL_EXIT)));
+    m_lbCurrPlayCtrl =
+        new QLabel(QString("<b>(%1)</b>")
+                       .arg(ConvertUtil::uintToHex(REG_PLAY_CONTROL_EXIT, 2)));
 
     QVBoxLayout *vBoxStrPlayTrl = new QVBoxLayout;
     vBoxStrPlayTrl->setSpacing(0);
@@ -141,7 +145,7 @@ Registers::Registers(MainWindow *parent)
     hBoxExit->setSpacing(2);
     QLabel *lbExit = new QLabel(tr("Exit:"));
     QPushButton *btnExit =
-        new QPushButton(ConvertUtil::intToHexString(REG_PLAY_CONTROL_EXIT));
+        new QPushButton(ConvertUtil::uintToHex(REG_PLAY_CONTROL_EXIT, 2));
     hBoxExit->setAlignment(Qt::AlignRight);
     hBoxExit->addWidget(lbExit);
     hBoxExit->addWidget(btnExit);
@@ -150,7 +154,7 @@ Registers::Registers(MainWindow *parent)
     hBoxPause->setSpacing(2);
     QLabel *lbPause = new QLabel(tr("Pause:"));
     QPushButton *btnPause =
-        new QPushButton(ConvertUtil::intToHexString(REG_PLAY_CONTROL_PAUSE));
+        new QPushButton(ConvertUtil::uintToHex(REG_PLAY_CONTROL_PAUSE, 2));
     hBoxPause->setAlignment(Qt::AlignRight);
     hBoxPause->addWidget(lbPause);
     hBoxPause->addWidget(btnPause);
@@ -159,7 +163,7 @@ Registers::Registers(MainWindow *parent)
     hBoxPlay->setSpacing(2);
     QLabel *lbPlay = new QLabel(tr("Play:"));
     QPushButton *btnPlay =
-        new QPushButton(ConvertUtil::intToHexString(REG_PLAY_CONTROL_PLAY));
+        new QPushButton(ConvertUtil::uintToHex(REG_PLAY_CONTROL_PLAY, 2));
     hBoxPlay->setAlignment(Qt::AlignRight);
     hBoxPlay->addWidget(lbPlay);
     hBoxPlay->addWidget(btnPlay);
@@ -196,7 +200,7 @@ Registers::Registers(MainWindow *parent)
     hsfGroup->setToolTip(tr("Set by CMD_HSF"));
 
     auto hsfLabel = new QLabel;
-    hsfLabel->setText(tr("Width of HSF:"));
+    hsfLabel->setText(tr("Width of HSF"));
     m_hsf = new QSpinBox;
     m_hsf->setMinimum(0);
     m_hsf->setValue(REG_HSF_HSIZE_DEFAULT);
@@ -219,6 +223,29 @@ Registers::Registers(MainWindow *parent)
       if (visible) m_hsf->setValue(0);
     });
   }
+
+  // Frequency
+  {
+    auto freqGroup = new QGroupBox;
+    freqGroup->setTitle(tr("Frequency"));
+
+    auto freqLabel = new QLabel;
+    freqLabel->setText(tr("REG_FREQUENCY"));
+    m_freq = new UintSpinBox(REG_FREQUENCY_DEFAULT);
+
+    auto freqLayout = new QHBoxLayout;
+    freqLayout->addWidget(freqLabel);
+    freqLayout->addWidget(m_freq);
+
+    freqGroup->setLayout(freqLayout);
+    layout->addWidget(freqGroup);
+
+    connect(m_freq, &UintSpinBox::changeFinished, this,
+            &Registers::onFreqChanged);
+    connect(m_freq, &UintSpinBox::hasAcceptableValue, this,
+            [this](uint32_t value) { emit frequencyChanged(value); });
+  }
+
   layout->addStretch();
 
   connect(m_mainWindow, &MainWindow::clearEvent, this,
@@ -238,12 +265,13 @@ void Registers::setupConnections(QObject *obj) {
 
   if (auto insp = m_mainWindow->inspector();
       insp && (obj == insp || obj == nullptr)) {
-    connect(
-        insp->ramReg(), &RamReg::regPlayControlChanged, this,
-        [this](int value) {
-          m_lbCurrPlayCtrl->setText(
-              QString("<b>(%1)</b>").arg(ConvertUtil::intToHexString(value)));
-        });
+    connect(insp->ramReg(), &RamReg::regPlayControlChanged, this,
+            [this](uint32_t value) {
+              m_lbCurrPlayCtrl->setText(
+                  QString("<b>(%1)</b>").arg(ConvertUtil::uintToHex(value, 2)));
+            });
+    connect(insp->ramReg(), &RamReg::regFrequencyChanged, this,
+            [this](uint32_t value) { m_freq->setText(value); });
   }
 }
 
@@ -304,6 +332,14 @@ void Registers::onHSFChanged(int newValue) {
   cmdEditor->setDisplayListModified(true);
 }
 
+void Registers::onFreqChanged(const QString &newValue) {
+  emit contentChanged();
+  if (m_undoRedoWorking) return;
+  m_undoStack->push(new UndoLineEdit(78994354, m_freq->getLineEdit(),
+                                     m_latestFreq, &m_undoRedoWorking));
+  m_latestFreq = newValue;
+}
+
 void Registers::onDisplaySizeChanged(int hSize, int vSize) {
   if (m_hSize->value() == hSize && m_vSize->value() == vSize) return;
   m_undoStack->beginMacro("Change resolution");
@@ -312,10 +348,7 @@ void Registers::onDisplaySizeChanged(int hSize, int vSize) {
   m_undoStack->endMacro();
 }
 
-int Registers::latestHSF() const
-{
-	return m_latestHSF;
-}
+int Registers::latestHSF() const { return m_latestHSF; }
 
 QSpinBox *Registers::rotate() const { return m_rotate; }
 
@@ -348,6 +381,7 @@ void Registers::onClearEvent() {
   m_vSize->setValue(screenHeightDefault(FTEDITOR_CURRENT_DEVICE));
   m_rotate->setValue(REG_ROTATE_DEFAULT);
   m_hsf->setValue(REG_HSF_HSIZE_DEFAULT);
+  m_freq->setText(REG_FREQUENCY_DEFAULT);
   m_macro->clear();
 
   // Reset Macro
@@ -380,10 +414,12 @@ void Registers::fromJson(QJsonObject obj) {
   auto reg = obj[REG_KEY].toObject();
   m_hSize->setValue(reg[REG_HSIZE_KEY].toVariant().toInt());
   m_vSize->setValue(reg[REG_VSIZE_KEY].toVariant().toInt());
-  m_rotate->setValue(reg.contains(REG_ROTATE_KEY) ? reg[REG_ROTATE_KEY].toVariant().toInt()
-                                            : REG_ROTATE_DEFAULT);
-  m_hsf->setValue(reg.contains(REG_HSF_KEY) ? reg[REG_HSF_KEY].toVariant().toInt()
-                                      : REG_HSF_HSIZE_DEFAULT);
+  m_rotate->setValue(reg.contains(REG_ROTATE_KEY)
+                         ? reg[REG_ROTATE_KEY].toVariant().toInt()
+                         : REG_ROTATE_DEFAULT);
+  m_hsf->setValue(reg.contains(REG_HSF_KEY)
+                      ? reg[REG_HSF_KEY].toVariant().toInt()
+                      : REG_HSF_HSIZE_DEFAULT);
   m_macro->codeEditor()->clear();
   CommonUtil::documentFromJsonArray(m_macro->codeEditor(),
                                     reg[REG_MACRO_KEY].toArray());
