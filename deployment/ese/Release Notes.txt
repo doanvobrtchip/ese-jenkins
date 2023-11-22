@@ -1,5 +1,5 @@
 Version 4.8.0
-RC1
+RC2
 Feature updates:
 •   Supporting the Exporting feature for BT817's commands.
 •   Add cmd_nop in ESE.
@@ -13,6 +13,8 @@ Feature updates:
 •   Add new example project -- Rotate Built-in Font.
 •   Show the search result in one seperate tab.
 •   Add the new example project to calibrate with new bitmap.
+•   Add BT817A support.
+•   Add read/write REG_FREQUENCY in ESE.
 
 Resolved issues:
 •   Generating the incorrect commands when drag & drop the animation asset from content manager to viewport.
