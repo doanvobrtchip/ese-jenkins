@@ -1467,6 +1467,7 @@ void DlParser::compileVC4(int deviceIntf, std::vector<uint32_t> &compiled, const
 					compiled.push_back(parsed.Parameter[0].U);
 					compiled.push_back(parsed.Parameter[1].U);
 					compiled.push_back(parsed.Parameter[2].U);
+					break;
 				}
 				case CMD_ANIMXY:
 				{
