@@ -25,6 +25,7 @@ Resolved issues:
 •   ESE crashes when opening calibrateWithBitmap project.
 •   Content windows | Issues with undo/redo action.
 •   [Properties Widget] Inconsistent text in BITMAP_SIZE_H.
+•   "nonASTC_img_flash" example does not work.
 
 =======================
 Version 4.7.0
